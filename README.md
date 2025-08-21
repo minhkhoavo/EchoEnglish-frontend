@@ -1,1 +1,1 @@
-# EchoEnglish-frontend
+React, Redux, Axios + Tanstack Query, TailwindCSS + ShaDCN
