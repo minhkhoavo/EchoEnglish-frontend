@@ -1,10 +1,14 @@
-import React from 'react';
-import { FileText, Image, Link2, X, Loader2, Brain, Sparkles } from 'lucide-react';
-import type { ContentItem, UploadProgress } from '../types/content.types';
+import React, { useState, useMemo } from 'react';
+import { 
+  FileText, Grid, List,
+  Search, Rows3
+} from 'lucide-react';
+import type { ContentItem, UploadProgress, ContentStatus } from '../types/content.types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ContentItemCard } from './ContentItemCard';
 
 interface ContentGridProps {
   items: ContentItem[];
@@ -21,206 +25,142 @@ export const ContentGrid: React.FC<ContentGridProps> = ({
   onGenerateContent,
   isGenerating = false 
 }) => {
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case 'image': return <Image className="h-5 w-5" />;
-      case 'url': return <Link2 className="h-5 w-5" />;
-      default: return <FileText className="h-5 w-5" />;
-    }
-  };
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'full'>('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<ContentStatus | 'all'>('all');
+  const [selectedType, setSelectedType] = useState<ContentItem['type'] | 'all'>('all');
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ready': return 'text-green-500';
-      case 'processing': return 'text-yellow-500';
-      case 'error': return 'text-red-500';
-      default: return 'text-gray-500';
-    }
-  };
+  const filteredItems = useMemo(() => {
+    return items
+      .filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
+        const matchesType = selectedType === 'all' || item.type === selectedType;
+        return matchesSearch && matchesStatus && matchesType;
+      });
+  }, [items, searchQuery, selectedStatus, selectedType]);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'ready': 
-        return <Badge variant="default" className="bg-green-100 text-green-800">Ready</Badge>;
-      case 'processing': 
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Processing</Badge>;
-      case 'error': 
-        return <Badge variant="destructive">Error</Badge>;
-      default: 
-        return <Badge variant="outline">Uploaded</Badge>;
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Beginner': return 'text-green-600 bg-green-100';
-      case 'Intermediate': return 'text-yellow-600 bg-yellow-100';
-      case 'Advanced': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getItemProgress = (itemId: string) => {
-    return uploadProgress.find(p => p.itemId === itemId)?.progress || 0;
-  };
 
   if (items.length === 0) {
     return (
-      <Card className="glass-card shadow-medium">
+      <Card className="shadow-sm border border-gray-100">
         <CardContent className="text-center py-16">
-          <FileText className="h-16 w-16 text-muted-foreground mx-auto mb-6 animate-float" />
-          <h3 className="text-xl font-semibold text-foreground mb-2">No content yet</h3>
-          <p className="text-muted-foreground">Upload your first file or add a URL to get started!</p>
+          <FileText className="h-16 w-16 text-gray-300 mx-auto mb-6" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No content yet</h3>
+          <p className="text-gray-600">Upload your first file or add a URL to get started!</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="grid gap-6">
-      {items.map((item) => {
-        const progress = getItemProgress(item.id);
-        const isProcessing = item.status === 'processing';
-        
-        return (
-          <Card 
-            key={item.id}
-            className="glass-card shadow-medium hover:shadow-strong transition-all duration-300 group"
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-4 flex-1">
-                  {/* File Icon */}
-                  <div className={`flex items-center justify-center w-12 h-12 rounded-lg ${getStatusColor(item.status)} bg-opacity-10`}>
-                    {getFileIcon(item.type)}
-                  </div>
-                  
-                  {/* Content Info */}
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground truncate max-w-md">
-                          {item.name}
-                        </h3>
-                        <div className="flex items-center space-x-2 mt-1">
-                          {getStatusBadge(item.status)}
-                          {item.size && (
-                            <span className="text-sm text-muted-foreground">{item.size}</span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onRemoveItem(item.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-100 hover:text-red-600"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
+    <div className="space-y-6">
+        {/* Search and Filters */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search Bar */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search files by name..."
+                className="w-full pl-10 pr-4 py-2.5 h-auto border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
 
-                    {/* Processing Progress */}
-                    {isProcessing && (
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                          <span className="text-sm text-muted-foreground">
-                            AI is analyzing your content...
-                          </span>
-                        </div>
-                        {progress > 0 && (
-                          <Progress value={progress} className="h-2" />
-                        )}
-                      </div>
-                    )}
+            {/* Filters */}
+            <div className="flex items-center gap-3">
+              <Select value={selectedStatus} onValueChange={(value: ContentStatus | 'all') => setSelectedStatus(value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="ready">Ready</SelectItem>
+                  <SelectItem value="processing">Processing</SelectItem>
+                  <SelectItem value="error">Error</SelectItem>
+                  <SelectItem value="uploaded">Uploaded</SelectItem>
+                </SelectContent>
+              </Select>
 
-                    {/* Insights */}
-                    {item.insights && item.status === 'ready' && (
-                      <div className="space-y-4">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <Badge className={`${getDifficultyColor(item.insights.difficulty)} border-0`}>
-                            {item.insights.difficulty}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground">
-                            📖 {item.insights.readingTime}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            📝 {item.insights.vocabulary} words
-                          </span>
-                        </div>
+              <Select value={selectedType} onValueChange={(value: ContentItem['type'] | 'all') => setSelectedType(value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="file">File</SelectItem>
+                  <SelectItem value="url">URL</SelectItem>
+                  <SelectItem value="image">Image</SelectItem>
+                </SelectContent>
+              </Select>
 
-                        <div className="flex flex-wrap gap-2">
-                          {item.insights.topics.slice(0, 3).map((topic) => (
-                            <Badge key={topic} variant="outline" className="text-xs">
-                              {topic}
-                            </Badge>
-                          ))}
-                          {item.insights.topics.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{item.insights.topics.length - 3} more
-                            </Badge>
-                          )}
-                        </div>
+              {/* View Mode Toggle */}
+              <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2.5 ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2.5 ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('full')}
+                    className={`p-2.5 ${viewMode === 'full' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                  >
+                    <Rows3 className="h-4 w-4" />
+                  </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                        {/* Generation Actions */}
-                        <div className="flex space-x-3 pt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onGenerateContent(item, 'quiz')}
-                            disabled={isGenerating}
-                            className="flex-1 hover:bg-gradient-primary hover:text-primary-foreground transition-all duration-300"
-                          >
-                            {isGenerating ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Brain className="h-4 w-4 mr-2" />
-                            )}
-                            Quiz ({item.insights.suggestedQuizzes})
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onGenerateContent(item, 'flashcards')}
-                            disabled={isGenerating}
-                            className="flex-1 hover:bg-gradient-primary hover:text-primary-foreground transition-all duration-300"
-                          >
-                            {isGenerating ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Sparkles className="h-4 w-4 mr-2" />
-                            )}
-                            Cards ({item.insights.suggestedFlashcards})
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Error State */}
-                    {item.status === 'error' && (
-                      <div className="text-red-600 text-sm">
-                        Failed to process this content. Please try again.
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Preview for images */}
-                {item.preview && (
-                  <div className="ml-4">
-                    <img 
-                      src={item.preview} 
-                      alt={item.name}
-                      className="w-20 h-20 object-cover rounded-lg border"
+        {filteredItems.length > 0 ? (
+          <div className={
+            viewMode === 'grid' 
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+              : 'space-y-4'
+          }>
+              {filteredItems.map((item) => (
+                  <div
+                      key={item.id}
+                      className="group bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 transition-all duration-300"
+                  >
+                    <ContentItemCard 
+                      item={item}
+                      viewMode={viewMode}
+                      isGenerating={isGenerating}
+                      uploadProgress={uploadProgress}
+                      onRemoveItem={onRemoveItem}
+                      onGenerateContent={onGenerateContent}
                     />
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+              ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-100">
+            <Search className="h-16 w-16 text-gray-300 mx-auto mb-6" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No files match your filters</h3>
+            <p className="text-gray-600 mb-6">Try adjusting your search query or filter settings.</p>
+            <Button 
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedStatus('all');
+                setSelectedType('all');
+              }}
+              className="bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            >
+              Clear All Filters
+            </Button>
+          </div>
+        )}
     </div>
-  );
+);
 };

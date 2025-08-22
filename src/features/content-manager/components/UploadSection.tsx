@@ -163,8 +163,8 @@ export const UploadSection: React.FC<UploadSectionProps> = ({ onFilesUpload, onU
               </div>
               {uploadedFiles.map((uploadedFile) => (
                 <div key={uploadedFile.id} className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-md bg-primary/10">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex-shrink-0 p-2 rounded-md bg-primary/10">
                       <FileText className="h-4 w-4 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
