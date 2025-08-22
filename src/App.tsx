@@ -1,8 +1,12 @@
-import LoginPage from "./pages/LoginPage"
+import ContentPage from "./pages/ContentPage"
+import { Toaster } from "./components/ui/sonner"
 
 function App() {
   return (
-      <LoginPage />
+    <>
+      <ContentPage />
+      <Toaster />
+    </>
   )
 }
 
