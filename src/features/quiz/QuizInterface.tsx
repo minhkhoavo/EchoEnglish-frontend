@@ -8,7 +8,7 @@ import {
   type QuizQuestion,
   setShowResults,
 } from './slices/quizSlice';
-import { useGetQuizByIdQuery, useSubmitQuizAnswersMutation } from './services/quizApi';
+import { useGetQuizByIdQuery, useGenerateQuizMutation, useSubmitQuizAnswersMutation } from './services/quizApi';
 import { QuizHeader } from './components/QuizHeader';
 import { QuizQuestionDisplay } from './components/QuizQuestionDisplay';
 import { QuizOptions } from './components/QuizOptions';
@@ -19,10 +19,10 @@ import { X } from 'lucide-react';
 
 interface QuizInterfaceProps {
   onClose: () => void;
-  quizId?: string; // Optional prop to specify which quiz to load
+  fileId?: string; 
 }
 
-export const QuizInterface = ({ onClose, quizId = 'toeic-sample-1' }: QuizInterfaceProps) => {
+export const QuizInterface = ({ onClose, fileId }: QuizInterfaceProps) => {
   const dispatch = useAppDispatch();
   const {
     activeQuiz,
@@ -34,16 +34,25 @@ export const QuizInterface = ({ onClose, quizId = 'toeic-sample-1' }: QuizInterf
     reviewQuestionIndex,
   } = useAppSelector((state) => state.quiz);
 
-  const { data: fetchedQuiz, isLoading, isError } = useGetQuizByIdQuery(quizId);
+  const [triggerGenerateQuiz, { data: generatedQuiz, isLoading: isGeneratingQuiz, isError: isGenerateError }] = useGenerateQuizMutation();
+  const { data: fetchedQuiz, isLoading: isFetchingQuiz, isError: isFetchError } = useGetQuizByIdQuery({ fileId });
   const [submitAnswers] = useSubmitQuizAnswersMutation();
   const [score, setScore] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
 
   useEffect(() => {
-    if (fetchedQuiz) {
+    if (fileId) {
+      triggerGenerateQuiz({ fileId });
+    }
+  }, [fileId, triggerGenerateQuiz]);
+
+  useEffect(() => {
+    if (generatedQuiz) {
+      dispatch(setActiveQuiz(generatedQuiz));
+    } else if (fetchedQuiz) {
       dispatch(setActiveQuiz(fetchedQuiz));
     }
-  }, [fetchedQuiz, dispatch]);
+  }, [generatedQuiz, fetchedQuiz, dispatch]);
 
   // Timer countdown
   useEffect(() => {
@@ -60,6 +69,7 @@ export const QuizInterface = ({ onClose, quizId = 'toeic-sample-1' }: QuizInterf
     if (activeQuiz) {
       try {
         const result = await submitAnswers({ quizId: activeQuiz.id, answers: selectedAnswers }).unwrap();
+        console.log("result:::::::" + result)
         setScore(result.score);
         setTotalQuestions(result.total);
         dispatch(setActiveQuiz({ ...activeQuiz, questions: activeQuiz.questions })); // Keep quiz data for results display
@@ -76,6 +86,9 @@ export const QuizInterface = ({ onClose, quizId = 'toeic-sample-1' }: QuizInterf
   const handleExitReviewMode = () => {
     dispatch(setReviewMode({ isReviewMode: false, reviewQuestionIndex: null }));
   };
+
+  const isLoading = isGeneratingQuiz || isFetchingQuiz;
+  const isError = isGenerateError || isFetchError;
 
   if (isLoading) {
     return (

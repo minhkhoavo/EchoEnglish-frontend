@@ -13,7 +13,7 @@ interface ContentItemCardProps {
   isGenerating?: boolean;
   uploadProgress: UploadProgress[];
   onRemoveItem: (id: string) => void;
-  onGenerateContent: (item: ContentItem, type: 'quiz' | 'flashcards') => void;
+  onGenerateContent: (item: ContentItem, type: 'quiz' | 'flashcards', fileId?: string) => void;
 }
 
 const getFileIcon = (type: ContentItem['type']) => {
@@ -98,7 +98,7 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({
               <div className="flex items-center gap-2">
                   {item.status === 'ready' && (
                       <Button
-                          onClick={() => onGenerateContent(item, 'quiz')}
+                          onClick={() => onGenerateContent(item, 'quiz', item.id)}
                           disabled={isGenerating}
                           size="icon"
                           variant="ghost"
@@ -210,7 +210,7 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({
             {item.status === 'ready' ? (
                 <>
                     <Button
-                        onClick={() => onGenerateContent(item, 'quiz')}
+                        onClick={() => onGenerateContent(item, 'quiz', item.id)}
                         disabled={isGenerating}
                         className="flex-1 bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >

@@ -19,11 +19,13 @@ import {
 import { UploadSection } from './components/UploadSection';
 import { ContentGrid } from './components/ContentGrid';
 import { GenerationHub } from './components/GenerationHub';
+import { useNavigate } from 'react-router-dom';
 import type { ContentItem } from './types/content.types';
 
 export const ContentManager = () => {
   const [activeTab, setActiveTab] = useState('upload');
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   
   const contentItems = useAppSelector(selectAllContent);
   const readyItems = useAppSelector(selectReadyContent);
@@ -77,9 +79,14 @@ export const ContentManager = () => {
   }, [dispatch]);
 
   // Simplified generation functions - can be implemented later if needed
-  const generateContent = useCallback(async () => {
+  const generateContent = useCallback(async (item: ContentItem, type: 'quiz' | 'flashcards', fileId?: string) => {
+    if (type === 'quiz' && fileId) {
+      navigate(`/quiz?fileId=${fileId}`);
+    } else {
+      console.log(`Generating ${type} for item ${item.id} with fileId: ${fileId}`);
+    }
     return { success: true, count: 0, message: 'Not implemented' };
-  }, []);
+  }, [navigate]);
 
   // Mock states for components that expect them
   const uploadProgress: {itemId: string; progress: number}[] = [];

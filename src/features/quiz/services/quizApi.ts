@@ -130,18 +130,56 @@ export const quizApi = createApi({
   reducerPath: 'quizApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/v1/' }),
   endpoints: (builder) => ({
-    getQuizById: builder.query<Quiz, string>({
-      queryFn: (id) => {
-        // Simulate API call with mock data
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            if (id === mockQuiz.id) {
-              resolve({ data: mockQuiz });
-            } else {
-              resolve({ error: { status: 404, data: 'Quiz not found' } });
-            }
-          }, 500); // Simulate network delay
-        });
+    getQuizById: builder.query<Quiz, { fileId?: string }>({
+      queryFn: async ({ fileId }) => {
+        try {
+          const formData = new FormData();
+          formData.append("part", "6"); 
+          formData.append("user_id", "88"); 
+          if (fileId) {
+            formData.append("file_ids", fileId);
+          }
+
+          const response = await fetch("http://localhost:8001/api/v1/generate/quiz/", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            return { error: { status: response.status, data: await response.text() } };
+          }
+
+          const data: Quiz = await response.json();
+          return { data };
+        } catch (error: unknown) {
+          return { error: { status: "FETCH_ERROR", error: (error as Error)?.message || "Unknown error" } };
+        }
+      },
+    }),
+    generateQuiz: builder.mutation<Quiz, { fileId?: string }>({
+      queryFn: async ({ fileId }) => {
+        try {
+          const formData = new FormData();
+          formData.append("part", "6"); // Default part as per instruction
+          formData.append("user_id", "88"); // Default user_id as per instruction
+          if (fileId) {
+            formData.append("file_ids", fileId);
+          }
+
+          const response = await fetch("http://localhost:8001/api/v1/generate/quiz/", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            return { error: { status: response.status, data: await response.text() } };
+          }
+
+          const data: Quiz = await response.json();
+          return { data };
+        } catch (error: unknown) {
+          return { error: { status: "FETCH_ERROR", error: (error as Error)?.message || "Unknown error" } };
+        }
       },
     }),
     createQuiz: builder.mutation<Quiz, QuizQuestionBuilder[]>({
@@ -193,4 +231,4 @@ export const quizApi = createApi({
   }),
 });
 
-export const { useGetQuizByIdQuery, useCreateQuizMutation, useSubmitQuizAnswersMutation } = quizApi;
+export const { useGetQuizByIdQuery, useGenerateQuizMutation, useCreateQuizMutation, useSubmitQuizAnswersMutation } = quizApi;
