@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
 import {
@@ -7,8 +7,9 @@ import {
   setReviewMode,
   type QuizQuestion,
   setShowResults,
+  resetQuizInterface,
 } from './slices/quizSlice';
-import { useGetQuizByIdQuery, useGenerateQuizMutation, useSubmitQuizAnswersMutation } from './services/quizApi';
+import { useGenerateQuizMutation, useSubmitQuizAnswersMutation } from './services/quizApi';
 import { QuizHeader } from './components/QuizHeader';
 import { QuizQuestionDisplay } from './components/QuizQuestionDisplay';
 import { QuizOptions } from './components/QuizOptions';
@@ -34,38 +35,27 @@ export const QuizInterface = ({ onClose, fileId }: QuizInterfaceProps) => {
     reviewQuestionIndex,
   } = useAppSelector((state) => state.quiz);
 
-  const [triggerGenerateQuiz, { data: generatedQuiz, isLoading: isGeneratingQuiz, isError: isGenerateError }] = useGenerateQuizMutation();
-  const { data: fetchedQuiz, isLoading: isFetchingQuiz, isError: isFetchError } = useGetQuizByIdQuery({ fileId });
+  const [triggerGenerateQuiz, { isLoading: isGeneratingQuiz, isError: isGenerateError }] = useGenerateQuizMutation();
   const [submitAnswers] = useSubmitQuizAnswersMutation();
   const [score, setScore] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
 
-  useEffect(() => {
-    if (fileId) {
-      triggerGenerateQuiz({ fileId });
-    }
-  }, [fileId, triggerGenerateQuiz]);
+useEffect(() => {
+  dispatch(resetQuizInterface());
+  if (!fileId) return;
 
-  useEffect(() => {
-    if (generatedQuiz) {
-      dispatch(setActiveQuiz(generatedQuiz));
-    } else if (fetchedQuiz) {
-      dispatch(setActiveQuiz(fetchedQuiz));
+  (async () => {
+    try {
+      const generated = await triggerGenerateQuiz({ fileId }).unwrap();
+      console.log("Generated Quiz inside useEffect:", generated);
+      dispatch(setActiveQuiz(generated));
+    } catch (err) {
+      console.error(err);
     }
-  }, [generatedQuiz, fetchedQuiz, dispatch]);
+  })();
+}, [fileId, dispatch, triggerGenerateQuiz]);
 
-  // Timer countdown
-  useEffect(() => {
-    if (timeLeft > 0 && !showResults && activeQuiz && !isReviewMode) {
-      const timer = setTimeout(() => dispatch(setTimeLeft(timeLeft - 1)), 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && activeQuiz && !showResults && !isReviewMode) {
-      dispatch(setTimeLeft(0));
-      handleSubmitQuiz();
-    }
-  }, [timeLeft, showResults, isReviewMode, dispatch]);
-
-  const handleSubmitQuiz = async () => {
+  const handleSubmitQuiz = useCallback(async () => {
     if (activeQuiz) {
       try {
         const result = await submitAnswers({ quizId: activeQuiz.id, answers: selectedAnswers }).unwrap();
@@ -81,14 +71,25 @@ export const QuizInterface = ({ onClose, fileId }: QuizInterfaceProps) => {
         dispatch(setTimeLeft(0));
       }
     }
-  };
+  }, [activeQuiz, selectedAnswers, submitAnswers, dispatch]);
+
+  // Timer countdown
+  useEffect(() => {
+    if (timeLeft > 0 && !showResults && activeQuiz && !isReviewMode) {
+      const timer = setTimeout(() => dispatch(setTimeLeft(timeLeft - 1)), 1000);
+      return () => clearTimeout(timer);
+    } else if (timeLeft === 0 && activeQuiz && !showResults && !isReviewMode) {
+      dispatch(setTimeLeft(0));
+      handleSubmitQuiz();
+    }
+  }, [timeLeft, showResults, isReviewMode, activeQuiz, handleSubmitQuiz, dispatch]);
 
   const handleExitReviewMode = () => {
     dispatch(setReviewMode({ isReviewMode: false, reviewQuestionIndex: null }));
   };
 
-  const isLoading = isGeneratingQuiz || isFetchingQuiz;
-  const isError = isGenerateError || isFetchError;
+  const isLoading = isGeneratingQuiz;
+  const isError = isGenerateError;
 
   if (isLoading) {
     return (

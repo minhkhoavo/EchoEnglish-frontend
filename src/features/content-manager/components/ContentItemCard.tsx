@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   FileText, Image, Link2, X, Loader2, Brain, Sparkles,
   ExternalLink, AlertCircle, CheckCircle2, RefreshCw
@@ -6,6 +6,7 @@ import {
 import type { ContentItem, ContentStatus, UploadProgress } from '../types/content.types';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { GenerateContentDialog } from './GenerateContentDialog';
 
 interface ContentItemCardProps {
   item: ContentItem;
@@ -55,9 +56,20 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({
   onRemoveItem,
   onGenerateContent,
 }) => {
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
 
   const getItemProgress = (itemId: string) => {
     return uploadProgress.find(p => p.itemId === itemId)?.progress || 0;
+  };
+
+  const handleGenerateClick = () => {
+    setShowGenerateDialog(true);
+  };
+
+  const handleGenerate = (item: ContentItem, type: 'quiz' | 'flashcards', options?: { optionId: string }) => {
+    console.log('Generating content with options:', { type, options });
+    onGenerateContent(item, type, item.id);
+    setShowGenerateDialog(false);
   };
 
   const progress = getItemProgress(item.id);
@@ -98,7 +110,7 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({
               <div className="flex items-center gap-2">
                   {item.status === 'ready' && (
                       <Button
-                          onClick={() => onGenerateContent(item, 'quiz', item.id)}
+                          onClick={handleGenerateClick}
                           disabled={isGenerating}
                           size="icon"
                           variant="ghost"
@@ -117,6 +129,14 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({
                   </Button>
               </div>
           </div>
+          
+          <GenerateContentDialog
+              open={showGenerateDialog}
+              onOpenChange={setShowGenerateDialog}
+              item={item}
+              onGenerate={handleGenerate}
+              isGenerating={isGenerating || false}
+          />
       </div>
     );
   }
@@ -210,7 +230,7 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({
             {item.status === 'ready' ? (
                 <>
                     <Button
-                        onClick={() => onGenerateContent(item, 'quiz', item.id)}
+                        onClick={handleGenerateClick}
                         disabled={isGenerating}
                         className="flex-1 bg-blue-600 text-white hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -237,6 +257,15 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({
                 </Button>
             )}
         </div>
+
+        {/* Generate Content Dialog */}
+        <GenerateContentDialog
+            open={showGenerateDialog}
+            onOpenChange={setShowGenerateDialog}
+            item={item}
+            onGenerate={handleGenerate}
+            isGenerating={isGenerating || false}
+        />
     </div>
   );
 };
