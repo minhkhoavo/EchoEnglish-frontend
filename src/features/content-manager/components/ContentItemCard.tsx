@@ -10,7 +10,7 @@ import { GenerateContentDialog } from './GenerateContentDialog';
 
 interface ContentItemCardProps {
   item: ContentItem;
-  viewMode: 'grid' | 'list' | 'full';
+  viewMode: 'grid' | 'list';
   isGenerating?: boolean;
   uploadProgress: UploadProgress[];
   onRemoveItem: (id: string) => void;
@@ -95,15 +95,15 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({
           </div>
 
           <div className="flex items-center gap-6">
-              {item.status === 'ready' && item.insights && (
+              {item.status === 'ready' && item.metadata && (
                   <>
                       <div className="text-center hidden sm:block">
-                          <p className="text-sm font-semibold text-blue-600">{item.insights.suggestedQuizzes}</p>
-                          <p className="text-xs text-gray-500">Quizzes</p>
+                          <p className="text-sm font-semibold text-blue-600">{item.metadata.difficulty}</p>
+                          <p className="text-xs text-gray-500">Difficulty</p>
                       </div>
                       <div className="text-center hidden sm:block">
-                          <p className="text-sm font-semibold text-purple-600">{item.insights.suggestedFlashcards}</p>
-                          <p className="text-xs text-gray-500">Cards</p>
+                          <p className="text-sm font-semibold text-purple-600 capitalize">{item.metadata.style}</p>
+                          <p className="text-xs text-gray-500">Style</p>
                       </div>
                   </>
               )}
@@ -189,38 +189,66 @@ export const ContentItemCard: React.FC<ContentItemCardProps> = ({
             </div>
         )}
 
-        {/* Estimated Learning Stats */}
-        {item.insights && item.status === 'ready' && (
-            <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                <div className="grid grid-cols-3 gap-3 text-center">
-                    <div>
-                        <p className="text-xs text-gray-600">Est. Time</p>
-                        <p className="text-sm font-semibold text-gray-900">{item.insights.readingTime}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-600">Vocabulary</p>
-                        <p className="text-sm font-semibold text-gray-900">{item.insights.vocabulary}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-gray-600">Difficulty</p>
-                        <p className="text-sm font-semibold text-gray-900">{item.insights.difficulty}</p>
-                    </div>
-                </div>
-            </div>
-        )}
+
 
         {/* AI Generation Potential */}
-        {item.insights && item.status === 'ready' && (
-            <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-blue-50 rounded-lg p-3 text-center">
-                    <Brain className="h-5 w-5 text-blue-600 mx-auto mb-1" />
-                    <p className="text-xs text-gray-600">Quizzes</p>
-                    <p className="font-semibold text-blue-600">{item.insights.suggestedQuizzes}</p>
+        {item.metadata && item.status === 'ready' && (
+            <div className="space-y-3 mb-4">
+                {/* Difficulty and Style */}
+                <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="grid grid-cols-2 gap-3 text-center">
+                        <div>
+                            <p className="text-xs text-gray-600">Difficulty</p>
+                            <p className="text-sm font-semibold text-gray-900">{item.metadata.difficulty}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-600">Style</p>
+                            <p className="text-sm font-semibold text-gray-900 capitalize">{item.metadata.style}</p>
+                        </div>
+                    </div>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-3 text-center">
-                    <Sparkles className="h-5 w-5 text-purple-600 mx-auto mb-1" />
-                    <p className="text-xs text-gray-600">Cards</p>
-                    <p className="font-semibold text-purple-600">{item.insights.suggestedFlashcards}</p>
+                
+                {/* Domain Tags */}
+                {item.metadata.domain && item.metadata.domain.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                        {item.metadata.domain.slice(0, 3).map((domain, index) => (
+                            <span 
+                                key={index} 
+                                className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-md border border-blue-200"
+                            >
+                                {domain}
+                            </span>
+                        ))}
+                        {item.metadata.domain.length > 3 && (
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-md">
+                                +{item.metadata.domain.length - 3}
+                            </span>
+                        )}
+                    </div>
+                )}
+
+                {/* Summary */}
+                {item.metadata.summary && (
+                    <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
+                        <p className="text-xs font-medium text-amber-800 mb-1">Summary</p>
+                        <p className="text-sm text-gray-700 line-clamp-3">
+                            {item.metadata.summary}
+                        </p>
+                    </div>
+                )}
+                
+                {/* Quiz and Flashcard Generation */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-blue-50 rounded-lg p-3 text-center">
+                        <Brain className="h-5 w-5 text-blue-600 mx-auto mb-1" />
+                        <p className="text-xs text-gray-600">Quizzes</p>
+                        <p className="font-semibold text-blue-600">Available</p>
+                    </div>
+                    <div className="bg-purple-50 rounded-lg p-3 text-center">
+                        <Sparkles className="h-5 w-5 text-purple-600 mx-auto mb-1" />
+                        <p className="text-xs text-gray-600">Cards</p>
+                        <p className="font-semibold text-purple-600">Available</p>
+                    </div>
                 </div>
             </div>
         )}

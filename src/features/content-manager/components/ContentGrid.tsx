@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   FileText, Grid, List,
-  Search, Rows3
+  Search
 } from 'lucide-react';
 import type { ContentItem, UploadProgress, ContentStatus } from '../types/content.types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,7 +25,7 @@ export const ContentGrid: React.FC<ContentGridProps> = ({
   onGenerateContent,
   isGenerating = false 
 }) => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'full'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<ContentStatus | 'all'>('all');
   const [selectedType, setSelectedType] = useState<ContentItem['type'] | 'all'>('all');
@@ -110,12 +110,6 @@ export const ContentGrid: React.FC<ContentGridProps> = ({
                     className={`p-2.5 ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
                   >
                     <List className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('full')}
-                    className={`p-2.5 ${viewMode === 'full' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
-                  >
-                    <Rows3 className="h-4 w-4" />
                   </button>
               </div>
             </div>

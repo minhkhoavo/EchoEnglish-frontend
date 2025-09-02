@@ -6,7 +6,29 @@ export interface ContentItem {
   url?: string;
   preview?: string;
   status: 'uploaded' | 'processing' | 'ready' | 'error';
-  insights?: ContentInsights;
+  metadata?: ContentMetadata;
+  toeicParts?: ToeicParts;
+  language?: string;
+  textQuality?: number;
+  tokenLength?: number;
+}
+
+export interface ContentMetadata {
+  domain: string[];
+  genre: string[];
+  setting: string[];
+  style: string;
+  difficulty: string;
+  summary: string;
+}
+
+export interface ToeicParts {
+  part2: boolean;
+  part3: boolean;
+  part4: boolean;
+  part5: boolean;
+  part6: boolean;
+  part7: boolean;
 }
 
 export interface ContentInsights {

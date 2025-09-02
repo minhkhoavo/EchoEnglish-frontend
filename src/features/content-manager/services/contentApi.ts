@@ -1,9 +1,9 @@
 import { api } from '../../../core/api/api';
-import type { ContentItem} from '../types/content.types';
+import type { ContentItem } from '../types/content.types';
 import axiosInstance from '../../../core/api/axios';
 
 interface FileApiResponse {
-  id: number;
+  id: string;
   file_name: string;
   file_type: string;
   language: string | null;
@@ -11,8 +11,28 @@ interface FileApiResponse {
   tags_part: string[];
   status: string;
   s3_url: string;
-  user_id: number;
+  user_id: string;
   upload_timestamp: string;
+  doc_id: string;
+  lang: string;
+  token_length: number;
+  text_quality: number;
+  metadata: {
+    domain: string[];
+    genre: string[];
+    setting: string[];
+    style: string;
+    difficulty: string;
+    summary: string;
+  };
+  toeic_parts: {
+    part2: boolean;
+    part3: boolean;
+    part4: boolean;
+    part5: boolean;
+    part6: boolean;
+    part7: boolean;
+  };
 }
 
 export const contentApi = api.injectEndpoints({
@@ -25,21 +45,18 @@ export const contentApi = api.injectEndpoints({
       transformResponse: (response: unknown[]) => {
         // Map backend response to frontend ContentItem format
         return (response as FileApiResponse[]).map((file) => ({
-          id: file.id.toString(),
+          id: file.id,
           name: file.file_name,
           type: file.file_type.startsWith('image/') ? 'image' as const : 'file' as const,
           size: `${(file.file_size_kb / 1024).toFixed(2)} MB`,
           url: file.s3_url,
           preview: file.file_type.startsWith('image/') ? file.s3_url : undefined,
           status: file.status === 'Indexed' ? 'ready' as const : 'processing' as const,
-          insights: {
-            difficulty: 'Beginner' as const,
-            topics: file.tags_part || [],
-            readingTime: '5 min',
-            vocabulary: 0,
-            suggestedQuizzes: 5,
-            suggestedFlashcards: 10,
-          },
+          metadata: file.metadata,
+          toeicParts: file.toeic_parts,
+          language: file.lang,
+          textQuality: file.text_quality,
+          tokenLength: file.token_length,
         }));
       },
     }),
