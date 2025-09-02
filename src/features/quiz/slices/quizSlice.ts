@@ -41,6 +41,12 @@ export interface Quiz {
   totalTime: number;
 }
 
+export interface QuizResult {
+  score: number;
+  total: number;
+  correctAnswers: Record<string, boolean>;
+}
+
 interface QuizState {
   // Quiz Builder State
   builderQuestions: QuizQuestionBuilder[];
@@ -53,6 +59,7 @@ interface QuizState {
   isPlayingAudio: Record<string, boolean>; // { audioId: boolean }
   isReviewMode: boolean;
   reviewQuestionIndex: number | null; 
+  quizResult: QuizResult | null;
 }
 
 const initialState: QuizState = {
@@ -70,6 +77,7 @@ const initialState: QuizState = {
   isPlayingAudio: {},
   isReviewMode: false,
   reviewQuestionIndex: null,
+  quizResult: null,
 };
 
 const quizSlice = createSlice({
@@ -129,10 +137,14 @@ const quizSlice = createSlice({
       state.isPlayingAudio = {};
       state.isReviewMode = false;
       state.reviewQuestionIndex = null;
+      state.quizResult = null;
     },
     setReviewMode: (state, action: PayloadAction<{ isReviewMode: boolean; reviewQuestionIndex: number | null }>) => {
       state.isReviewMode = action.payload.isReviewMode;
       state.reviewQuestionIndex = action.payload.reviewQuestionIndex;
+    },
+    setQuizResult: (state, action: PayloadAction<QuizResult>) => {
+      state.quizResult = action.payload;
     },
   },
 });
@@ -150,6 +162,7 @@ export const {
   setIsPlayingAudio,
   resetQuizInterface,
   setReviewMode,
+  setQuizResult,
 } = quizSlice.actions;
 
 export default quizSlice.reducer;

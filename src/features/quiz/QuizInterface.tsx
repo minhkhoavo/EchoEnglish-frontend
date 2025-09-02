@@ -8,6 +8,7 @@ import {
   type QuizQuestion,
   setShowResults,
   resetQuizInterface,
+  setQuizResult,
 } from './slices/quizSlice';
 import { useGenerateQuizMutation, useSubmitQuizAnswersMutation } from './services/quizApi';
 import { QuizHeader } from './components/QuizHeader';
@@ -58,10 +59,17 @@ useEffect(() => {
   const handleSubmitQuiz = useCallback(async () => {
     if (activeQuiz) {
       try {
-        const result = await submitAnswers({ quizId: activeQuiz.id, answers: selectedAnswers }).unwrap();
-        console.log("result:::::::" + result)
+        const result = await submitAnswers({ quiz: activeQuiz, answers: selectedAnswers }).unwrap();
+        console.log("Quiz Result:", result);
         setScore(result.score);
         setTotalQuestions(result.total);
+        
+        dispatch(setQuizResult({
+          score: result.score,
+          total: result.total,
+          correctAnswers: result.correctAnswers
+        }));
+        
         dispatch(setActiveQuiz({ ...activeQuiz, questions: activeQuiz.questions })); // Keep quiz data for results display
         dispatch(setTimeLeft(0));
         dispatch(setShowResults(true));

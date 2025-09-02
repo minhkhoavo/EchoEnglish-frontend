@@ -40,14 +40,15 @@ export const QuizNavigation = ({ onSubmitQuiz }: QuizNavigationProps) => {
         <Button variant="outline" onClick={handleSubmit}>
           Submit Quiz
         </Button>
-        <Button 
-          onClick={handleNext}
+
+        {currentQuestionIndex < activeQuiz.questions.length - 1 && (
+          <Button onClick={handleNext}
           disabled={!selectedAnswers[activeQuiz.questions[currentQuestionIndex].id]}
-        >
-          {currentQuestionIndex === activeQuiz.questions.length - 1 ? 'Finish' : 'Next'}
-          <ArrowRight className="h-4 w-4 ml-2" />
-        </Button>
-      </div>
+          >
+          Next <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        )}
+        </div>
     </div>
   );
 };

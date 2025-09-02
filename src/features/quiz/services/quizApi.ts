@@ -1,130 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { Quiz, QuizQuestionBuilder } from '../slices/quizSlice';
-
-const mockQuiz: Quiz = {
-  id: 'toeic-sample-1',
-  title: 'TOEIC Listening & Reading Practice',
-  description: 'A comprehensive practice quiz covering listening and reading skills',
-  totalTime: 10, // 10 second
-  questions: [
-    {
-      id: 'q1',
-      type: 'listening',
-      question: {
-        text: 'Listen to the conversation and choose the best answer.',
-        audio: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'
-      },
-      options: [
-        { id: 'a', text: 'She will attend the meeting tomorrow.' },
-        { id: 'b', text: 'She cannot make it to the conference.' },
-        { id: 'c', text: 'She needs to reschedule the appointment.' },
-        { id: 'd', text: 'She will call back later today.' }
-      ],
-      correctAnswer: 'c',
-      explanation: {
-        text: 'The speaker mentions needing to reschedule due to a conflict.',
-        audio: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'
-      },
-      timeLimit: 30
-    },
-    {
-      id: 'q2',
-      type: 'reading',
-      question: {
-        text: 'Read the following notice and answer the question.',
-        image: 'https://images.ctfassets.net/hrltx12pl8hq/01rJn4TormMsGQs1ZRIpzX/16a1cae2440420d0fd0a7a9a006f2dcb/Artboard_Copy_231.jpg'
-      },
-      options: [
-        { id: 'a', text: 'Monday to Friday, 9 AM - 5 PM' },
-        { id: 'b', text: 'Monday to Saturday, 8 AM - 6 PM' },
-        { id: 'c', text: 'Tuesday to Sunday, 10 AM - 4 PM' },
-        { id: 'd', text: 'Daily, 24 hours' }
-      ],
-      correctAnswer: 'a',
-      explanation: {
-        text: 'The notice clearly states the office hours as Monday through Friday, 9 AM to 5 PM.'
-      },
-      timeLimit: 45
-    },
-    {
-      id: 'q3',
-      type: 'vocabulary',
-      question: {
-        text: 'Choose the word that best completes the sentence:',
-        imageGroup: [
-          'https://via.placeholder.com/150x100/10b981/ffffff?text=Image+1',
-          'https://via.placeholder.com/150x100/f59e0b/ffffff?text=Image+2',
-          'https://via.placeholder.com/150x100/ef4444/ffffff?text=Image+3',
-          'https://via.placeholder.com/150x100/8b5cf6/ffffff?text=Image+4'
-        ]
-      },
-      options: [
-        { 
-          id: 'a', 
-          text: 'Collaborate',
-          image: 'https://via.placeholder.com/100x60/10b981/ffffff?text=A'
-        },
-        { 
-          id: 'b', 
-          text: 'Procrastinate',
-          image: 'https://via.placeholder.com/100x60/f59e0b/ffffff?text=B'
-        },
-        { 
-          id: 'c', 
-          text: 'Negotiate',
-          image: 'https://via.placeholder.com/100x60/ef4444/ffffff?text=C'
-        },
-        { 
-          id: 'd', 
-          text: 'Demonstrate',
-          image: 'https://via.placeholder.com/100x60/8b5cf6/ffffff?text=D'
-        }
-      ],
-      correctAnswer: 'a',
-      explanation: {
-        text: 'Collaborate means to work together, which fits the business context shown in the images.'
-      },
-      timeLimit: 30
-    },
-    {
-      id: 'q4',
-      type: 'listening',
-      question: {
-        text: 'Listen to the audio and identify the speaker\'s main concern.',
-        audio: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'
-      },
-      options: [
-        { 
-          id: 'a', 
-          text: 'Budget constraints',
-          audio: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'
-        },
-        { 
-          id: 'b', 
-          text: 'Time management',
-          audio: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'
-        },
-        { 
-          id: 'c', 
-          text: 'Staff shortage',
-          audio: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'
-        },
-        { 
-          id: 'd', 
-          text: 'Technical issues',
-          image: 'https://via.placeholder.com/100x60/8b5cf6/ffffff?text=D',
-          audio: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'
-        }
-      ],
-      correctAnswer: 'b',
-      explanation: {
-        text: 'The speaker emphasizes the importance of meeting deadlines and efficient scheduling.',
-        audio: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'
-      },
-      timeLimit: 40
-    }
-  ]
-};
+import type { Quiz, QuizQuestionBuilder, QuizQuestion } from '../types/quiz.type';
 
 export const quizApi = createApi({
   reducerPath: 'quizApi',
@@ -150,7 +25,7 @@ export const quizApi = createApi({
           }
 
           const data: Quiz = await response.json();
-          return { ...data, totalTime: 15 };
+          return { data: { ...data, totalTime: 15 } };
         } catch (error: unknown) {
           return { error: { status: "FETCH_ERROR", error: (error as Error)?.message || "Unknown error" } };
         }
@@ -176,17 +51,15 @@ export const quizApi = createApi({
           }
 
           const data: Quiz = await response.json();
-return { 
-  data: {
-    ...data,
-    totalTime: 15,
-    id: 'toeic-sample-1',
-    title: 'TOEIC Listening & Reading Practice',
-    description: 'A comprehensive practice quiz covering listening and reading skills',
-  }
-};
-
-
+          return { 
+              data: {
+                  ...data,
+                  totalTime: 15,
+                  id: 'toeic-sample-1',
+                  title: 'TOEIC Listening & Reading Practice',
+                  description: 'A comprehensive practice quiz covering listening and reading skills',
+              }
+          };
         } catch (error: unknown) {
           return { error: { status: "FETCH_ERROR", error: (error as Error)?.message || "Unknown error" } };
         }
@@ -205,7 +78,7 @@ return {
                 id: `gen-q${index + 1}`,
                 type: 'multiple-choice', 
                 question: { text: q.question },
-                options: q.options.map((opt, i) => ({ id: String.fromCharCode(97 + i), text: opt })),
+                options: q.options.map((opt: string, i: number) => ({ id: String.fromCharCode(97 + i), text: opt })),
                 correctAnswer: String.fromCharCode(97 + q.correctAnswer),
                 explanation: q.explanation ? { text: q.explanation } : undefined,
               })),
@@ -216,27 +89,32 @@ return {
       },
     }),
     submitQuizAnswers: builder.mutation<
-      { score: number; total: number },
-      { quizId: string; answers: Record<string, string> }
+      { score: number; total: number; correctAnswers: Record<string, boolean> },
+      { quiz: Quiz; answers: Record<string, string> }
     >({
-      queryFn: ({ quizId, answers }) => {
+      queryFn: ({ quiz, answers }) => {
         return new Promise((resolve) => {
           setTimeout(() => {
-              const result = { score: 99, total: mockQuiz.questions.length };
-              resolve({ data: result });
+            let correct = 0;
+            const correctAnswers: Record<string, boolean> = {};
+            
+            // Calculate the score by comparing user answers with correct answers
+            quiz.questions.forEach((question: QuizQuestion) => {
+              const userAnswer = answers[question.id];
+              const isCorrect = userAnswer === question.correctAnswer;
+              correctAnswers[question.id] = isCorrect;
+              
+              if (isCorrect) {
+                correct++;
+              }
+            });
 
-            // if (quizId === mockQuiz.id) {
-            //   let correct = 0;
-            //   mockQuiz.questions.forEach(q => {
-            //     if (answers[q.id] === q.correctAnswer) correct++;
-            //   });
-
-            //   const result = { score: correct, total: mockQuiz.questions.length };
-            //   resolve({ data: result });
-            // } else {
-            //   console.error("Quiz not found for submission:", quizId);
-            //   resolve({ error: { status: 404, data: 'Quiz not found' } });
-            // }
+            const result = { 
+              score: correct, 
+              total: quiz.questions.length,
+              correctAnswers 
+            };
+            resolve({ data: result });
           }, 500);
         });
       },
