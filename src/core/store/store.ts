@@ -20,7 +20,11 @@ export const store = configureStore({
     [flashcardApi.reducerPath]: flashcardApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(api.middleware, quizApi.middleware, flashcardApi.middleware),
+    getDefaultMiddleware().concat(
+      api.middleware,
+      quizApi.middleware,
+      flashcardApi.middleware
+    ),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

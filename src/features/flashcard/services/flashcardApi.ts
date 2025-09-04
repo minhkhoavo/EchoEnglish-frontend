@@ -103,8 +103,7 @@ const axiosBaseQuery = (): BaseQueryFn<Args, unknown, Err> =>
 
 export const flashcardApi = createApi({
   reducerPath: 'flashcardApi',
-  baseQuery: axiosBaseQuery(),
-  tagTypes: ['Flashcard', 'Category'],
+  baseQuery: fetchBaseQuery({ baseUrl: '/' }),
   endpoints: (builder) => ({
     getFlashcards: builder.query<Flashcard[], void>({
       query: () => ({

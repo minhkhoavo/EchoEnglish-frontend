@@ -14,13 +14,35 @@ import FlashcardPage from './FlashcardPage';
 
 const ContentPage = () => {
   const dispatch: AppDispatch = useDispatch();
-  const { activeTab, isSidebarOpen } = useSelector((state: RootState) => state.ui);
+  const { activeTab, isSidebarOpen } = useSelector(
+    (state: RootState) => state.ui
+  );
 
   const navigation = [
-    { id: 'dashboard', name: 'Dashboard', icon: Home, description: 'Overview & Quick Actions' },
-    { id: 'content', name: 'Content Manager', icon: Upload, description: 'Upload & AI Analysis' },
-    { id: 'flashcards', name: 'Study Cards', icon: BookOpen, description: 'Practice & Review' },
-    { id: 'analytics', name: 'Progress', icon: BarChart3, description: 'Track Performance' }
+    {
+      id: 'dashboard',
+      name: 'Dashboard',
+      icon: Home,
+      description: 'Overview & Quick Actions',
+    },
+    {
+      id: 'content',
+      name: 'Content Manager',
+      icon: Upload,
+      description: 'Upload & AI Analysis',
+    },
+    {
+      id: 'flashcards',
+      name: 'Study Cards',
+      icon: BookOpen,
+      description: 'Practice & Review',
+    },
+    {
+      id: 'analytics',
+      name: 'Progress',
+      icon: BarChart3,
+      description: 'Track Performance',
+    },
   ];
 
   const renderContent = () => {
@@ -34,21 +56,27 @@ const ContentPage = () => {
             <p className="text-muted-foreground">Track your TOEIC preparation progress</p>
             <Card className="modern-card"><CardContent className="text-center py-16">
                 <BarChart3 className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
-                <h3 className="text-xl font-semibold mb-2">Analytics Coming Soon</h3>
-                <p className="text-muted-foreground mb-6">Comprehensive analytics will be available soon.</p>
+                <h3 className="text-xl font-semibold mb-2">
+                  Analytics Coming Soon
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Comprehensive analytics will be available soon.
+                </p>
                 <Button>Get Notified</Button>
-            </CardContent></Card>
-        </div>
-      );
-      default: return <ContentManager />;
+              </CardContent>
+            </Card>
+          </div>
+        );
+      default:
+        return <ContentManager />;
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-background">
-      <Header 
-        sidebarOpen={isSidebarOpen} 
-        setSidebarOpen={(open) => dispatch(setSidebarOpen(open))} 
+      <Header
+        sidebarOpen={isSidebarOpen}
+        setSidebarOpen={(open) => dispatch(setSidebarOpen(open))}
       />
       <div className="max-w-7xl mx-auto flex">
         <Sidebar
@@ -63,9 +91,7 @@ const ContentPage = () => {
             onClick={() => dispatch(setSidebarOpen(false))}
           />
         )}
-        <main className="flex-1 p-6">
-          {renderContent()}
-        </main>
+        <main className="flex-1 p-6">{renderContent()}</main>
       </div>
     </div>
   );

@@ -4,18 +4,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
-import { 
-  selectAllContent, 
-  selectReadyContent, 
-  addFilesToProcess, 
-  addUrlToProcess, 
+import {
+  selectAllContent,
+  selectReadyContent,
+  addFilesToProcess,
+  addUrlToProcess,
   removeItem as removeContentItem,
   setLoadedFiles,
-  setLoading
+  setLoading,
 } from './slices/contentSlice';
-import { 
-  useLazyFetchUserFilesQuery,
-} from './services/contentApi';
+import { useLazyFetchUserFilesQuery } from './services/contentApi';
 import { UploadSection } from './components/UploadSection';
 import { ContentGrid } from './components/ContentGrid';
 import { GenerationHub } from './components/GenerationHub';
@@ -26,7 +24,7 @@ export const ContentManager = () => {
   const [activeTab, setActiveTab] = useState('upload');
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  
+
   const contentItems = useAppSelector(selectAllContent);
   const readyItems = useAppSelector(selectReadyContent);
   const [fetchUserFiles] = useLazyFetchUserFilesQuery();
@@ -49,51 +47,71 @@ export const ContentManager = () => {
     }
   }, [activeTab, loadFiles]);
 
-  const addFiles = useCallback(async (files: File[]) => {
-    const newItems: ContentItem[] = files.map((file) => ({
-      id: Date.now().toString() + Math.random().toString(),
-      name: file.name,
-      type: file.type.startsWith('image/') ? 'image' : 'file',
-      size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
-      status: 'uploaded'
-    }));
+  const addFiles = useCallback(
+    async (files: File[]) => {
+      const newItems: ContentItem[] = files.map((file) => ({
+        id: Date.now().toString() + Math.random().toString(),
+        name: file.name,
+        type: file.type.startsWith('image/') ? 'image' : 'file',
+        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+        preview: file.type.startsWith('image/')
+          ? URL.createObjectURL(file)
+          : undefined,
+        status: 'uploaded',
+      }));
 
-    dispatch(addFilesToProcess(newItems));
-  }, [dispatch]);
+      dispatch(addFilesToProcess(newItems));
+    },
+    [dispatch]
+  );
 
-  const addUrl = useCallback(async (url: string) => {
-    const newItem: ContentItem = {
-      id: Date.now().toString() + Math.random().toString(),
-      name: url,
-      type: 'url',
-      url,
-      status: 'uploaded'
-    };
+  const addUrl = useCallback(
+    async (url: string) => {
+      const newItem: ContentItem = {
+        id: Date.now().toString() + Math.random().toString(),
+        name: url,
+        type: 'url',
+        url,
+        status: 'uploaded',
+      };
 
-    dispatch(addUrlToProcess(newItem));
-  }, [dispatch]);
+      dispatch(addUrlToProcess(newItem));
+    },
+    [dispatch]
+  );
 
-  const removeItem = useCallback((id: string) => {
-    dispatch(removeContentItem(id));
-  }, [dispatch]);
+  const removeItem = useCallback(
+    (id: string) => {
+      dispatch(removeContentItem(id));
+    },
+    [dispatch]
+  );
 
   // Simplified generation functions - can be implemented later if needed
-  const generateContent = useCallback(async (item: ContentItem, type: 'quiz' | 'flashcards', fileId?: string) => {
-    if (type === 'quiz' && fileId) {
-      navigate(`/quiz?fileId=${fileId}`);
-    } else {
-      console.log(`Generating ${type} for item ${item.id} with fileId: ${fileId}`);
-    }
-    return { success: true, count: 0, message: 'Not implemented' };
-  }, [navigate]);
+  const generateContent = useCallback(
+    async (item: ContentItem, type: 'quiz' | 'flashcards', fileId?: string) => {
+      if (type === 'quiz' && fileId) {
+        navigate(`/quiz?fileId=${fileId}`);
+      } else {
+        console.log(
+          `Generating ${type} for item ${item.id} with fileId: ${fileId}`
+        );
+      }
+      return { success: true, count: 0, message: 'Not implemented' };
+    },
+    [navigate]
+  );
 
   // Mock states for components that expect them
-  const uploadProgress: {itemId: string; progress: number}[] = [];
+  const uploadProgress: { itemId: string; progress: number }[] = [];
   const isGenerating = false;
 
-  const totalSuggestions = readyItems.reduce((acc, item) => 
-    acc + (item.insights?.suggestedQuizzes || 0) + (item.insights?.suggestedFlashcards || 0), 0
+  const totalSuggestions = readyItems.reduce(
+    (acc, item) =>
+      acc +
+      (item.insights?.suggestedQuizzes || 0) +
+      (item.insights?.suggestedFlashcards || 0),
+    0
   );
 
   return (
@@ -118,19 +136,25 @@ export const ContentManager = () => {
             </p>
           </div>
         </div>
-        
+
         {/* Stats */}
         <div className="flex justify-center space-x-8">
           <div className="text-center">
-            <div className="text-2xl font-bold text-primary">{contentItems.length}</div>
+            <div className="text-2xl font-bold text-primary">
+              {contentItems.length}
+            </div>
             <div className="text-sm text-muted-foreground">Content Items</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-success">{readyItems.length}</div>
+            <div className="text-2xl font-bold text-success">
+              {readyItems.length}
+            </div>
             <div className="text-sm text-muted-foreground">Ready to Use</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-secondary">{totalSuggestions}</div>
+            <div className="text-2xl font-bold text-secondary">
+              {totalSuggestions}
+            </div>
             <div className="text-sm text-muted-foreground">AI Suggestions</div>
           </div>
         </div>
@@ -138,22 +162,23 @@ export const ContentManager = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 glass-card shadow-soft">
-          <TabsTrigger 
-            value="upload" 
+          <TabsTrigger
+            value="upload"
             className="data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-pink"
           >
             <Upload className="h-4 w-4 mr-2" />
             Upload Content
           </TabsTrigger>
-          <TabsTrigger 
-            value="library" 
+          <TabsTrigger
+            value="library"
             className="data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-pink"
           >
             <File className="h-4 w-4 mr-2" />
-            Content Library {contentItems.length > 0 && `(${contentItems.length})`}
+            Content Library{' '}
+            {contentItems.length > 0 && `(${contentItems.length})`}
           </TabsTrigger>
-          <TabsTrigger 
-            value="generate" 
+          <TabsTrigger
+            value="generate"
             className="data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-pink"
           >
             <Brain className="h-4 w-4 mr-2" />
@@ -162,10 +187,7 @@ export const ContentManager = () => {
         </TabsList>
 
         <TabsContent value="upload" className="space-y-6">
-          <UploadSection 
-            onFilesUpload={addFiles}
-            onUrlAdd={addUrl}
-          />
+          <UploadSection onFilesUpload={addFiles} onUrlAdd={addUrl} />
         </TabsContent>
 
         <TabsContent value="library" className="space-y-6">
@@ -173,9 +195,13 @@ export const ContentManager = () => {
             <Card className="glass-card shadow-medium">
               <CardContent className="text-center py-16">
                 <File className="h-16 w-16 text-muted-foreground mx-auto mb-6 animate-float" />
-                <h3 className="text-xl font-semibold text-foreground mb-2">No content yet</h3>
-                <p className="text-muted-foreground mb-6">Upload your first file or add a URL to get started!</p>
-                <Button 
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  No content yet
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Upload your first file or add a URL to get started!
+                </p>
+                <Button
                   onClick={() => setActiveTab('upload')}
                   className="bg-gradient-primary hover:scale-105 transition-all duration-300 shadow-pink"
                 >
@@ -185,7 +211,7 @@ export const ContentManager = () => {
               </CardContent>
             </Card>
           ) : (
-            <ContentGrid 
+            <ContentGrid
               items={contentItems}
               uploadProgress={uploadProgress}
               onRemoveItem={removeItem}
@@ -196,7 +222,7 @@ export const ContentManager = () => {
         </TabsContent>
 
         <TabsContent value="generate" className="space-y-6">
-          <GenerationHub 
+          <GenerationHub
             readyItems={readyItems}
             onGenerateContent={generateContent}
             isGenerating={isGenerating}
