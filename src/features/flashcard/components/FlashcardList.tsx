@@ -44,8 +44,12 @@ const FlashcardList: React.FC = () => {
         <Card className="glass-card shadow-medium">
           <CardContent className="text-center py-16">
             <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-6 animate-float" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">No flashcards yet</h3>
-            <p className="text-muted-foreground">Create your first flashcard or generate from content!</p>
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              No flashcards yet
+            </h3>
+            <p className="text-muted-foreground">
+              Create your first flashcard or generate from content!
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -66,10 +70,15 @@ const FlashcardList: React.FC = () => {
               )}
 
               <div className="flex items-center justify-between mb-4">
-                <Badge variant="outline" className="border-secondary/30 text-secondary text-xs">
+                <Badge
+                  variant="outline"
+                  className="border-secondary/30 text-secondary text-xs"
+                >
                   {card.category}
                 </Badge>
-                <Badge className={`${getDifficultyColor(card.difficulty)} text-xs`}>
+                <Badge
+                  className={`${getDifficultyColor(card.difficulty)} text-xs`}
+                >
                   {card.difficulty}
                 </Badge>
               </div>
@@ -79,12 +88,16 @@ const FlashcardList: React.FC = () => {
                   {flippedCards.has(card.id) ? (
                     <>
                       <EyeOff className="h-5 w-5 text-muted-foreground mx-auto animate-pulse" />
-                      <p className="text-sm text-foreground font-medium">{card.back}</p>
+                      <p className="text-sm text-foreground font-medium">
+                        {card.back}
+                      </p>
                     </>
                   ) : (
                     <>
                       <Eye className="h-5 w-5 text-muted-foreground mx-auto" />
-                      <p className="text-sm text-foreground font-medium">{card.front}</p>
+                      <p className="text-sm text-foreground font-medium">
+                        {card.front}
+                      </p>
                     </>
                   )}
                 </div>
@@ -99,12 +112,19 @@ const FlashcardList: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex space-x-1">
                     {card.tags.slice(0, 2).map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs bg-secondary-light text-secondary">
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="text-xs bg-secondary-light text-secondary"
+                      >
                         {tag}
                       </Badge>
                     ))}
                     {card.tags.length > 2 && (
-                      <Badge variant="secondary" className="text-xs bg-secondary-light text-secondary">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-secondary-light text-secondary"
+                      >
                         +{card.tags.length - 2}
                       </Badge>
                     )}

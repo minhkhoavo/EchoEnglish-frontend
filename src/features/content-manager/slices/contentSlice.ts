@@ -1,4 +1,8 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import {
+  createSlice,
+  createAsyncThunk,
+  type PayloadAction,
+} from '@reduxjs/toolkit';
 import type { ContentItem } from '../types/content.types';
 
 export const addFilesToProcess = createAsyncThunk(
@@ -26,7 +30,7 @@ const initialState: ContentState = {
   items: [],
   loading: false,
   error: null,
-  processingItems: []
+  processingItems: [],
 };
 
 const contentSlice = createSlice({
@@ -34,14 +38,19 @@ const contentSlice = createSlice({
   initialState,
   reducers: {
     removeItem: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter(item => item.id !== action.payload);
-      state.processingItems = state.processingItems.filter(id => id !== action.payload);
+      state.items = state.items.filter((item) => item.id !== action.payload);
+      state.processingItems = state.processingItems.filter(
+        (id) => id !== action.payload
+      );
     },
     clearError: (state) => {
       state.error = null;
     },
-    setItemStatus: (state, action: PayloadAction<{ id: string; status: ContentItem['status'] }>) => {
-      const item = state.items.find(item => item.id === action.payload.id);
+    setItemStatus: (
+      state,
+      action: PayloadAction<{ id: string; status: ContentItem['status'] }>
+    ) => {
+      const item = state.items.find((item) => item.id === action.payload.id);
       if (item) {
         item.status = action.payload.status;
       }
@@ -53,13 +62,13 @@ const contentSlice = createSlice({
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(addFilesToProcess.fulfilled, (state, action) => {
         state.items.push(...action.payload);
-        state.processingItems.push(...action.payload.map(item => item.id));
+        state.processingItems.push(...action.payload.map((item) => item.id));
       })
       .addCase(addUrlToProcess.fulfilled, (state, action) => {
         state.items.push(action.payload);
@@ -68,15 +77,24 @@ const contentSlice = createSlice({
   },
 });
 
-export const { removeItem, clearError, setItemStatus, setLoadedFiles, setLoading } = contentSlice.actions;
+export const {
+  removeItem,
+  clearError,
+  setItemStatus,
+  setLoadedFiles,
+  setLoading,
+} = contentSlice.actions;
 
 // Selectors
-export const selectAllContent = (state: { content: ContentState }) => state.content.items;
-export const selectReadyContent = (state: { content: ContentState }) => 
-  state.content.items.filter(item => item.status === 'ready');
-export const selectProcessingContent = (state: { content: ContentState }) => 
-  state.content.items.filter(item => item.status === 'processing');
-export const selectContentLoading = (state: { content: ContentState }) => state.content.loading;
-export const selectContentError = (state: { content: ContentState }) => state.content.error;
+export const selectAllContent = (state: { content: ContentState }) =>
+  state.content.items;
+export const selectReadyContent = (state: { content: ContentState }) =>
+  state.content.items.filter((item) => item.status === 'ready');
+export const selectProcessingContent = (state: { content: ContentState }) =>
+  state.content.items.filter((item) => item.status === 'processing');
+export const selectContentLoading = (state: { content: ContentState }) =>
+  state.content.loading;
+export const selectContentError = (state: { content: ContentState }) =>
+  state.content.error;
 
 export default contentSlice.reducer;

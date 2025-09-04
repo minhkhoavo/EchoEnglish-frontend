@@ -4,7 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
 import {
   addBuilderQuestion,
@@ -16,11 +22,16 @@ import { useCreateQuizMutation } from './services/quizApi';
 
 export const QuizBuilder = () => {
   const dispatch = useAppDispatch();
-  const { builderQuestions, currentBuilderQuestion } = useAppSelector((state) => state.quiz);
+  const { builderQuestions, currentBuilderQuestion } = useAppSelector(
+    (state) => state.quiz
+  );
   const [createQuiz, { isLoading }] = useCreateQuizMutation();
 
   const handleAddQuestion = async () => {
-    if (currentBuilderQuestion.question && currentBuilderQuestion.options?.every(opt => opt.trim())) {
+    if (
+      currentBuilderQuestion.question &&
+      currentBuilderQuestion.options?.every((opt) => opt.trim())
+    ) {
       const newQuestion: QuizQuestionBuilder = {
         id: Date.now().toString(),
         question: currentBuilderQuestion.question,
@@ -38,7 +49,10 @@ export const QuizBuilder = () => {
     dispatch(updateBuilderOption({ index, value }));
   };
 
-  const handleUpdateCurrentQuestion = <K extends keyof QuizQuestionBuilder>(field: K, value: QuizQuestionBuilder[K]) => {
+  const handleUpdateCurrentQuestion = <K extends keyof QuizQuestionBuilder>(
+    field: K,
+    value: QuizQuestionBuilder[K]
+  ) => {
     dispatch(updateCurrentBuilderQuestion({ [field]: value }));
   };
 
@@ -55,7 +69,8 @@ export const QuizBuilder = () => {
           </h2>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Create engaging TOEIC quizzes from your uploaded content. AI will help generate questions automatically.
+          Create engaging TOEIC quizzes from your uploaded content. AI will help
+          generate questions automatically.
         </p>
       </div>
 
@@ -76,7 +91,9 @@ export const QuizBuilder = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
+                  <SelectItem value="multiple-choice">
+                    Multiple Choice
+                  </SelectItem>
                   <SelectItem value="reading">Reading Comprehension</SelectItem>
                   <SelectItem value="listening">Listening Practice</SelectItem>
                 </SelectContent>
@@ -109,13 +126,16 @@ export const QuizBuilder = () => {
               </Select>
             </div>
           </div>
-          
+
           <div className="flex space-x-2">
             <Button className="bg-gradient-success hover:scale-105 transition-all duration-300 shadow-soft">
               <Shuffle className="h-4 w-4 mr-2" />
               Auto-Generate from Content
             </Button>
-            <Button variant="outline" className="border-primary/20 hover:bg-gradient-hero">
+            <Button
+              variant="outline"
+              className="border-primary/20 hover:bg-gradient-hero"
+            >
               <Clock className="h-4 w-4 mr-2" />
               Preview Quiz
             </Button>
@@ -136,7 +156,9 @@ export const QuizBuilder = () => {
             <label className="text-sm font-medium">Question</label>
             <Textarea
               value={currentBuilderQuestion.question}
-              onChange={(e) => handleUpdateCurrentQuestion('question', e.target.value)}
+              onChange={(e) =>
+                handleUpdateCurrentQuestion('question', e.target.value)
+              }
               placeholder="Enter your TOEIC question here..."
               className="bg-background/50 border-border/50 focus:border-primary transition-all duration-300 min-h-[100px]"
             />
@@ -160,7 +182,9 @@ export const QuizBuilder = () => {
                     type="radio"
                     name="correctAnswer"
                     checked={currentBuilderQuestion.correctAnswer === index}
-                    onChange={() => handleUpdateCurrentQuestion('correctAnswer', index)}
+                    onChange={() =>
+                      handleUpdateCurrentQuestion('correctAnswer', index)
+                    }
                     className="w-4 h-4 text-primary accent-primary"
                   />
                 </div>
@@ -169,16 +193,20 @@ export const QuizBuilder = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Explanation (Optional)</label>
+            <label className="text-sm font-medium">
+              Explanation (Optional)
+            </label>
             <Textarea
               value={currentBuilderQuestion.explanation || ''}
-              onChange={(e) => handleUpdateCurrentQuestion('explanation', e.target.value)}
+              onChange={(e) =>
+                handleUpdateCurrentQuestion('explanation', e.target.value)
+              }
               placeholder="Explain why this answer is correct..."
               className="bg-background/50 border-border/50 focus:border-primary transition-all duration-300"
             />
           </div>
 
-          <Button 
+          <Button
             onClick={handleAddQuestion}
             className="w-full bg-gradient-primary hover:scale-105 transition-all duration-300 shadow-soft hover:shadow-glow"
             disabled={isLoading}
@@ -202,16 +230,24 @@ export const QuizBuilder = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {builderQuestions.map((question, index) => (
-              <div key={question.id} className="p-4 bg-background/30 rounded-lg border border-border/50 hover:border-primary/50 transition-all duration-300">
+              <div
+                key={question.id}
+                className="p-4 bg-background/30 rounded-lg border border-border/50 hover:border-primary/50 transition-all duration-300"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <h4 className="font-medium text-foreground">
                     Question {index + 1}
                   </h4>
-                  <Badge variant="outline" className="border-primary/20 text-primary">
+                  <Badge
+                    variant="outline"
+                    className="border-primary/20 text-primary"
+                  >
                     {String.fromCharCode(65 + question.correctAnswer)}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground mb-3">{question.question}</p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  {question.question}
+                </p>
                 <div className="grid grid-cols-2 gap-2">
                   {question.options.map((option, optIndex) => (
                     <div

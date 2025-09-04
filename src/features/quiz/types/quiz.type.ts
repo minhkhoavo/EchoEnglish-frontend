@@ -23,7 +23,7 @@ export interface QuizQuestion {
     imageGroup?: string[];
   };
   options: QuizOption[];
-  correctAnswer: string; 
+  correctAnswer: string;
   explanation?: {
     text?: string;
     audio?: string;

@@ -11,12 +11,15 @@ interface QuizHeaderProps {
 }
 
 export const QuizHeader = ({ onClose }: QuizHeaderProps) => {
-  const { activeQuiz, currentQuestionIndex, timeLeft } = useAppSelector((state) => state.quiz);
+  const { activeQuiz, currentQuestionIndex, timeLeft } = useAppSelector(
+    (state) => state.quiz
+  );
 
   if (!activeQuiz) return null;
 
   const currentQ = activeQuiz.questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / activeQuiz.questions.length) * 100;
+  const progress =
+    ((currentQuestionIndex + 1) / activeQuiz.questions.length) * 100;
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -29,7 +32,9 @@ export const QuizHeader = ({ onClose }: QuizHeaderProps) => {
       <div className="flex items-center justify-between">
         <div>
           <CardTitle className="text-xl">{activeQuiz.title}</CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">{activeQuiz.description}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {activeQuiz.description}
+          </p>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>
           <X className="h-4 w-4" />
@@ -39,13 +44,12 @@ export const QuizHeader = ({ onClose }: QuizHeaderProps) => {
       {/* Progress and Timer */}
       <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
-          <span>Question {currentQuestionIndex + 1} of {activeQuiz.questions.length}</span>
+          <span>
+            Question {currentQuestionIndex + 1} of {activeQuiz.questions.length}
+          </span>
           <div className="flex items-center space-x-2">
             <Timer className="h-4 w-4" />
-            <span className={cn(
-              "font-mono",
-              timeLeft < 60 && "text-red-500"
-            )}>
+            <span className={cn('font-mono', timeLeft < 60 && 'text-red-500')}>
               {formatTime(timeLeft)}
             </span>
           </div>

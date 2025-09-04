@@ -1,20 +1,26 @@
 import React, { useState } from 'react';
-import { 
-  Brain, 
-  Sparkles, 
-  Zap, 
-  Target, 
-  Clock, 
-  Users, 
+import {
+  Brain,
+  Sparkles,
+  Zap,
+  Target,
+  Clock,
+  Users,
   ChevronRight,
   BookOpen,
   Trophy,
   Headphones,
   FileText,
-  MessageSquare
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import type { ContentItem, ToeicParts } from '../types/content.types';
 
@@ -22,7 +28,11 @@ interface GenerateContentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item: ContentItem;
-  onGenerate: (item: ContentItem, type: 'quiz' | 'flashcards', options?: { optionId: string }) => void;
+  onGenerate: (
+    item: ContentItem,
+    type: 'quiz' | 'flashcards',
+    options?: { optionId: string }
+  ) => void;
   isGenerating: boolean;
 }
 
@@ -44,15 +54,15 @@ const quizOptions: GenerationOption[] = [
     description: 'Classic quiz format with 4 answer choices',
     icon: <Target className="h-5 w-5" />,
     badge: 'Popular',
-    estimatedTime: '15-20 questions'
+    estimatedTime: '15-20 questions',
   },
   {
     id: 'fill-blank',
     label: 'Fill in the Blanks',
     description: 'Test comprehension with missing words',
     icon: <BookOpen className="h-5 w-5" />,
-    estimatedTime: '10-15 questions'
-  }
+    estimatedTime: '10-15 questions',
+  },
 ];
 
 const getToeicQuizOptions = (toeicParts?: ToeicParts): GenerationOption[] => [
@@ -64,7 +74,7 @@ const getToeicQuizOptions = (toeicParts?: ToeicParts): GenerationOption[] => [
     badge: 'TOEIC',
     estimatedTime: '25 questions',
     toeicPart: 'part2',
-    disabled: !toeicParts?.part2
+    disabled: !toeicParts?.part2,
   },
   {
     id: 'toeic-part3',
@@ -74,7 +84,7 @@ const getToeicQuizOptions = (toeicParts?: ToeicParts): GenerationOption[] => [
     badge: 'TOEIC',
     estimatedTime: '30 questions',
     toeicPart: 'part3',
-    disabled: !toeicParts?.part3
+    disabled: !toeicParts?.part3,
   },
   {
     id: 'toeic-part4',
@@ -84,7 +94,7 @@ const getToeicQuizOptions = (toeicParts?: ToeicParts): GenerationOption[] => [
     badge: 'TOEIC',
     estimatedTime: '30 questions',
     toeicPart: 'part4',
-    disabled: !toeicParts?.part4
+    disabled: !toeicParts?.part4,
   },
   {
     id: 'toeic-part5',
@@ -94,7 +104,7 @@ const getToeicQuizOptions = (toeicParts?: ToeicParts): GenerationOption[] => [
     badge: 'TOEIC',
     estimatedTime: '30 questions',
     toeicPart: 'part5',
-    disabled: !toeicParts?.part5
+    disabled: !toeicParts?.part5,
   },
   {
     id: 'toeic-part6',
@@ -104,7 +114,7 @@ const getToeicQuizOptions = (toeicParts?: ToeicParts): GenerationOption[] => [
     badge: 'TOEIC',
     estimatedTime: '12 questions',
     toeicPart: 'part6',
-    disabled: !toeicParts?.part6
+    disabled: !toeicParts?.part6,
   },
   {
     id: 'toeic-part7',
@@ -114,8 +124,8 @@ const getToeicQuizOptions = (toeicParts?: ToeicParts): GenerationOption[] => [
     badge: 'TOEIC',
     estimatedTime: '54 questions',
     toeicPart: 'part7',
-    disabled: !toeicParts?.part7
-  }
+    disabled: !toeicParts?.part7,
+  },
 ];
 
 const flashcardOptions: GenerationOption[] = [
@@ -125,15 +135,15 @@ const flashcardOptions: GenerationOption[] = [
     description: 'Key terms and definitions from content',
     icon: <BookOpen className="h-5 w-5" />,
     badge: 'Recommended',
-    estimatedTime: '15-30 cards'
+    estimatedTime: '15-30 cards',
   },
   {
     id: 'concept',
     label: 'Concept Cards',
     description: 'Important concepts and explanations',
     icon: <Brain className="h-5 w-5" />,
-    estimatedTime: '15-20 cards'
-  }
+    estimatedTime: '15-20 cards',
+  },
 ];
 
 export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
@@ -141,9 +151,11 @@ export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
   onOpenChange,
   item,
   onGenerate,
-  isGenerating
+  isGenerating,
 }) => {
-  const [selectedType, setSelectedType] = useState<'quiz' | 'flashcards' | null>(null);
+  const [selectedType, setSelectedType] = useState<
+    'quiz' | 'flashcards' | null
+  >(null);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [quizMode, setQuizMode] = useState<'general' | 'toeic'>('general');
 
@@ -168,7 +180,9 @@ export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
 
   const getCurrentQuizOptions = () => {
     if (selectedType === 'quiz') {
-      return quizMode === 'toeic' ? getToeicQuizOptions(item.toeicParts) : quizOptions;
+      return quizMode === 'toeic'
+        ? getToeicQuizOptions(item.toeicParts)
+        : quizOptions;
     }
     return flashcardOptions;
   };
@@ -179,7 +193,7 @@ export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0 max-h-[90vh] flex flex-col overflow-hidden">
         <DialogClose />
-        
+
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 border-b border-gray-100 flex-shrink-0">
           <DialogHeader>
@@ -204,7 +218,8 @@ export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
                   What would you like to create?
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Choose the type of learning material that suits your study style
+                  Choose the type of learning material that suits your study
+                  style
                 </p>
               </div>
 
@@ -220,10 +235,13 @@ export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-gray-900">Interactive Quiz</h4>
+                        <h4 className="font-semibold text-gray-900">
+                          Interactive Quiz
+                        </h4>
                       </div>
                       <p className="text-sm text-gray-600 mb-3">
-                        Test your knowledge with interactive questions and immediate feedback
+                        Test your knowledge with interactive questions and
+                        immediate feedback
                       </p>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
                         <div className="flex items-center gap-1">
@@ -251,10 +269,13 @@ export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-gray-900">Study Flashcards</h4>
+                        <h4 className="font-semibold text-gray-900">
+                          Study Flashcards
+                        </h4>
                       </div>
                       <p className="text-sm text-gray-600 mb-3">
-                        Review key concepts with spaced repetition learning cards
+                        Review key concepts with spaced repetition learning
+                        cards
                       </p>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
                         <div className="flex items-center gap-1">
@@ -280,7 +301,8 @@ export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    Choose {selectedType === 'quiz' ? 'Quiz' : 'Flashcard'} Format
+                    Choose {selectedType === 'quiz' ? 'Quiz' : 'Flashcard'}{' '}
+                    Format
                   </h3>
                   <p className="text-sm text-gray-600">
                     Select the format that matches your learning goals
@@ -330,45 +352,62 @@ export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-lg transition-colors ${
-                        option.disabled
-                          ? 'bg-gray-200'
-                          : selectedType === 'quiz' 
-                            ? 'bg-blue-100 group-hover:bg-blue-200' 
-                            : 'bg-purple-100 group-hover:bg-purple-200'
-                      }`}>
+                      <div
+                        className={`p-2 rounded-lg transition-colors ${
+                          option.disabled
+                            ? 'bg-gray-200'
+                            : selectedType === 'quiz'
+                              ? 'bg-blue-100 group-hover:bg-blue-200'
+                              : 'bg-purple-100 group-hover:bg-purple-200'
+                        }`}
+                      >
                         {option.icon}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className={`font-medium ${option.disabled ? 'text-gray-400' : 'text-gray-900'}`}>
+                          <h4
+                            className={`font-medium ${option.disabled ? 'text-gray-400' : 'text-gray-900'}`}
+                          >
                             {option.label}
                           </h4>
                           {option.badge && (
-                            <Badge 
-                              variant={option.badge === 'TOEIC' ? 'default' : 'secondary'} 
+                            <Badge
+                              variant={
+                                option.badge === 'TOEIC'
+                                  ? 'default'
+                                  : 'secondary'
+                              }
                               className={`text-xs ${option.badge === 'TOEIC' ? 'bg-orange-100 text-orange-800' : ''}`}
                             >
                               {option.badge}
                             </Badge>
                           )}
                           {option.disabled && (
-                            <Badge variant="outline" className="text-xs text-gray-400 border-gray-300">
+                            <Badge
+                              variant="outline"
+                              className="text-xs text-gray-400 border-gray-300"
+                            >
                               Not Available
                             </Badge>
                           )}
                         </div>
-                        <p className={`text-sm mb-2 ${option.disabled ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <p
+                          className={`text-sm mb-2 ${option.disabled ? 'text-gray-400' : 'text-gray-600'}`}
+                        >
                           {option.description}
                         </p>
                         {option.estimatedTime && (
-                          <p className={`text-xs ${option.disabled ? 'text-gray-400' : 'text-gray-500'}`}>
+                          <p
+                            className={`text-xs ${option.disabled ? 'text-gray-400' : 'text-gray-500'}`}
+                          >
                             {option.estimatedTime}
                           </p>
                         )}
                       </div>
                       {!option.disabled && (
-                        <ChevronRight className={`h-4 w-4 text-gray-400 group-hover:text-${selectedType === 'quiz' ? 'blue' : 'purple'}-600 transition-colors`} />
+                        <ChevronRight
+                          className={`h-4 w-4 text-gray-400 group-hover:text-${selectedType === 'quiz' ? 'blue' : 'purple'}-600 transition-colors`}
+                        />
                       )}
                     </div>
                   </button>
@@ -383,10 +422,13 @@ export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
                       <Trophy className="h-4 w-4 text-orange-600" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-orange-900 mb-1">TOEIC Test Format</h4>
+                      <h4 className="text-sm font-medium text-orange-900 mb-1">
+                        TOEIC Test Format
+                      </h4>
                       <p className="text-xs text-orange-700">
-                        Available parts are based on your content analysis. Disabled parts indicate the content 
-                        is not suitable for that specific TOEIC section format.
+                        Available parts are based on your content analysis.
+                        Disabled parts indicate the content is not suitable for
+                        that specific TOEIC section format.
                       </p>
                     </div>
                   </div>
@@ -399,7 +441,9 @@ export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
           {selectedType && selectedOption && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Ready to Generate</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Ready to Generate
+                </h3>
                 <Button variant="ghost" size="sm" onClick={handleBack}>
                   ← Back
                 </Button>
@@ -407,27 +451,45 @@ export const GenerateContentDialog: React.FC<GenerateContentDialogProps> = ({
 
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-lg ${selectedType === 'quiz' ? 'bg-blue-100' : 'bg-purple-100'}`}>
-                    {selectedType === 'quiz' ? <Brain className="h-5 w-5 text-blue-600" /> : <Sparkles className="h-5 w-5 text-purple-600" />}
+                  <div
+                    className={`p-2 rounded-lg ${selectedType === 'quiz' ? 'bg-blue-100' : 'bg-purple-100'}`}
+                  >
+                    {selectedType === 'quiz' ? (
+                      <Brain className="h-5 w-5 text-blue-600" />
+                    ) : (
+                      <Sparkles className="h-5 w-5 text-purple-600" />
+                    )}
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900 mb-1">
-                      {currentOptions.find(opt => opt.id === selectedOption)?.label}
+                      {
+                        currentOptions.find((opt) => opt.id === selectedOption)
+                          ?.label
+                      }
                     </h4>
                     <p className="text-sm text-gray-600 mb-2">
-                      {currentOptions.find(opt => opt.id === selectedOption)?.description}
+                      {
+                        currentOptions.find((opt) => opt.id === selectedOption)
+                          ?.description
+                      }
                     </p>
                     <div className="flex items-center gap-4 text-xs text-gray-500">
                       <span>Source: {item.name}</span>
                       <span>•</span>
-                      <span>{currentOptions.find(opt => opt.id === selectedOption)?.estimatedTime}</span>
+                      <span>
+                        {
+                          currentOptions.find(
+                            (opt) => opt.id === selectedOption
+                          )?.estimatedTime
+                        }
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <Button 
+                <Button
                   onClick={handleGenerate}
                   disabled={isGenerating}
                   className={`flex-1 ${selectedType === 'quiz' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'} text-white font-medium`}

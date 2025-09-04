@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ContentPage from "./pages/ContentPage";
-import { Toaster } from "./components/ui/sonner";
-import { QuizInterface } from "./features/quiz/QuizInterface";
+import ContentPage from './pages/ContentPage';
+import { Toaster } from './components/ui/sonner';
+import { QuizInterface } from './features/quiz/QuizInterface';
 import { useLocation } from 'react-router-dom';
 
 const QuizRouteWrapper = () => {

@@ -25,7 +25,7 @@ export interface QuizQuestion {
     imageGroup?: string[];
   };
   options: QuizOption[];
-  correctAnswer: string; 
+  correctAnswer: string;
   explanation?: {
     text?: string;
     audio?: string;
@@ -58,7 +58,7 @@ interface QuizState {
   timeLeft: number;
   isPlayingAudio: Record<string, boolean>; // { audioId: boolean }
   isReviewMode: boolean;
-  reviewQuestionIndex: number | null; 
+  reviewQuestionIndex: number | null;
   quizResult: QuizResult | null;
 }
 
@@ -92,12 +92,22 @@ const quizSlice = createSlice({
         correctAnswer: 0,
       };
     },
-    updateCurrentBuilderQuestion: (state, action: PayloadAction<Partial<QuizQuestionBuilder>>) => {
-      state.currentBuilderQuestion = { ...state.currentBuilderQuestion, ...action.payload };
+    updateCurrentBuilderQuestion: (
+      state,
+      action: PayloadAction<Partial<QuizQuestionBuilder>>
+    ) => {
+      state.currentBuilderQuestion = {
+        ...state.currentBuilderQuestion,
+        ...action.payload,
+      };
     },
-    updateBuilderOption: (state, action: PayloadAction<{ index: number; value: string }>) => {
+    updateBuilderOption: (
+      state,
+      action: PayloadAction<{ index: number; value: string }>
+    ) => {
       if (state.currentBuilderQuestion.options) {
-        state.currentBuilderQuestion.options[action.payload.index] = action.payload.value;
+        state.currentBuilderQuestion.options[action.payload.index] =
+          action.payload.value;
       }
     },
     setActiveQuiz: (state, action: PayloadAction<Quiz | null>) => {
@@ -106,9 +116,15 @@ const quizSlice = createSlice({
       state.timeLeft = action.payload?.totalTime || 0;
     },
     nextQuestion: (state) => {
-      if (state.activeQuiz && state.currentQuestionIndex < state.activeQuiz.questions.length - 1) {
+      if (
+        state.activeQuiz &&
+        state.currentQuestionIndex < state.activeQuiz.questions.length - 1
+      ) {
         state.currentQuestionIndex += 1;
-      } else if (state.activeQuiz && state.currentQuestionIndex === state.activeQuiz.questions.length - 1) {
+      } else if (
+        state.activeQuiz &&
+        state.currentQuestionIndex === state.activeQuiz.questions.length - 1
+      ) {
         state.showResults = true;
       }
     },
@@ -117,8 +133,12 @@ const quizSlice = createSlice({
         state.currentQuestionIndex -= 1;
       }
     },
-    selectAnswer: (state, action: PayloadAction<{ questionId: string; optionId: string }>) => {
-      state.selectedAnswers[action.payload.questionId] = action.payload.optionId;
+    selectAnswer: (
+      state,
+      action: PayloadAction<{ questionId: string; optionId: string }>
+    ) => {
+      state.selectedAnswers[action.payload.questionId] =
+        action.payload.optionId;
     },
     setShowResults: (state, action: PayloadAction<boolean>) => {
       state.showResults = action.payload;
@@ -126,7 +146,10 @@ const quizSlice = createSlice({
     setTimeLeft: (state, action: PayloadAction<number>) => {
       state.timeLeft = action.payload;
     },
-    setIsPlayingAudio: (state, action: PayloadAction<{ audioId: string; isPlaying: boolean }>) => {
+    setIsPlayingAudio: (
+      state,
+      action: PayloadAction<{ audioId: string; isPlaying: boolean }>
+    ) => {
       state.isPlayingAudio[action.payload.audioId] = action.payload.isPlaying;
     },
     resetQuizInterface: (state) => {
@@ -139,7 +162,13 @@ const quizSlice = createSlice({
       state.reviewQuestionIndex = null;
       state.quizResult = null;
     },
-    setReviewMode: (state, action: PayloadAction<{ isReviewMode: boolean; reviewQuestionIndex: number | null }>) => {
+    setReviewMode: (
+      state,
+      action: PayloadAction<{
+        isReviewMode: boolean;
+        reviewQuestionIndex: number | null;
+      }>
+    ) => {
       state.isReviewMode = action.payload.isReviewMode;
       state.reviewQuestionIndex = action.payload.reviewQuestionIndex;
     },
