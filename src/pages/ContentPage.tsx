@@ -10,6 +10,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ContentManager } from '@/features/content-manager/ContentManager';
+import FlashcardPage from './FlashcardPage';
 
 const ContentPage = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -26,7 +27,7 @@ const ContentPage = () => {
     switch (activeTab) {
       case 'dashboard': return <ContentManager />;
       case 'content': return <ContentManager />;
-      case 'flashcards': return <ContentManager />;
+      case 'flashcards': return <FlashcardPage />;
       case 'analytics': return (
         <div className="space-y-6 text-center">
             <h1 className="text-3xl font-bold text-foreground">Learning Analytics</h1>

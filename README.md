@@ -1,1 +1,1 @@
-React, Redux, Axios + Tanstack Query, TailwindCSS + ShaDCN
+React, Redux, Axios + RTK Query, TailwindCSS + ShaDCN

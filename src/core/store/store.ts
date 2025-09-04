@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import uiReducer from '../store/slices/uiSlice.';
 import contentReducer from '../../features/content-manager/slices/contentSlice';
 import quizReducer from '../../features/quiz/slices/quizSlice';
+import flashcardReducer from '../../features/flashcard/slices/flashcardSlice';
 import { api } from '../api/api';
 import { quizApi } from '../../features/quiz/services/quizApi';
 import { flashcardApi } from '../../features/flashcard/services/flashcardApi';
@@ -13,6 +14,7 @@ export const store = configureStore({
     ui: uiReducer,
     content: contentReducer,
     quiz: quizReducer,
+    flashcard: flashcardReducer,
     [api.reducerPath]: api.reducer,
     [quizApi.reducerPath]: quizApi.reducer,
     [flashcardApi.reducerPath]: flashcardApi.reducer,
