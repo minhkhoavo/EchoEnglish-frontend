@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ContentPage from "./pages/ContentPage";
-import FlashcardPage from "./pages/FlashcardPage";
-import { Toaster } from "./components/ui/sonner";
-import { QuizInterface } from "./features/quiz/QuizInterface";
+import ContentPage from './pages/ContentPage';
+import FlashcardPage from './pages/FlashcardPage';
+import { Toaster } from './components/ui/sonner';
+import { QuizInterface } from './features/quiz/QuizInterface';
 import { useLocation } from 'react-router-dom';
 
 const QuizRouteWrapper = () => {
@@ -18,7 +18,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<ContentPage />} />
-  <Route path="/flashcards" element={<FlashcardPage />} />
+        <Route path="/flashcards" element={<FlashcardPage />} />
         <Route path="/quiz" element={<QuizRouteWrapper />} />
       </Routes>
       <Toaster />

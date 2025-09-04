@@ -47,14 +47,23 @@ const ContentPage = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return <ContentManager />;
-      case 'content': return <ContentManager />;
-      case 'flashcards': return <FlashcardPage />;
-      case 'analytics': return (
-        <div className="space-y-6 text-center">
-            <h1 className="text-3xl font-bold text-foreground">Learning Analytics</h1>
-            <p className="text-muted-foreground">Track your TOEIC preparation progress</p>
-            <Card className="modern-card"><CardContent className="text-center py-16">
+      case 'dashboard':
+        return <ContentManager />;
+      case 'content':
+        return <ContentManager />;
+      case 'flashcards':
+        return <FlashcardPage />;
+      case 'analytics':
+        return (
+          <div className="space-y-6 text-center">
+            <h1 className="text-3xl font-bold text-foreground">
+              Learning Analytics
+            </h1>
+            <p className="text-muted-foreground">
+              Track your TOEIC preparation progress
+            </p>
+            <Card className="modern-card">
+              <CardContent className="text-center py-16">
                 <BarChart3 className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
                 <h3 className="text-xl font-semibold mb-2">
                   Analytics Coming Soon
@@ -78,20 +87,27 @@ const ContentPage = () => {
         sidebarOpen={isSidebarOpen}
         setSidebarOpen={(open) => dispatch(setSidebarOpen(open))}
       />
-      <div className="max-w-7xl mx-auto flex">
+      {/* Container chính sử dụng flex */}
+      <div className="flex">
+        {/* Sidebar sẽ nằm ở đây, sát lề trái */}
         <Sidebar
           sidebarOpen={isSidebarOpen}
           activeTab={activeTab}
           navigation={navigation}
           onTabClick={(tabId) => dispatch(setActiveTab(tabId))}
         />
+        {/* Lớp phủ cho sidebar trên mobile */}
         {isSidebarOpen && (
           <div
             className="fixed inset-0 bg-background/50 z-30 lg:hidden"
             onClick={() => dispatch(setSidebarOpen(false))}
           />
         )}
-        <main className="flex-1 p-6">{renderContent()}</main>
+        {/* Main content sẽ chiếm phần còn lại */}
+        {/* Thêm container bên trong main để giới hạn chiều rộng nội dung nếu cần */}
+        <main className="flex-1 p-6">
+          <div className="max-w-7xl mx-auto">{renderContent()}</div>
+        </main>
       </div>
     </div>
   );

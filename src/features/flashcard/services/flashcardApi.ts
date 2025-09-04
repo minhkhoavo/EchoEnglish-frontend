@@ -1,13 +1,23 @@
-import { createApi, type BaseQueryFn } from '@reduxjs/toolkit/query/react';
+import {
+  createApi,
+  fetchBaseQuery,
+  type BaseQueryFn,
+} from '@reduxjs/toolkit/query/react';
 import type { AxiosError } from 'axios';
 import axiosInstance from '@/core/api/axios';
 import type { Flashcard, Category } from '../types/flashcard.types';
 import { mockFlashcards, mockCategories } from '../data/mockData';
 
-type Args = { url: string; method: 'GET'|'POST'|'PUT'|'PATCH'|'DELETE'; data?: unknown; params?: Record<string, unknown> };
-export type Err  = { status?: number; data?: unknown; message?: string };
+type Args = {
+  url: string;
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  data?: unknown;
+  params?: Record<string, unknown>;
+};
+export type Err = { status?: number; data?: unknown; message?: string };
 
-const axiosBaseQuery = (): BaseQueryFn<Args, unknown, Err> =>
+const axiosBaseQuery =
+  (): BaseQueryFn<Args, unknown, Err> =>
   async ({ url, method, data, params }, api) => {
     try {
       // Comment out real API call and return mock data
@@ -15,7 +25,7 @@ const axiosBaseQuery = (): BaseQueryFn<Args, unknown, Err> =>
       // return { data: res.data };
 
       // Mock implementation
-      await new Promise(resolve => setTimeout(resolve, 100)); // Simulate delay
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate delay
 
       if (method === 'GET') {
         if (url === '/flashcards') {
@@ -24,16 +34,21 @@ const axiosBaseQuery = (): BaseQueryFn<Args, unknown, Err> =>
           return { data: mockCategories };
         } else if (url.startsWith('/flashcards/category/')) {
           const categoryId = url.split('/').pop();
-          const category = mockCategories.find(cat => cat.id === categoryId);
+          const category = mockCategories.find((cat) => cat.id === categoryId);
           if (category) {
-            const filteredFlashcards = mockFlashcards.filter(card => card.category === category.name);
+            const filteredFlashcards = mockFlashcards.filter(
+              (card) => card.category === category.name
+            );
             return { data: filteredFlashcards };
           }
           return { error: { status: 404, data: 'Category not found' } };
         }
       } else if (method === 'POST') {
         if (url === '/flashcards') {
-          const newFlashcard = data as Omit<Flashcard, 'id' | 'createdAt' | 'updatedAt'>;
+          const newFlashcard = data as Omit<
+            Flashcard,
+            'id' | 'createdAt' | 'updatedAt'
+          >;
           const createdFlashcard: Flashcard = {
             ...newFlashcard,
             id: Date.now().toString(),
@@ -42,7 +57,10 @@ const axiosBaseQuery = (): BaseQueryFn<Args, unknown, Err> =>
           };
           return { data: createdFlashcard };
         } else if (url === '/categories') {
-          const newCategory = data as Omit<Category, 'id' | 'createdAt' | 'updatedAt' | 'flashcardCount'>;
+          const newCategory = data as Omit<
+            Category,
+            'id' | 'createdAt' | 'updatedAt' | 'flashcardCount'
+          >;
           const createdCategory: Category = {
             ...newCategory,
             id: Date.now().toString(),
@@ -56,18 +74,26 @@ const axiosBaseQuery = (): BaseQueryFn<Args, unknown, Err> =>
         if (url.startsWith('/flashcards/')) {
           const id = url.split('/').pop();
           const updates = data as Partial<Flashcard>;
-          const flashcard = mockFlashcards.find(card => card.id === id);
+          const flashcard = mockFlashcards.find((card) => card.id === id);
           if (flashcard) {
-            const updatedFlashcard = { ...flashcard, ...updates, updatedAt: new Date().toISOString() };
+            const updatedFlashcard = {
+              ...flashcard,
+              ...updates,
+              updatedAt: new Date().toISOString(),
+            };
             return { data: updatedFlashcard };
           }
           return { error: { status: 404, data: 'Flashcard not found' } };
         } else if (url.startsWith('/categories/')) {
           const id = url.split('/').pop();
           const updates = data as Partial<Category>;
-          const category = mockCategories.find(cat => cat.id === id);
+          const category = mockCategories.find((cat) => cat.id === id);
           if (category) {
-            const updatedCategory = { ...category, ...updates, updatedAt: new Date().toISOString() };
+            const updatedCategory = {
+              ...category,
+              ...updates,
+              updatedAt: new Date().toISOString(),
+            };
             return { data: updatedCategory };
           }
           return { error: { status: 404, data: 'Category not found' } };
@@ -85,92 +111,117 @@ const axiosBaseQuery = (): BaseQueryFn<Args, unknown, Err> =>
       return { error: { status: 404, data: 'Endpoint not mocked' } };
     } catch (e) {
       const err = e as AxiosError;
-      
+
       // Return specific error for server connection issues
       if (err.code === 'ERR_NETWORK' || err.code === 'ERR_CONNECTION_REFUSED') {
-        return { 
-          error: { 
-            status: 0, 
+        return {
+          error: {
+            status: 0,
             data: null,
-            message: 'SERVER_DISCONNECTED'
-          } 
+            message: 'SERVER_DISCONNECTED',
+          },
         };
       }
-      
-      return { error: { status: err.response?.status, data: err.response?.data ?? err.message } };
+
+      return {
+        error: {
+          status: err.response?.status,
+          data: err.response?.data ?? err.message,
+        },
+      };
     }
   };
 
 export const flashcardApi = createApi({
   reducerPath: 'flashcardApi',
-  baseQuery: fetchBaseQuery({ baseUrl: '/' }),
+  baseQuery: axiosBaseQuery(),
+  tagTypes: ['Flashcard', 'Category'],
   endpoints: (builder) => ({
     getFlashcards: builder.query<Flashcard[], void>({
       query: () => ({
         url: '/flashcards',
         method: 'GET',
       }),
-      providesTags: ['Flashcard'],
+      providesTags: [{ type: 'Flashcard' }],
     }),
     getCategories: builder.query<Category[], void>({
       query: () => ({
         url: '/categories',
         method: 'GET',
       }),
-      providesTags: ['Category'],
+      providesTags: [{ type: 'Category' }],
     }),
     getFlashcardsByCategory: builder.query<Flashcard[], string>({
-      query: (categoryId) => ({
+      query: (categoryId: string) => ({
         url: `/flashcards/category/${categoryId}`,
         method: 'GET',
       }),
-      providesTags: ['Flashcard'],
+      providesTags: [{ type: 'Flashcard' }],
     }),
-    createFlashcard: builder.mutation<Flashcard, Omit<Flashcard, 'id' | 'createdAt' | 'updatedAt'>>({
-      query: (newFlashcard) => ({
+    createFlashcard: builder.mutation<
+      Flashcard,
+      Omit<Flashcard, 'id' | 'createdAt' | 'updatedAt'>
+    >({
+      query: (
+        newFlashcard: Omit<Flashcard, 'id' | 'createdAt' | 'updatedAt'>
+      ) => ({
         url: '/flashcards',
         method: 'POST',
         data: newFlashcard,
       }),
-      invalidatesTags: ['Flashcard', 'Category'],
+      invalidatesTags: [{ type: 'Flashcard' }, { type: 'Category' }],
     }),
-    updateFlashcard: builder.mutation<Flashcard, Partial<Flashcard> & { id: string }>({
-      query: ({ id, ...updates }) => ({
+    updateFlashcard: builder.mutation<
+      Flashcard,
+      Partial<Flashcard> & { id: string }
+    >({
+      query: ({ id, ...updates }: Partial<Flashcard> & { id: string }) => ({
         url: `/flashcards/${id}`,
         method: 'PUT',
         data: updates,
       }),
-      invalidatesTags: ['Flashcard'],
+      invalidatesTags: [{ type: 'Flashcard' }],
     }),
     deleteFlashcard: builder.mutation<{ id: string }, string>({
-      query: (id) => ({
+      query: (id: string) => ({
         url: `/flashcards/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Flashcard', 'Category'],
+      invalidatesTags: [{ type: 'Flashcard' }, { type: 'Category' }],
     }),
-    createCategory: builder.mutation<Category, Omit<Category, 'id' | 'createdAt' | 'updatedAt' | 'flashcardCount'>>({
-      query: (newCategory) => ({
+    createCategory: builder.mutation<
+      Category,
+      Omit<Category, 'id' | 'createdAt' | 'updatedAt' | 'flashcardCount'>
+    >({
+      query: (
+        newCategory: Omit<
+          Category,
+          'id' | 'createdAt' | 'updatedAt' | 'flashcardCount'
+        >
+      ) => ({
         url: '/categories',
         method: 'POST',
         data: newCategory,
       }),
-      invalidatesTags: ['Category'],
+      invalidatesTags: [{ type: 'Category' }],
     }),
-    updateCategory: builder.mutation<Category, Partial<Category> & { id: string }>({
-      query: ({ id, ...updates }) => ({
+    updateCategory: builder.mutation<
+      Category,
+      Partial<Category> & { id: string }
+    >({
+      query: ({ id, ...updates }: Partial<Category> & { id: string }) => ({
         url: `/categories/${id}`,
         method: 'PUT',
         data: updates,
       }),
-      invalidatesTags: ['Category'],
+      invalidatesTags: [{ type: 'Category' }],
     }),
     deleteCategory: builder.mutation<{ id: string }, string>({
-      query: (id) => ({
+      query: (id: string) => ({
         url: `/categories/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Category', 'Flashcard'],
+      invalidatesTags: [{ type: 'Category' }, { type: 'Flashcard' }],
     }),
   }),
 });

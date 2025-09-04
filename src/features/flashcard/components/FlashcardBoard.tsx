@@ -8,49 +8,56 @@ import {
   setSorting,
   clearFilters,
 } from '../slices/flashcardSlice';
-import { useGetFlashcardsQuery, useDeleteFlashcardMutation } from '../services/flashcardApi';
+import {
+  useGetFlashcardsQuery,
+  useDeleteFlashcardMutation,
+} from '../services/flashcardApi';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import FlashcardItem from './FlashcardItem';
 import CategorySidebar from './CategorySidebar.tsx';
 import CreateEditFlashcardDialog from './CreateEditFlashcardDialog';
 import CreateEditCategoryDialog from './CreateEditCategoryDialog';
-import { 
-  Search, 
-  Filter, 
-  Grid3X3, 
-  List, 
-  Plus, 
+import {
+  Search,
+  Filter,
+  Grid3X3,
+  List,
+  Plus,
   SlidersHorizontal,
   Brain,
   X,
   Download,
   Upload,
-  FolderPlus
+  FolderPlus,
 } from 'lucide-react';
 import { sortOptions } from '../types/flashcard.types';
 import type { Flashcard } from '../types/flashcard.types';
 
 const FlashcardBoard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const {
-    filters,
-    viewMode,
-    sortBy,
-    sortDirection,
-    searchQuery,
-  } = useSelector((state: RootState) => state.flashcard);
-  
+  const { filters, viewMode, sortBy, sortDirection, searchQuery } = useSelector(
+    (state: RootState) => state.flashcard
+  );
+
   const { data: flashcards = [], isLoading, error } = useGetFlashcardsQuery();
   const [deleteFlashcard] = useDeleteFlashcardMutation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { toast } = useToast();
 
   const [showFilters, setShowFilters] = useState(false);
-  const [editingFlashcard, setEditingFlashcard] = useState<Flashcard | null>(null);
+  const [editingFlashcard, setEditingFlashcard] = useState<Flashcard | null>(
+    null
+  );
 
   // Debug: Log when filters change
   useEffect(() => {
@@ -58,10 +65,10 @@ const FlashcardBoard: React.FC = () => {
   }, [filters]);
 
   // Check if error is server disconnection
-  const isServerDisconnected = error && (
-    ('message' in error && error.message === 'SERVER_DISCONNECTED') || 
-    ('status' in error && error.status === 0)
-  );
+  const isServerDisconnected =
+    error &&
+    (('message' in error && error.message === 'SERVER_DISCONNECTED') ||
+      ('status' in error && error.status === 0));
 
   // Filter and sort flashcards locally
   const filteredFlashcards = React.useMemo(() => {
@@ -70,32 +77,39 @@ const FlashcardBoard: React.FC = () => {
 
     // Apply search filter
     if (searchQuery) {
-      filtered = filtered.filter(card => 
-        card.front.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        card.back.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        card.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      filtered = filtered.filter(
+        (card) =>
+          card.front.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          card.back.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          card.tags.some((tag: string) =>
+            tag.toLowerCase().includes(searchQuery.toLowerCase())
+          )
       );
     }
 
     // Apply category filter
     if (selectedCategory) {
-      filtered = filtered.filter(card => card.category === selectedCategory);
+      filtered = filtered.filter((card) => card.category === selectedCategory);
     }
 
     // Apply filters
     if (filters.difficulty) {
       console.log('Applying difficulty filter:', filters.difficulty);
-      filtered = filtered.filter(card => card.difficulty === filters.difficulty);
+      filtered = filtered.filter(
+        (card) => card.difficulty === filters.difficulty
+      );
     }
 
     if (filters.aiGenerated) {
       console.log('Applying aiGenerated filter:', filters.aiGenerated);
-      filtered = filtered.filter(card => card.isAIGenerated === filters.aiGenerated);
+      filtered = filtered.filter(
+        (card) => card.isAIGenerated === filters.aiGenerated
+      );
     }
 
     if (filters.tags.length > 0) {
-      filtered = filtered.filter(card => 
-        filters.tags.some(tag => card.tags.includes(tag))
+      filtered = filtered.filter((card) =>
+        filters.tags.some((tag) => card.tags.includes(tag))
       );
     }
 
@@ -107,13 +121,17 @@ const FlashcardBoard: React.FC = () => {
       let bValue = b[sortBy as keyof Flashcard];
 
       // Handle special cases
-      if (sortBy === 'createdAt' || sortBy === 'updatedAt' || sortBy === 'lastReviewed') {
+      if (
+        sortBy === 'createdAt' ||
+        sortBy === 'updatedAt' ||
+        sortBy === 'lastReviewed'
+      ) {
         aValue = new Date(aValue as string).getTime();
         bValue = new Date(bValue as string).getTime();
       }
 
       if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortDirection === 'asc' 
+        return sortDirection === 'asc'
           ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue);
       }
@@ -126,21 +144,29 @@ const FlashcardBoard: React.FC = () => {
     });
 
     return filtered;
-  }, [flashcards, searchQuery, selectedCategory, filters, sortBy, sortDirection]);
+  }, [
+    flashcards,
+    searchQuery,
+    selectedCategory,
+    filters,
+    sortBy,
+    sortDirection,
+  ]);
 
   useEffect(() => {
     // Show different toast based on error type
     if (isServerDisconnected) {
       toast({
-        title: "Server Unavailable",
-        description: "Cannot connect to the server. Please check your connection or try again later.",
-        variant: "destructive",
+        title: 'Server Unavailable',
+        description:
+          'Cannot connect to the server. Please check your connection or try again later.',
+        variant: 'destructive',
       });
     } else if (error) {
       toast({
-        title: "Error",
-        description: "An error occurred while loading data.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'An error occurred while loading data.',
+        variant: 'destructive',
       });
     }
   }, [error, isServerDisconnected, toast]);
@@ -151,22 +177,29 @@ const FlashcardBoard: React.FC = () => {
 
   const handleSortChange = (value: string) => {
     const [sortBy, direction] = value.split('-');
-    const option = sortOptions.find(opt => opt.value === sortBy && opt.direction === direction);
+    const option = sortOptions.find(
+      (opt) => opt.value === sortBy && opt.direction === direction
+    );
     if (option) {
-      dispatch(setSorting({ sortBy: option.value, direction: option.direction }));
+      dispatch(
+        setSorting({ sortBy: option.value, direction: option.direction })
+      );
     }
   };
 
-  const handleFilterChange = (filterKey: string, value: string | boolean | string[]) => {
+  const handleFilterChange = (
+    filterKey: string,
+    value: string | boolean | string[]
+  ) => {
     console.log('Filter change:', filterKey, value);
     console.log('Current filters before:', filters);
-    
+
     if (filterKey === 'difficulty' && value === 'all') {
       dispatch(setFilters({ [filterKey]: '' }));
     } else {
       dispatch(setFilters({ [filterKey]: value }));
     }
-    
+
     // Check state after dispatch
     setTimeout(() => {
       console.log('Current filters after:', filters);
@@ -210,20 +243,20 @@ const FlashcardBoard: React.FC = () => {
             <div className="h-6 bg-gray-200 rounded mb-4"></div>
             <div className="h-10 bg-gray-200 rounded mb-6"></div>
             <div className="space-y-2">
-              {[1, 2, 3, 4].map(i => (
+              {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="h-12 bg-gray-200 rounded"></div>
               ))}
             </div>
           </div>
         </div>
-        
+
         {/* Main Content Skeleton */}
         <div className="flex-1 p-6">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded mb-4 w-1/3"></div>
             <div className="h-10 bg-gray-200 rounded mb-6"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[1, 2, 3, 4, 5, 6].map(i => (
+              {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="h-48 bg-gray-200 rounded"></div>
               ))}
             </div>
@@ -236,7 +269,7 @@ const FlashcardBoard: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <CategorySidebar 
+      <CategorySidebar
         selectedCategory={selectedCategory}
         onCategorySelect={setSelectedCategory}
       />
@@ -247,37 +280,42 @@ const FlashcardBoard: React.FC = () => {
         <div className="bg-white border-b border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-            <div className="flex items-center gap-1">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {selectedCategory || 'All Flashcards'}
-              </h1>
-            </div>
+              <div className="flex items-center gap-1">
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {selectedCategory || 'All Flashcards'}
+                </h1>
+              </div>
               <p className="text-gray-600">
-                {filteredFlashcards.length} flashcard{filteredFlashcards.length !== 1 ? 's' : ''}
+                {filteredFlashcards.length} flashcard
+                {filteredFlashcards.length !== 1 ? 's' : ''}
                 {selectedCategory && ` in ${selectedCategory}`}
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <CreateEditFlashcardDialog 
+              <CreateEditFlashcardDialog
                 trigger={
-                  <Button 
-                    className="gap-2" 
+                  <Button
+                    className="gap-2"
                     disabled={isServerDisconnected}
-                    title={isServerDisconnected ? "Server unavailable" : undefined}
+                    title={
+                      isServerDisconnected ? 'Server unavailable' : undefined
+                    }
                   >
                     <Plus size={16} />
                     Create Flashcard
                   </Button>
                 }
               />
-              <CreateEditCategoryDialog 
+              <CreateEditCategoryDialog
                 trigger={
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="gap-2"
                     disabled={isServerDisconnected}
-                    title={isServerDisconnected ? "Server unavailable" : undefined}
+                    title={
+                      isServerDisconnected ? 'Server unavailable' : undefined
+                    }
                   >
                     <FolderPlus size={16} />
                     New Category
@@ -308,13 +346,19 @@ const FlashcardBoard: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <Select value={`${sortBy}-${sortDirection}`} onValueChange={handleSortChange}>
+              <Select
+                value={`${sortBy}-${sortDirection}`}
+                onValueChange={handleSortChange}
+              >
                 <SelectTrigger className="w-48 border-gray-300">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
                   {sortOptions.map((option) => (
-                    <SelectItem key={`${option.value}-${option.direction}`} value={`${option.value}-${option.direction}`}>
+                    <SelectItem
+                      key={`${option.value}-${option.direction}`}
+                      value={`${option.value}-${option.direction}`}
+                    >
                       {option.label}
                     </SelectItem>
                   ))}
@@ -368,12 +412,19 @@ const FlashcardBoard: React.FC = () => {
                   Clear All
                 </Button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Difficulty Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
-                  <Select value={filters.difficulty || 'all'} onValueChange={(value) => handleFilterChange('difficulty', value)}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Difficulty
+                  </label>
+                  <Select
+                    value={filters.difficulty || 'all'}
+                    onValueChange={(value) =>
+                      handleFilterChange('difficulty', value)
+                    }
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="All difficulties" />
                     </SelectTrigger>
@@ -388,17 +439,25 @@ const FlashcardBoard: React.FC = () => {
 
                 {/* Special Filters */}
                 <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">Special</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Special
+                  </label>
                   <div className="space-y-2">
                     <label className="flex items-center">
                       <input
                         type="checkbox"
                         checked={filters.aiGenerated}
-                        onChange={(e) => handleFilterChange('aiGenerated', e.target.checked)}
+                        onChange={(e) =>
+                          handleFilterChange('aiGenerated', e.target.checked)
+                        }
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <Brain className={`h-4 w-4 ml-2 mr-1 ${filters.aiGenerated ? 'text-purple-600' : 'text-gray-400'}`} />
-                      <span className="text-sm text-gray-700">AI Generated</span>
+                      <Brain
+                        className={`h-4 w-4 ml-2 mr-1 ${filters.aiGenerated ? 'text-purple-600' : 'text-gray-400'}`}
+                      />
+                      <span className="text-sm text-gray-700">
+                        AI Generated
+                      </span>
                     </label>
                   </div>
                 </div>
@@ -417,20 +476,21 @@ const FlashcardBoard: React.FC = () => {
                   <span className="text-white font-bold text-xl">!</span>
                 </div>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Server Unavailable</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Server Unavailable
+              </h3>
               <p className="text-gray-600 mb-6">
-                Cannot connect to the server. Please check your internet connection and try again.
+                Cannot connect to the server. Please check your internet
+                connection and try again.
               </p>
               <div className="flex justify-center gap-3">
-                <Button 
-                  onClick={() => window.location.reload()} 
+                <Button
+                  onClick={() => window.location.reload()}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Retry Connection
                 </Button>
-                <Button variant="outline">
-                  Check Status
-                </Button>
+                <Button variant="outline">Check Status</Button>
               </div>
             </div>
           ) : filteredFlashcards.length === 0 ? (
@@ -439,13 +499,15 @@ const FlashcardBoard: React.FC = () => {
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="h-10 w-10 text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No flashcards found</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No flashcards found
+              </h3>
               <p className="text-gray-600 mb-6">
                 {searchQuery || getActiveFiltersCount() > 0
                   ? 'Try adjusting your search or filters'
                   : 'Create your first flashcard to get started'}
               </p>
-              <CreateEditFlashcardDialog 
+              <CreateEditFlashcardDialog
                 trigger={
                   <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                     <Plus className="h-4 w-4 mr-2" />
@@ -455,10 +517,13 @@ const FlashcardBoard: React.FC = () => {
               />
             </div>
           ) : (
-            <div className={viewMode === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
-              : 'space-y-4'
-            }>
+            <div
+              className={
+                viewMode === 'grid'
+                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                  : 'space-y-4'
+              }
+            >
               {filteredFlashcards.map((flashcard: Flashcard) => (
                 <FlashcardItem
                   key={flashcard.id}

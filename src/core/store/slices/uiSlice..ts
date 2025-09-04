@@ -5,11 +5,13 @@ export type ActiveTab = 'dashboard' | 'content' | 'flashcards' | 'analytics';
 interface UiState {
   activeTab: ActiveTab;
   isSidebarOpen: boolean;
+  sidebarCollapsed: boolean;
 }
 
 const initialState: UiState = {
   activeTab: 'dashboard',
   isSidebarOpen: false,
+  sidebarCollapsed: false,
 };
 
 const uiSlice = createSlice({
@@ -26,8 +28,20 @@ const uiSlice = createSlice({
     setSidebarOpen(state, action: PayloadAction<boolean>) {
       state.isSidebarOpen = action.payload;
     },
+    toggleSidebarCollapse(state) {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+    },
+    setSidebarCollapsed(state, action: PayloadAction<boolean>) {
+      state.sidebarCollapsed = action.payload;
+    },
   },
 });
 
-export const { setActiveTab, toggleSidebar, setSidebarOpen } = uiSlice.actions;
+export const {
+  setActiveTab,
+  toggleSidebar,
+  setSidebarOpen,
+  toggleSidebarCollapse,
+  setSidebarCollapsed,
+} = uiSlice.actions;
 export default uiSlice.reducer;

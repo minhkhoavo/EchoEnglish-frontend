@@ -54,7 +54,7 @@ const FlashcardList: React.FC = () => {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {flashcards.map((card) => (
+          {flashcards.map((card: Flashcard) => (
             <div
               key={card.id}
               className="p-6 h-64 flex flex-col border rounded-lg relative group cursor-pointer" // Thêm border và bo góc để dễ nhìn
@@ -111,7 +111,7 @@ const FlashcardList: React.FC = () => {
                 )}
                 <div className="flex items-center justify-between">
                   <div className="flex space-x-1">
-                    {card.tags.slice(0, 2).map((tag, index) => (
+                    {card.tags.slice(0, 2).map((tag: string, index: number) => (
                       <Badge
                         key={index}
                         variant="secondary"
