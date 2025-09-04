@@ -1,8 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ContentPage from "./pages/ContentPage";
+import RecordingPage from "./pages/RecordingPage";
 import { Toaster } from "./components/ui/sonner";
 import { QuizInterface } from "./features/quiz/QuizInterface";
 import { useLocation } from 'react-router-dom';
+import SpeechScoreSidebar from './features/testss/components/SpeechScoreSidebar';
+import PronunciationDemo from './features/testss/components/PronunciationDemo';
 
 const QuizRouteWrapper = () => {
   const location = useLocation();
@@ -16,7 +19,9 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<ContentPage />} />
+        {/* <Route path="/" element={<ContentPage />} /> */}
+        {/* <Route path="/" element={<RecordingPage />} /> */}
+        <Route path="/" element={<PronunciationDemo />} />
         <Route path="/quiz" element={<QuizRouteWrapper />} />
       </Routes>
       <Toaster />

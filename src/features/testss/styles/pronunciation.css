@@ -1,0 +1,431 @@
+/* Enhanced Transcript Styles */
+
+/* Audio player slider customization */
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.slider::-webkit-slider-track {
+    background: #d1d5db;
+    height: 4px;
+    border-radius: 2px;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background: #3b82f6;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+    background: #2563eb;
+    transform: scale(1.1);
+}
+
+.slider::-moz-range-track {
+    background: #d1d5db;
+    height: 4px;
+    border-radius: 2px;
+    border: none;
+}
+
+.slider::-moz-range-thumb {
+    background: #3b82f6;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+    background: #2563eb;
+    transform: scale(1.1);
+}
+
+/* Word highlighting animations */
+.word-highlight {
+    animation: wordHighlight 0.3s ease-in-out;
+}
+
+@keyframes wordHighlight {
+    0% {
+        background-color: transparent;
+        transform: scale(1);
+    }
+
+    50% {
+        background-color: #fef3c7;
+        transform: scale(1.05);
+    }
+
+    100% {
+        background-color: #fef3c7;
+        transform: scale(1.02);
+    }
+}
+
+/* Stress word pulse effect */
+.stressed-word {
+    position: relative;
+    display: inline-block;
+    margin: 0 6px 0 6px;
+    /* Increased margin to prevent overlap */
+    line-height: 1.6;
+    /* Increased line height for better spacing */
+    vertical-align: baseline;
+}
+
+.stressed-word::before {
+    content: 'ˈ';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    font-size: 16px;
+    color: #3b82f6;
+    font-weight: bold;
+    z-index: 1;
+}
+
+/* Enhanced stress word effect - fixed overlap */
+.stressed-word.emphasize {
+    font-size: 1.3em !important;
+    /* Reduced from 1.5em to prevent overlap */
+    font-weight: 900 !important;
+    color: #1d4ed8 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    margin: 0 8px 0 8px;
+    /* Increased margin */
+    line-height: 1.8;
+    /* Increased line height */
+    padding: 2px 0;
+    /* Add some padding */
+    box-sizing: border-box;
+    /* Remove transform scale to prevent overlap */
+}
+
+/* Accuracy level styling */
+.accuracy-excellent {
+    color: #059669;
+    font-weight: 500;
+}
+
+.accuracy-good {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.accuracy-fair {
+    color: #d97706;
+    font-weight: 500;
+}
+
+.accuracy-poor {
+    color: #dc2626;
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: #fca5a5;
+}
+
+/* Duplicated word styling */
+.duplicated-word {
+    background: linear-gradient(45deg, #fef3c7 25%, #fed7aa 25%, #fed7aa 50%, #fef3c7 50%, #fef3c7 75%, #fed7aa 75%);
+    background-size: 8px 8px;
+    border-radius: 3px;
+    padding: 1px 3px;
+}
+
+/* Popup animations */
+.pronunciation-popup {
+    animation: popupSlideIn 0.15s ease-out;
+    z-index: 1000;
+}
+
+@keyframes popupSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-5px) scale(0.98);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Compact popup styles */
+.compact-popup {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e5e7eb;
+}
+
+.compact-popup .header {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+/* Segment highlighting */
+.segment-active {
+    animation: segmentGlow 0.5s ease-in-out;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+@keyframes segmentGlow {
+    0% {
+        box-shadow: 0 0 5px rgba(59, 130, 246, 0.1);
+    }
+
+    100% {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+    }
+}
+
+/* Progress bar enhancements */
+.progress-bar {
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: progressShimmer 2s infinite;
+}
+
+@keyframes progressShimmer {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+/* Phoneme accuracy indicators */
+.phoneme-excellent {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #34d399;
+}
+
+.phoneme-good {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #60a5fa;
+}
+
+.phoneme-fair {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+.phoneme-poor {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #f87171;
+}
+
+/* Tooltip enhancements */
+.tooltip-arrow {
+    filter: drop-shadow(0 -1px 1px rgba(0, 0, 0, 0.1));
+}
+
+/* Loading states */
+.audio-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.audio-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);
+    animation: loadingShimmer 1.5s infinite;
+}
+
+@keyframes loadingShimmer {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+/* Error severity indicators */
+.error-severity-low {
+    border-left: 3px solid #3b82f6;
+    background: #eff6ff;
+}
+
+.error-severity-medium {
+    border-left: 3px solid #f59e0b;
+    background: #fffbeb;
+}
+
+.error-severity-high {
+    border-left: 3px solid #ef4444;
+    background: #fef2f2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .pronunciation-popup {
+        max-width: 90vw;
+        left: 5vw !important;
+        right: 5vw !important;
+        transform: none !important;
+    }
+
+    .stressed-word::before {
+        font-size: 12px;
+        top: -6px;
+        left: -6px;
+    }
+
+    .stressed-word.emphasize {
+        font-size: 1.3em !important;
+        margin: 0 4px;
+    }
+}
+
+/* Dark mode support (if needed) */
+@media (prefers-color-scheme: dark) {
+    .pronunciation-popup {
+        background: #1f2937;
+        color: #f9fafb;
+        border-color: #374151;
+    }
+
+    .phoneme-excellent {
+        background: #064e3b;
+        color: #a7f3d0;
+    }
+
+    .phoneme-good {
+        background: #1e3a8a;
+        color: #93c5fd;
+    }
+
+    .phoneme-fair {
+        background: #78350f;
+        color: #fcd34d;
+    }
+
+    .phoneme-poor {
+        background: #7f1d1d;
+        color: #fca5a5;
+    }
+}
+
+/* Enhanced pronunciation popup styling */
+.pronunciation-popup .pronunciation-comparison {
+    background: #f8fafc;
+    border-radius: 4px;
+    padding: 4px;
+    margin-bottom: 8px;
+}
+
+.pronunciation-popup .pronunciation-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 2px;
+}
+
+.pronunciation-popup .pronunciation-row:last-child {
+    margin-bottom: 0;
+}
+
+.pronunciation-popup .pronunciation-row .label {
+    font-weight: 600;
+    min-width: 50px;
+    font-size: 10px;
+}
+
+.pronunciation-popup .pronunciation-row .pronunciation {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.pronunciation-popup .pronunciation-row .expected {
+    color: #059669;
+}
+
+.pronunciation-popup .pronunciation-row .actual {
+    color: #2563eb;
+}
+
+.pronunciation-popup .pronunciation-row .reference {
+    color: #6b7280;
+    font-style: italic;
+    font-size: 10px;
+}
+
+/* Enhanced phoneme styling */
+.pronunciation-popup .phoneme-item.incorrect {
+    position: relative;
+}
+
+.pronunciation-popup .phoneme-item.incorrect::after {
+    content: '⚠';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    font-size: 8px;
+    color: #dc2626;
+}
+
+/* Error type styling */
+.pronunciation-popup .error-type {
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.pronunciation-popup .error-type::before {
+    content: '⚠ ';
+    color: #f59e0b;
+}
+
+/* Confidence indicators */
+.pronunciation-popup .confidence-high {
+    color: #059669;
+}
+
+.pronunciation-popup .confidence-medium {
+    color: #f59e0b;
+}
+
+.pronunciation-popup .confidence-low {
+    color: #dc2626;
+}
+
+/* Better spacing for error phonemes */
+.pronunciation-popup .error-phonemes {
+    font-family: 'Courier New', monospace;
+    background: #fef2f2;
+    border-left: 2px solid #dc2626;
+    padding-left: 4px;
+    margin-top: 2px;
+}
