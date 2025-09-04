@@ -43,7 +43,7 @@ const mockFlashcards: Flashcard[] = [
 
 export const flashcardApi = createApi({
   reducerPath: 'flashcardApi',
-  baseQuery: fetchBaseQuery({ baseUrl: '/' }), 
+  baseQuery: fetchBaseQuery({ baseUrl: '/' }),
   endpoints: (builder) => ({
     getFlashcards: builder.query<Flashcard[], void>({
       queryFn: () => {
@@ -56,7 +56,13 @@ export const flashcardApi = createApi({
         if (flashcard) {
           return { data: flashcard };
         }
-        return { error: { status: 404, statusText: 'Not Found', data: 'Flashcard not found' } };
+        return {
+          error: {
+            status: 404,
+            statusText: 'Not Found',
+            data: 'Flashcard not found',
+          },
+        };
       },
     }),
   }),

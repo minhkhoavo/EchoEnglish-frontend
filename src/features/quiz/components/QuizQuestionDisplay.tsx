@@ -7,7 +7,10 @@ interface QuizQuestionDisplayProps {
   isReviewMode?: boolean;
 }
 
-export const QuizQuestionDisplay = ({ currentQ, isReviewMode = false }: QuizQuestionDisplayProps) => {
+export const QuizQuestionDisplay = ({
+  currentQ,
+  isReviewMode = false,
+}: QuizQuestionDisplayProps) => {
   return (
     <CardContent className="space-y-6">
       {/* Question */}
@@ -17,16 +20,16 @@ export const QuizQuestionDisplay = ({ currentQ, isReviewMode = false }: QuizQues
         )}
 
         {currentQ.question.audio && (
-          <MediaPlayer 
-            audio={currentQ.question.audio} 
+          <MediaPlayer
+            audio={currentQ.question.audio}
             audioId={`question-${currentQ.id}`}
           />
         )}
 
         {currentQ.question.image && (
           <div className="flex justify-center">
-            <img 
-              src={currentQ.question.image} 
+            <img
+              src={currentQ.question.image}
               alt="Question visual"
               className="max-w-full h-auto rounded-lg border shadow-sm"
             />
@@ -36,9 +39,9 @@ export const QuizQuestionDisplay = ({ currentQ, isReviewMode = false }: QuizQues
         {currentQ.question.imageGroup && (
           <div className="grid grid-cols-2 gap-4">
             {currentQ.question.imageGroup.map((img, idx) => (
-              <img 
+              <img
                 key={idx}
-                src={img} 
+                src={img}
                 alt={`Question image ${idx + 1}`}
                 className="w-full h-auto rounded-lg border shadow-sm"
               />

@@ -47,11 +47,18 @@ export const contentApi = api.injectEndpoints({
         return (response as FileApiResponse[]).map((file) => ({
           id: file.id,
           name: file.file_name,
-          type: file.file_type.startsWith('image/') ? 'image' as const : 'file' as const,
+          type: file.file_type.startsWith('image/')
+            ? ('image' as const)
+            : ('file' as const),
           size: `${(file.file_size_kb / 1024).toFixed(2)} MB`,
           url: file.s3_url,
-          preview: file.file_type.startsWith('image/') ? file.s3_url : undefined,
-          status: file.status === 'Indexed' ? 'ready' as const : 'processing' as const,
+          preview: file.file_type.startsWith('image/')
+            ? file.s3_url
+            : undefined,
+          status:
+            file.status === 'Indexed'
+              ? ('ready' as const)
+              : ('processing' as const),
           metadata: file.metadata,
           toeicParts: file.toeic_parts,
           language: file.lang,
@@ -60,29 +67,30 @@ export const contentApi = api.injectEndpoints({
         }));
       },
     }),
-    uploadFile: builder.mutation<{success: boolean; message: string}, { file: File; id: string }>({
+    uploadFile: builder.mutation<
+      { success: boolean; message: string },
+      { file: File; id: string }
+    >({
       queryFn: async ({ file }, { signal }) => {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('user_id', '88'); 
+        formData.append('user_id', '88');
 
         try {
-          const response = await axiosInstance.post(
-            '/uploadfile/',
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-              signal, 
-              onUploadProgress: () => {
-                // Progress tracking if needed
-              },
-            }
-          );
+          const response = await axiosInstance.post('/uploadfile/', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+            signal,
+            onUploadProgress: () => {
+              // Progress tracking if needed
+            },
+          });
           return { data: response.data };
         } catch (axiosError) {
-          const err = axiosError as {response?: {status: number; data: unknown}};
+          const err = axiosError as {
+            response?: { status: number; data: unknown };
+          };
           return {
             error: {
               status: err.response?.status,
@@ -98,5 +106,5 @@ export const contentApi = api.injectEndpoints({
 export const {
   useUploadFileMutation,
   useFetchUserFilesQuery,
-  useLazyFetchUserFilesQuery
+  useLazyFetchUserFilesQuery,
 } = contentApi;
