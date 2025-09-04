@@ -52,7 +52,7 @@ export const UploadSection: React.FC<UploadSectionProps> = ({ onFilesUpload, onU
         description: "Upload failed",
       });
     }
-  }, [uploadFile, toast, onFilesUpload]);
+  }, [uploadFile, onFilesUpload]);
 
   const handleDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles: UploadedFile[] = acceptedFiles.map(file => ({

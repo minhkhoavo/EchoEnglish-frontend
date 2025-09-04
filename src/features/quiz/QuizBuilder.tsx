@@ -38,7 +38,7 @@ export const QuizBuilder = () => {
     dispatch(updateBuilderOption({ index, value }));
   };
 
-  const handleUpdateCurrentQuestion = (field: keyof QuizQuestionBuilder, value: any) => {
+  const handleUpdateCurrentQuestion = <K extends keyof QuizQuestionBuilder>(field: K, value: QuizQuestionBuilder[K]) => {
     dispatch(updateCurrentBuilderQuestion({ [field]: value }));
   };
 

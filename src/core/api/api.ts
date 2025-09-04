@@ -2,8 +2,8 @@ import { createApi, type BaseQueryFn } from '@reduxjs/toolkit/query/react';
 import type { AxiosError } from 'axios';
 import axiosInstance from './axios';
 
-type Args = { url: string; method: 'GET'|'POST'|'PUT'|'PATCH'|'DELETE'; data?: any; params?: any };
-type Err  = { status?: number; data?: any };
+type Args = { url: string; method: 'GET'|'POST'|'PUT'|'PATCH'|'DELETE'; data?: unknown; params?: Record<string, unknown> };
+type Err  = { status?: number; data?: unknown };
 const axiosBaseQuery = (): BaseQueryFn<Args, unknown, Err> =>
   async ({ url, method, data, params }, api) => {
     try {

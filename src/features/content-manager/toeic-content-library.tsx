@@ -1,13 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import type { ContentItem, GenerationType } from './types/content.types';
 import { 
-  Search, Filter, Grid, List, BookOpen, Brain, Sparkles, 
-  Clock, Target, TrendingUp, Star, ChevronDown, MoreVertical,
-  FileText, Video, AudioLines, Archive,
-  Play, Pause, Download, Trash2, Tag, Calendar, Users,
-  BarChart3, PieChart, Activity, Zap, CheckCircle2,
-  AlertCircle, Eye, Settings, Plus, Upload, Folder,
-  SortAsc, SortDesc, RefreshCw, BookMarked, GraduationCap,
-  Loader2, ExternalLink, Copy, Edit3
+  Search, Grid, List, BookOpen, Brain, Sparkles, 
+  Clock, MoreVertical,
+  FileText, AudioLines,
+  Play, Calendar,
+  CheckCircle2, Zap,
+  AlertCircle, Upload,
+  RefreshCw, BookMarked,
+  Loader2, ExternalLink
 } from 'lucide-react';
 
 // Mock API data based on your backend response
@@ -135,7 +136,7 @@ const mockApiData = [
 ];
 
 // Helper functions - moved outside component
-const getFileCategory = (fileType) => {
+const getFileCategory = (fileType: string) => {
   if (fileType?.includes('pdf')) return 'Document';
   if (fileType?.includes('text')) return 'Text';
   if (fileType?.includes('word')) return 'Document';
@@ -144,20 +145,26 @@ const getFileCategory = (fileType) => {
   return 'Other';
 };
 
-const estimateReadingTime = (sizeKb) => {
+const estimateReadingTime = (sizeKb: number) => {
   const minutes = Math.ceil(sizeKb / 10);
   return `${minutes} min`;
 };
 
-const estimateVocabulary = (sizeKb) => {
+const estimateVocabulary = (sizeKb: number) => {
   return Math.ceil(sizeKb * 8);
 };
+
+interface ContentLibraryProps {
+  readyItems?: typeof mockApiData;
+  onGenerateContent?: (item: ContentItem, type: GenerationType) => Promise<void>;
+  isGenerating?: boolean;
+}
 
 const ContentLibrary = ({ 
   readyItems = mockApiData,
   onGenerateContent,
   isGenerating = false 
-}) => {
+}: ContentLibraryProps) => {
   const [viewMode, setViewMode] = useState('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -169,6 +176,15 @@ const ContentLibrary = ({
   const processedItems = useMemo(() => {
     return readyItems.map(item => ({
       ...item,
+      id: String(item.id),
+      name: item.file_name,
+      type: 'file' as const,
+      status: (
+        item.status === 'Indexed' ? 'ready' :
+        item.status === 'Failed' ? 'error' :
+        item.status === 'Processing' ? 'processing' :
+        'uploaded'
+      ) as 'ready' | 'error' | 'processing' | 'uploaded',
       displayName: item.file_name,
       category: getFileCategory(item.file_type),
       readingTime: estimateReadingTime(item.file_size_kb),
@@ -182,7 +198,7 @@ const ContentLibrary = ({
 
   // Filter and sort logic
   const filteredItems = useMemo(() => {
-    let items = processedItems.filter(item => {
+  const items = processedItems.filter(item => {
       const matchesSearch = item.displayName.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
       const matchesFileType = selectedFileType === 'all' || item.category === selectedFileType;
@@ -209,7 +225,7 @@ const ContentLibrary = ({
     return items;
   }, [processedItems, searchQuery, selectedStatus, selectedFileType, sortBy]);
 
-  const getFileIcon = (fileType) => {
+  const getFileIcon = (fileType: string) => {
     if (fileType?.includes('pdf')) return <FileText className="h-5 w-5 text-red-500" />;
     if (fileType?.includes('word')) return <FileText className="h-5 w-5 text-blue-500" />;
     if (fileType?.includes('text')) return <FileText className="h-5 w-5 text-gray-500" />;
@@ -218,7 +234,7 @@ const ContentLibrary = ({
     return <FileText className="h-5 w-5 text-gray-500" />;
   };
 
-  const getStatusIndicator = (status) => {
+  const getStatusIndicator = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'indexed':
         return <CheckCircle2 className="h-4 w-4 text-green-500" />;
@@ -231,7 +247,7 @@ const ContentLibrary = ({
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'indexed': return 'bg-green-100 text-green-800 border-green-200';
       case 'processing': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -240,7 +256,7 @@ const ContentLibrary = ({
     }
   };
 
-  const handleItemGenerate = async (item, type) => {
+  const handleItemGenerate = async (item: ContentItem, type: GenerationType) => {
     if (onGenerateContent) {
       try {
         await onGenerateContent(item, type);
@@ -250,7 +266,7 @@ const ContentLibrary = ({
     }
   };
 
-  const formatFileSize = (sizeKb) => {
+  const formatFileSize = (sizeKb: number) => {
     if (sizeKb < 1024) return `${sizeKb} KB`;
     return `${(sizeKb / 1024).toFixed(1)} MB`;
   };
@@ -258,8 +274,8 @@ const ContentLibrary = ({
   // Statistics
   const stats = {
     total: processedItems.length,
-    indexed: processedItems.filter(item => item.status === 'Indexed').length,
-    failed: processedItems.filter(item => item.status === 'Failed').length,
+  indexed: processedItems.filter(item => item.status === 'ready').length,
+  failed: processedItems.filter(item => item.status === 'error').length,
     totalQuizzes: processedItems.reduce((acc, item) => acc + item.suggestedQuizzes, 0),
     totalFlashcards: processedItems.reduce((acc, item) => acc + item.suggestedFlashcards, 0)
   };
@@ -478,7 +494,7 @@ const ContentLibrary = ({
                   </div>
 
                   {/* AI Generation Potential - Only for indexed files */}
-                  {item.status === 'Indexed' && (
+                  {item.status === 'ready' && (
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="bg-blue-50 rounded-lg p-3 text-center">
                         <Brain className="h-5 w-5 text-blue-600 mx-auto mb-1" />
@@ -495,7 +511,7 @@ const ContentLibrary = ({
 
                   {/* Action Buttons */}
                   <div className="flex gap-2">
-                    {item.status === 'Indexed' ? (
+                    {item.status === 'ready' ? (
                       <>
                         <button 
                           onClick={() => handleItemGenerate(item, 'quiz')}
@@ -513,7 +529,7 @@ const ContentLibrary = ({
                           <ExternalLink className="h-4 w-4 text-gray-500" />
                         </button>
                       </>
-                    ) : item.status === 'Failed' ? (
+                    ) : item.status === 'error' ? (
                       <button className="flex-1 bg-red-100 text-red-700 py-2 px-3 rounded-lg text-sm font-medium cursor-not-allowed">
                         <AlertCircle className="h-4 w-4 inline mr-1" />
                         Processing Failed
@@ -547,7 +563,7 @@ const ContentLibrary = ({
                   </div>
 
                   <div className="flex items-center gap-6">
-                    {item.status === 'Indexed' && (
+                    {item.status === 'ready' && (
                       <>
                         <div className="text-center">
                           <p className="text-sm font-semibold text-blue-600">{item.suggestedQuizzes}</p>
@@ -561,7 +577,7 @@ const ContentLibrary = ({
                     )}
                     <div className="flex items-center gap-2">
                       {getStatusIndicator(item.status)}
-                      {item.status === 'Indexed' && (
+                      {item.status === 'ready' && (
                         <button 
                           onClick={() => handleItemGenerate(item, 'quiz')}
                           disabled={isGenerating}

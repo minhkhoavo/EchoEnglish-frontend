@@ -11,6 +11,7 @@ export interface ContentItem {
   language?: string;
   textQuality?: number;
   tokenLength?: number;
+  insights?: ContentInsights;
 }
 
 export interface ContentMetadata {
