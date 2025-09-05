@@ -1,8 +1,12 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { Home, Upload, BookOpen, BarChart3 } from 'lucide-react';
+import { Home, Upload, BookOpen, BarChart3, FileText } from 'lucide-react';
 
 import { type RootState, type AppDispatch } from '@/core/store/store';
-import { setActiveTab, setSidebarOpen } from '@/core/store/slices/uiSlice.';
+import {
+  setActiveTab,
+  setSidebarOpen,
+  type ActiveTab,
+} from '@/core/store/slices/uiSlice.';
 
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -11,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ContentManager } from '@/features/content-manager/ContentManager';
 import FlashcardPage from './FlashcardPage';
+import TOEICTestsContent from '@/features/test/components/TOEICTestsContent';
 
 const ContentPage = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -38,12 +43,22 @@ const ContentPage = () => {
       description: 'Practice & Review',
     },
     {
+      id: 'tests',
+      name: 'TOEIC Tests',
+      icon: FileText,
+      description: 'Practice Tests Library',
+    },
+    {
       id: 'analytics',
       name: 'Progress',
       icon: BarChart3,
       description: 'Track Performance',
     },
   ];
+
+  const handleTabClick = (tabId: string) => {
+    dispatch(setActiveTab(tabId as ActiveTab));
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -53,6 +68,8 @@ const ContentPage = () => {
         return <ContentManager />;
       case 'flashcards':
         return <FlashcardPage />;
+      case 'tests':
+        return <TOEICTestsContent testsPerPage={1} />;
       case 'analytics':
         return (
           <div className="space-y-6 text-center">
@@ -94,7 +111,7 @@ const ContentPage = () => {
           sidebarOpen={isSidebarOpen}
           activeTab={activeTab}
           navigation={navigation}
-          onTabClick={(tabId) => dispatch(setActiveTab(tabId))}
+          onTabClick={handleTabClick}
         />
         {/* Lớp phủ cho sidebar trên mobile */}
         {isSidebarOpen && (

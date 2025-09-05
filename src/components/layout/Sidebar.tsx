@@ -12,13 +12,13 @@ type NavItem = {
   description: string;
 };
 
-type ActiveTab = 'dashboard' | 'content' | 'flashcards' | 'analytics';
+type ActiveTab = 'dashboard' | 'content' | 'flashcards' | 'analytics' | 'tests';
 
 interface SidebarProps {
   sidebarOpen: boolean;
   activeTab: ActiveTab;
   navigation: NavItem[];
-  onTabClick: (tabId: ActiveTab) => void;
+  onTabClick: (tabId: string) => void;
 }
 
 export const Sidebar = ({
@@ -55,7 +55,7 @@ export const Sidebar = ({
         {navigation.map((item) => (
           <div key={item.id} className="relative group/item">
             <button
-              onClick={() => onTabClick(item.id as ActiveTab)}
+              onClick={() => onTabClick(item.id)}
               className={cn(
                 'w-full flex items-center text-left transition-all duration-200 rounded-lg',
                 // Desktop: collapsed by default, expand on sidebar hover
