@@ -1,6 +1,11 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-export type ActiveTab = 'dashboard' | 'content' | 'flashcards' | 'analytics';
+export type ActiveTab =
+  | 'dashboard'
+  | 'content'
+  | 'flashcards'
+  | 'analytics'
+  | 'tests';
 
 interface UiState {
   activeTab: ActiveTab;
