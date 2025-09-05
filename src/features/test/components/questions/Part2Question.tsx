@@ -96,6 +96,19 @@ export const Part2Question = ({ part }: Part2QuestionProps) => {
         </span>
       </div>
 
+      {/* Part Instructions */}
+      <Card className="bg-blue-50 dark:bg-blue-950">
+        <CardContent className="p-4">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            <strong>Instructions:</strong> You will hear a question or statement
+            and three responses spoken in English. They will not be printed in
+            your test book and will be spoken only one time. Select the best
+            response to the question or statement and mark the letter (A), (B),
+            or (C) on your answer sheet.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* All Questions */}
       <div className="space-y-8">
         {part.questions.map((question) => {
@@ -291,27 +304,6 @@ export const Part2Question = ({ part }: Part2QuestionProps) => {
                             </div>
                           </div>
                         ))}
-                      </div>
-
-                      <div className="mt-4 p-3 rounded-lg bg-muted">
-                        <div className="flex items-center gap-2 text-sm">
-                          <span>
-                            Your answer: <strong>{mockUserAnswer}</strong>
-                          </span>
-                          <span>•</span>
-                          <span>
-                            Correct answer:{' '}
-                            <strong>{question.correctAnswer}</strong>
-                          </span>
-                          <span>•</span>
-                          <span
-                            className={
-                              isCorrect ? 'text-green-600' : 'text-red-600'
-                            }
-                          >
-                            {isCorrect ? '✓ Correct' : '✗ Incorrect'}
-                          </span>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
