@@ -1,3 +1,4 @@
+// Basic types for test list
 export interface TOEICTest {
   testId: string;
   testTitle: string;
@@ -12,4 +13,87 @@ export interface TOEICTestsResponse {
   total?: number;
   page?: number;
   limit?: number;
+}
+
+// Detailed test structure for /tests/:testId endpoint
+export interface TestOption {
+  label: string;
+  text: string;
+}
+
+export interface TestMedia {
+  audioUrl: string | null;
+  imageUrls: string[] | null;
+  passageHtml: string | null;
+  transcript: string | null;
+  translation: string | null;
+}
+
+export interface TestQuestion {
+  questionNumber: number;
+  questionText: string | null;
+  options: TestOption[];
+  correctAnswer: string;
+  explanation: string;
+  media: TestMedia;
+}
+
+export interface TestQuestionGroup {
+  groupContext: TestMedia;
+  questions: TestQuestion[];
+}
+
+export interface TestPart {
+  partName: string;
+  partId: string;
+  questions?: TestQuestion[]; // For Parts 1, 2, 5
+  questionGroups?: TestQuestionGroup[]; // For Parts 3, 4, 6, 7
+}
+
+export interface TOEICTestDetail {
+  _id: string;
+  testId: string;
+  testTitle: string;
+  resultId: string;
+  parts: TestPart[];
+}
+
+// Response type for getting test by part (contains only one part)
+export interface TOEICTestPartDetail {
+  _id: string;
+  testId: string;
+  testTitle: string;
+  resultId: string;
+  parts: [TestPart]; // Only one part in the array
+}
+
+// UI and session types
+export interface TestFilters {
+  search: string;
+  difficulty: string;
+  category: string;
+  completed: boolean;
+  favorites: boolean;
+}
+
+export interface TestSession {
+  testId: string;
+  startTime: number;
+  currentQuestionIndex: number;
+  answers: Record<string, string>;
+  timeRemaining: number;
+  isPaused: boolean;
+}
+
+export interface TestResult {
+  testId: string;
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  timeSpent: number;
+  completedAt: number;
+  sections: {
+    listening: { score: number; total: number };
+    reading: { score: number; total: number };
+  };
 }
