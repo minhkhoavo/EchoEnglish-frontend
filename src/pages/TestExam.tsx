@@ -10,6 +10,9 @@ import { Part1Question } from '@/features/test/components/questions/Part1Questio
 import { Part2Question } from '@/features/test/components/questions/Part2Question';
 import { Part3Question } from '@/features/test/components/questions/Part3Question';
 import { Part4Question } from '@/features/test/components/questions/Part4Question';
+import { Part5Question } from '@/features/test/components/questions/Part5Question';
+import { Part6Question } from '@/features/test/components/questions/Part6Question';
+import { Part7Question } from '@/features/test/components/questions/Part7Question';
 import axiosInstance from '@/core/api/axios';
 
 interface TestData {
@@ -90,6 +93,67 @@ interface TestData {
         }>;
       }>;
     };
+    part5?: {
+      partName: string;
+      partId: string;
+      questions: Array<{
+        questionNumber: number;
+        questionText: string;
+        options: Array<{ label: string; text: string }>;
+        correctAnswer: string;
+        userAnswer?: string;
+        explanation: string;
+        media: {
+          audioUrl: null;
+          imageUrls: null;
+          passageHtml: null;
+          transcript: null;
+          translation: null;
+        };
+      }>;
+    };
+    part6?: {
+      partName: string;
+      partId: string;
+      questionGroups: Array<{
+        groupContext: {
+          audioUrl: null;
+          imageUrls: string[] | null;
+          passageHtml: string;
+          transcript: string;
+          translation: string;
+        };
+        questions: Array<{
+          questionNumber: number;
+          questionText: null;
+          options: Array<{ label: string; text: string }>;
+          correctAnswer: string;
+          userAnswer?: string;
+          explanation: string;
+        }>;
+      }>;
+    };
+    part7?: {
+      partName: string;
+      partId: string;
+      questionGroups: Array<{
+        groupContext: {
+          audioUrl: null;
+          imageUrls: string[] | null;
+          passageHtml: string;
+          transcript: string;
+          translation?: string;
+        };
+        questions: Array<{
+          questionNumber: number;
+          questionText: string;
+          options: Array<{ label: string; text: string }>;
+          correctAnswer: string;
+          userAnswer?: string;
+          explanation: string;
+        }>;
+      }>;
+    };
   };
 }
 
@@ -107,11 +171,16 @@ const TestExam = () => {
 
       try {
         setLoading(true);
+
+        // Fetch all parts 1-7
         const responses = await Promise.all([
           axiosInstance.get(`/tests/${testId}/part/1`),
           axiosInstance.get(`/tests/${testId}/part/2`),
           axiosInstance.get(`/tests/${testId}/part/3`),
           axiosInstance.get(`/tests/${testId}/part/4`),
+          axiosInstance.get(`/tests/${testId}/part/5`),
+          axiosInstance.get(`/tests/${testId}/part/6`),
+          axiosInstance.get(`/tests/${testId}/part/7`),
         ]);
 
         const combinedTestData = {
@@ -123,6 +192,9 @@ const TestExam = () => {
             part2: responses[1].data.parts[0],
             part3: responses[2].data.parts[0],
             part4: responses[3].data.parts[0],
+            part5: responses[4].data.parts[0],
+            part6: responses[5].data.parts[0],
+            part7: responses[6].data.parts[0],
           },
         };
 
@@ -242,21 +314,21 @@ const TestExam = () => {
                   </TabsContent>
 
                   <TabsContent value="part5" className="mt-0">
-                    <div className="text-center py-8 text-muted-foreground">
-                      Part 5 - Not implemented yet
-                    </div>
+                    {testData.parts.part5 && (
+                      <Part5Question part={testData.parts.part5} />
+                    )}
                   </TabsContent>
 
                   <TabsContent value="part6" className="mt-0">
-                    <div className="text-center py-8 text-muted-foreground">
-                      Part 6 - Not implemented yet
-                    </div>
+                    {testData.parts.part6 && (
+                      <Part6Question part={testData.parts.part6} />
+                    )}
                   </TabsContent>
 
                   <TabsContent value="part7" className="mt-0">
-                    <div className="text-center py-8 text-muted-foreground">
-                      Part 7 - Not implemented yet
-                    </div>
+                    {testData.parts.part7 && (
+                      <Part7Question part={testData.parts.part7} />
+                    )}
                   </TabsContent>
                 </div>
 

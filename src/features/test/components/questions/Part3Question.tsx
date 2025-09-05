@@ -104,6 +104,20 @@ export const Part3Question = ({ part }: Part3QuestionProps) => {
         </span>
       </div>
 
+      {/* Part Instructions */}
+      <Card className="bg-blue-50 dark:bg-blue-950">
+        <CardContent className="p-4">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            <strong>Instructions:</strong> You will hear some conversations
+            between two or more people. You will be asked to answer three
+            questions about what the speakers say in each conversation. Select
+            the best response to each question and mark the letter (A), (B),
+            (C), or (D) on your answer sheet. The conversations will not be
+            printed in your test book and will be spoken only one time.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* All Question Groups */}
       <div className="space-y-12">
         {part.questionGroups.map((group, groupIndex) => {
@@ -269,27 +283,6 @@ export const Part3Question = ({ part }: Part3QuestionProps) => {
                                 </div>
                               </div>
                             ))}
-                          </div>
-
-                          <div className="mb-4 p-3 rounded-lg bg-muted">
-                            <div className="flex items-center gap-2 text-sm">
-                              <span>
-                                Your answer: <strong>{mockUserAnswer}</strong>
-                              </span>
-                              <span>•</span>
-                              <span>
-                                Correct answer:{' '}
-                                <strong>{question.correctAnswer}</strong>
-                              </span>
-                              <span>•</span>
-                              <span
-                                className={
-                                  isCorrect ? 'text-green-600' : 'text-red-600'
-                                }
-                              >
-                                {isCorrect ? '✓ Correct' : '✗ Incorrect'}
-                              </span>
-                            </div>
                           </div>
 
                           {/* Explanation */}
