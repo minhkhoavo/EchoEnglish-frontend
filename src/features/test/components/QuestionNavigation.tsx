@@ -81,9 +81,67 @@ interface TestData {
         }>;
       }>;
     };
-    part5?: unknown;
-    part6?: unknown;
-    part7?: unknown;
+    part5?: {
+      partName: string;
+      partId: string;
+      questions: Array<{
+        questionNumber: number;
+        questionText: string;
+        options: Array<{ label: string; text: string }>;
+        correctAnswer: string;
+        userAnswer?: string;
+        explanation: string;
+        media: {
+          audioUrl: null;
+          imageUrls: null;
+          passageHtml: null;
+          transcript: null;
+          translation: null;
+        };
+      }>;
+    };
+    part6?: {
+      partName: string;
+      partId: string;
+      questionGroups: Array<{
+        groupContext: {
+          audioUrl: null;
+          imageUrls: string[] | null;
+          passageHtml: string;
+          transcript: string;
+          translation: string;
+        };
+        questions: Array<{
+          questionNumber: number;
+          questionText: null;
+          options: Array<{ label: string; text: string }>;
+          correctAnswer: string;
+          userAnswer?: string;
+          explanation: string;
+        }>;
+      }>;
+    };
+    part7?: {
+      partName: string;
+      partId: string;
+      questionGroups: Array<{
+        groupContext: {
+          audioUrl: null;
+          imageUrls: string[] | null;
+          passageHtml: string;
+          transcript: string;
+          translation?: string;
+        };
+        questions: Array<{
+          questionNumber: number;
+          questionText: string;
+          options: Array<{ label: string; text: string }>;
+          correctAnswer: string;
+          userAnswer?: string;
+          explanation: string;
+        }>;
+      }>;
+    };
   };
 }
 
@@ -140,6 +198,46 @@ export const QuestionNavigation = ({
       71: { userAnswer: 'B', correctAnswer: 'D' },
       72: { userAnswer: 'A', correctAnswer: 'A' },
       73: { userAnswer: 'C', correctAnswer: 'C' },
+      // Part 5 mock answers
+      101: { userAnswer: 'B', correctAnswer: 'B' },
+      102: { userAnswer: 'D', correctAnswer: 'D' },
+      103: { userAnswer: 'C', correctAnswer: 'C' },
+      104: { userAnswer: 'A', correctAnswer: 'B' }, // incorrect
+      105: { userAnswer: 'B', correctAnswer: 'B' },
+      // Part 6 mock answers
+      131: { userAnswer: 'D', correctAnswer: 'D' },
+      132: { userAnswer: 'D', correctAnswer: 'D' },
+      133: { userAnswer: 'A', correctAnswer: 'A' },
+      134: { userAnswer: 'B', correctAnswer: 'B' },
+      135: { userAnswer: 'C', correctAnswer: 'C' },
+      136: { userAnswer: 'A', correctAnswer: 'A' },
+      137: { userAnswer: 'B', correctAnswer: 'B' },
+      138: { userAnswer: 'B', correctAnswer: 'B' },
+      139: { userAnswer: 'A', correctAnswer: 'B' }, // incorrect
+      140: { userAnswer: 'C', correctAnswer: 'C' },
+      // Part 7 mock answers
+      147: { userAnswer: 'C', correctAnswer: 'C' },
+      148: { userAnswer: 'B', correctAnswer: 'B' },
+      149: { userAnswer: 'B', correctAnswer: 'B' },
+      150: { userAnswer: 'C', correctAnswer: 'C' },
+      151: { userAnswer: 'B', correctAnswer: 'B' },
+      152: { userAnswer: 'D', correctAnswer: 'D' },
+      153: { userAnswer: 'A', correctAnswer: 'A' },
+      154: { userAnswer: 'B', correctAnswer: 'B' },
+      155: { userAnswer: 'A', correctAnswer: 'A' },
+      156: { userAnswer: 'D', correctAnswer: 'D' },
+      157: { userAnswer: 'B', correctAnswer: 'B' },
+      158: { userAnswer: 'B', correctAnswer: 'B' },
+      159: { userAnswer: 'A', correctAnswer: 'A' },
+      160: { userAnswer: 'B', correctAnswer: 'B' },
+      161: { userAnswer: 'C', correctAnswer: 'A' }, // incorrect
+      190: { userAnswer: 'A', correctAnswer: 'A' },
+      195: { userAnswer: 'C', correctAnswer: 'B' }, // incorrect
+      196: { userAnswer: 'A', correctAnswer: 'A' },
+      197: { userAnswer: 'C', correctAnswer: 'C' },
+      198: { userAnswer: 'C', correctAnswer: 'C' },
+      199: { userAnswer: 'D', correctAnswer: 'D' },
+      200: { userAnswer: 'B', correctAnswer: 'B' },
     };
 
     const answer = mockAnswers[questionNum as keyof typeof mockAnswers];
