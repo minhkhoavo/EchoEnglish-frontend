@@ -4,6 +4,7 @@ import contentReducer from '../../features/content-manager/slices/contentSlice';
 import quizReducer from '../../features/quiz/slices/quizSlice';
 import flashcardReducer from '../../features/flashcard/slices/flashcardSlice';
 import testReducer from '../../features/test/slices/testSlice';
+import authReducer from '../../features/auth/slices/authSlice';
 import { api } from '../api/api';
 import { quizApi } from '../../features/quiz/services/quizApi';
 import { flashcardApi } from '../../features/flashcard/services/flashcardApi';
@@ -17,6 +18,7 @@ export const store = configureStore({
     quiz: quizReducer,
     flashcard: flashcardReducer,
     test: testReducer,
+    auth: authReducer,
     [api.reducerPath]: api.reducer,
     [quizApi.reducerPath]: quizApi.reducer,
     [flashcardApi.reducerPath]: flashcardApi.reducer,

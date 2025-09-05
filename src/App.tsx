@@ -3,6 +3,12 @@ import ContentPage from './pages/ContentPage';
 import FlashcardPage from './pages/FlashcardPage';
 import TOEICTests from './pages/TOEICTests';
 import TestExam from './pages/TestExam';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import VerifyOtpPage from './pages/auth/VerifyOtpPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import ProfilePage from './pages/auth/ProfilePage';
 import { Toaster } from './components/ui/sonner';
 import { QuizInterface } from './features/quiz/QuizInterface';
 import { useLocation } from 'react-router-dom';
@@ -19,6 +25,15 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/verify-otp" element={<VerifyOtpPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+
+        {/* Main App Routes */}
         <Route path="/" element={<ContentPage />} />
         <Route path="/flashcards" element={<FlashcardPage />} />
         <Route path="/quiz" element={<QuizRouteWrapper />} />

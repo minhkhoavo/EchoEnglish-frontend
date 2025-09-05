@@ -20,6 +20,10 @@ import {
   Bell,
   Search,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '@/core/store/store';
+import { logout } from '@/features/auth/slices/authSlice';
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -27,6 +31,15 @@ interface HeaderProps {
 }
 
 export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    toast.success('Logged out successfully!');
+    navigate('/login');
+  };
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -117,7 +130,10 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
                 >
                   <span className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-300 to-pink-300 opacity-70" />
                   <img
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
+                    src={
+                      user?.image ||
+                      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
+                    }
                     alt="User Avatar"
                     className="h-7 w-7 rounded-full object-cover relative z-10 border border-white dark:border-gray-900"
                   />
@@ -127,14 +143,19 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">John Doe</p>
+                    <p className="text-sm font-medium leading-none">
+                      {user?.fullName || 'User'}
+                    </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      john.doe@example.com
+                      {user?.email || 'user@example.com'}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate('/profile')}
+                >
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
@@ -151,7 +172,10 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600">
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-600 focus:text-red-600"
+                  onClick={handleLogout}
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>
                 </DropdownMenuItem>
