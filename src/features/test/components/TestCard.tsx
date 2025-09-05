@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Clock, Users, BookOpen, Eye } from 'lucide-react';
 import {
   Card,
@@ -16,6 +17,8 @@ interface TestCardProps {
 }
 
 export const TestCard = ({ test }: TestCardProps) => {
+  const navigate = useNavigate();
+
   // Mock additional data since API only provides testId and testTitle
   const mockData = {
     participants: Math.floor(Math.random() * 5000000) + 100000,
@@ -117,10 +120,10 @@ export const TestCard = ({ test }: TestCardProps) => {
         <Button
           className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold py-2.5 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
           onClick={() => {
-            console.log(`View test details: ${test.testId}`);
+            navigate(`/test-exam/${test.testId}`);
           }}
         >
-          Detail
+          View Details
         </Button>
       </CardFooter>
     </Card>
