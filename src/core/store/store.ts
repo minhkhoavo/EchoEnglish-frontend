@@ -7,7 +7,6 @@ import testReducer from '../../features/test/slices/testSlice';
 import authReducer from '../../features/auth/slices/authSlice';
 import { api } from '../api/api';
 import { quizApi } from '../../features/quiz/services/quizApi';
-import { flashcardApi } from '../../features/flashcard/services/flashcardApi';
 import { useDispatch, useSelector } from 'react-redux';
 import type { TypedUseSelectorHook } from 'react-redux';
 
@@ -21,14 +20,9 @@ export const store = configureStore({
     auth: authReducer,
     [api.reducerPath]: api.reducer,
     [quizApi.reducerPath]: quizApi.reducer,
-    [flashcardApi.reducerPath]: flashcardApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(
-      api.middleware,
-      quizApi.middleware,
-      flashcardApi.middleware
-    ),
+    getDefaultMiddleware().concat(api.middleware, quizApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

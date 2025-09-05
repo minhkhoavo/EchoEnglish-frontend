@@ -78,18 +78,6 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
             </div>
           </div>
 
-          {/* Center Section - Search (hidden on mobile) */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search lessons, vocabulary..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
           {/* Right Section */}
           <div className="flex items-center space-x-3">
             {/* Premium Badge */}

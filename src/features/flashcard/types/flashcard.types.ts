@@ -1,5 +1,6 @@
 export interface Flashcard {
-  id: string;
+  _id?: string;
+  id?: string;
   front: string;
   back: string;
   category: string;
@@ -9,20 +10,39 @@ export interface Flashcard {
   isAIGenerated: boolean;
   createdAt: string;
   updatedAt: string;
-  reviewCount?: number;
-  correctCount?: number;
-  lastReviewed?: string;
+  createBy: string;
+  updateBy: string;
 }
 
 export interface Category {
-  id: string;
+  _id?: string;
+  id?: string;
   name: string;
-  color: string;
-  icon?: string;
   description?: string;
-  flashcardCount: number;
-  createdAt: string;
-  updatedAt?: string;
+  color?: string;
+  icon?: string;
+  flashcardCount?: number;
+  createdAt?: string;
+  updateAt?: string;
+}
+
+export interface FlashcardWithCategory extends Omit<Flashcard, 'category'> {
+  category: Category;
+}
+
+export interface FlashcardsByCategoryResponse {
+  flashcards: FlashcardWithCategory[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface ApiResponse<T> {
+  message: string;
+  data: T;
 }
 
 export interface FlashcardFilters {

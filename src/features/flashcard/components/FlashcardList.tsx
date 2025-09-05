@@ -58,7 +58,7 @@ const FlashcardList: React.FC = () => {
             <div
               key={card.id}
               className="p-6 h-64 flex flex-col border rounded-lg relative group cursor-pointer" // Thêm border và bo góc để dễ nhìn
-              onClick={() => toggleFlip(card.id)}
+              onClick={() => card.id && toggleFlip(card.id)}
             >
               {card.isAIGenerated && (
                 <div className="absolute top-2 right-2">
@@ -85,7 +85,7 @@ const FlashcardList: React.FC = () => {
 
               <div className="flex-1 flex items-center justify-center text-center">
                 <div className="space-y-3">
-                  {flippedCards.has(card.id) ? (
+                  {card.id && flippedCards.has(card.id) ? (
                     <>
                       <EyeOff className="h-5 w-5 text-muted-foreground mx-auto animate-pulse" />
                       <p className="text-sm text-foreground font-medium">

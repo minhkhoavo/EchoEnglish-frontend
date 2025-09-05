@@ -83,8 +83,8 @@ export const authApi = api.injectEndpoints({
       UpdateProfileRequest
     >({
       query: (profileData) => ({
-        url: '/auth/myInfo',
-        method: 'POST',
+        url: '/users/my-profile',
+        method: 'PUT',
         data: profileData,
       }),
       invalidatesTags: ['Profile'],

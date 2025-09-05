@@ -59,12 +59,6 @@ const FlashcardBoard: React.FC = () => {
     null
   );
 
-  // Debug: Log when filters change
-  useEffect(() => {
-    console.log('Filters changed:', filters);
-  }, [filters]);
-
-  // Check if error is server disconnection
   const isServerDisconnected =
     error &&
     (('message' in error && error.message === 'SERVER_DISCONNECTED') ||
@@ -72,10 +66,7 @@ const FlashcardBoard: React.FC = () => {
 
   // Filter and sort flashcards locally
   const filteredFlashcards = React.useMemo(() => {
-    console.log('Recalculating filtered flashcards with filters:', filters);
     let filtered = [...flashcards];
-
-    // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(
         (card) =>
@@ -87,21 +78,17 @@ const FlashcardBoard: React.FC = () => {
       );
     }
 
-    // Apply category filter
     if (selectedCategory) {
       filtered = filtered.filter((card) => card.category === selectedCategory);
     }
 
-    // Apply filters
     if (filters.difficulty) {
-      console.log('Applying difficulty filter:', filters.difficulty);
       filtered = filtered.filter(
         (card) => card.difficulty === filters.difficulty
       );
     }
 
     if (filters.aiGenerated) {
-      console.log('Applying aiGenerated filter:', filters.aiGenerated);
       filtered = filtered.filter(
         (card) => card.isAIGenerated === filters.aiGenerated
       );
@@ -113,21 +100,17 @@ const FlashcardBoard: React.FC = () => {
       );
     }
 
-    console.log('Filtered result count:', filtered.length);
-
-    // Apply sorting
     filtered.sort((a, b) => {
-      let aValue = a[sortBy as keyof Flashcard];
-      let bValue = b[sortBy as keyof Flashcard];
-
-      // Handle special cases
+      const aValue = a[sortBy as keyof Flashcard];
+      const bValue = b[sortBy as keyof Flashcard];
       if (
         sortBy === 'createdAt' ||
         sortBy === 'updatedAt' ||
         sortBy === 'lastReviewed'
       ) {
-        aValue = new Date(aValue as string).getTime();
-        bValue = new Date(bValue as string).getTime();
+        const aTime = new Date(aValue as string).getTime();
+        const bTime = new Date(bValue as string).getTime();
+        return sortDirection === 'asc' ? aTime - bTime : bTime - aTime;
       }
 
       if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -191,19 +174,11 @@ const FlashcardBoard: React.FC = () => {
     filterKey: string,
     value: string | boolean | string[]
   ) => {
-    console.log('Filter change:', filterKey, value);
-    console.log('Current filters before:', filters);
-
     if (filterKey === 'difficulty' && value === 'all') {
       dispatch(setFilters({ [filterKey]: '' }));
     } else {
       dispatch(setFilters({ [filterKey]: value }));
     }
-
-    // Check state after dispatch
-    setTimeout(() => {
-      console.log('Current filters after:', filters);
-    }, 0);
   };
 
   const handleClearFilters = () => {
@@ -215,8 +190,17 @@ const FlashcardBoard: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this flashcard?')) {
       try {
         await deleteFlashcard(id).unwrap();
+        toast({
+          title: 'Success',
+          description: 'Flashcard deleted successfully.',
+        });
       } catch (error) {
         console.error('Failed to delete flashcard:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to delete flashcard. Please try again.',
+          variant: 'destructive',
+        });
       }
     }
   };
@@ -255,7 +239,7 @@ const FlashcardBoard: React.FC = () => {
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded mb-4 w-1/3"></div>
             <div className="h-10 bg-gray-200 rounded mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="scrollbar-hide grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="h-48 bg-gray-200 rounded"></div>
               ))}
@@ -520,13 +504,13 @@ const FlashcardBoard: React.FC = () => {
             <div
               className={
                 viewMode === 'grid'
-                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                  ? 'scrollbar-hide grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6'
                   : 'space-y-4'
               }
             >
               {filteredFlashcards.map((flashcard: Flashcard) => (
                 <FlashcardItem
-                  key={flashcard.id}
+                  key={flashcard._id || flashcard.id}
                   flashcard={flashcard}
                   viewMode={viewMode}
                   onEdit={handleEditFlashcard}

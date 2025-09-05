@@ -51,13 +51,26 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
   });
   const [newTag, setNewTag] = useState('');
 
-  const { data: categories = [], isLoading: categoriesLoading } =
-    useGetCategoriesQuery();
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useGetCategoriesQuery();
   const [createFlashcard, { isLoading: isCreating }] =
     useCreateFlashcardMutation();
   const [updateFlashcard, { isLoading: isUpdating }] =
     useUpdateFlashcardMutation();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (categoriesError) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load categories. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, [categoriesError, toast]);
 
   useEffect(() => {
     if (isEdit && flashcard) {
@@ -86,7 +99,6 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!formData.front.trim() || !formData.back.trim() || !formData.category) {
       toast({
         title: 'Validation Error',
@@ -100,7 +112,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
     try {
       if (isEdit && flashcard) {
         await updateFlashcard({
-          id: flashcard.id,
+          id: flashcard._id || flashcard.id || '',
           ...formData,
         }).unwrap();
         toast({
@@ -153,7 +165,24 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
   return (
     <>
       {/* Trigger Button */}
-      <div onClick={() => setOpen(true)}>
+      <div
+        onClick={() => {
+          // Reset form data for new flashcard creation
+          if (!isEdit) {
+            setFormData({
+              front: '',
+              back: '',
+              category: '',
+              difficulty: 'Medium',
+              tags: [],
+              source: '',
+              isAIGenerated: false,
+            });
+            setNewTag('');
+          }
+          setOpen(true);
+        }}
+      >
         {trigger || (
           <Button className="gap-2">
             {isEdit ? <Edit2 size={16} /> : <Plus size={16} />}
@@ -166,12 +195,27 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
         open={open}
         onOpenChange={(newOpen) => {
           setOpen(newOpen);
-          if (!newOpen && isEdit) {
-            onSuccess?.(); // Call onSuccess when closing edit dialog
+          if (!newOpen) {
+            // Reset form when closing dialog
+            if (!isEdit) {
+              setFormData({
+                front: '',
+                back: '',
+                category: '',
+                difficulty: 'Medium',
+                tags: [],
+                source: '',
+                isAIGenerated: false,
+              });
+              setNewTag('');
+            }
+            if (isEdit) {
+              onSuccess?.();
+            }
           }
         }}
       >
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-6">
+        <DialogContent className="scrollbar-hide max-w-lg max-h-[90vh] overflow-y-auto p-6">
           <DialogHeader className="pb-4">
             <DialogTitle className="text-xl font-semibold">
               {isEdit ? 'Edit Flashcard' : 'Create New Flashcard'}
@@ -229,9 +273,9 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                 </Label>
                 <Select
                   value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, category: value }))
-                  }
+                  onValueChange={(value) => {
+                    setFormData((prev) => ({ ...prev, category: value }));
+                  }}
                   required
                 >
                   <SelectTrigger>
@@ -242,15 +286,31 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                       <SelectItem value="loading" disabled>
                         Loading categories...
                       </SelectItem>
+                    ) : categories.length === 0 ? (
+                      <SelectItem value="no-categories" disabled>
+                        No categories available. Please create a category first.
+                      </SelectItem>
                     ) : (
-                      categories.map((category: Category) => (
-                        <SelectItem key={category.id} value={category.name}>
-                          {category.name}
-                        </SelectItem>
-                      ))
+                      categories.map((category: Category) => {
+                        return (
+                          <SelectItem
+                            key={category._id || category.id}
+                            value={category._id || category.id || ''}
+                          >
+                            <span className="truncate block max-w-full">
+                              {category.name}
+                            </span>
+                          </SelectItem>
+                        );
+                      })
                     )}
                   </SelectContent>
                 </Select>
+                {categories.length === 0 && !categoriesLoading && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    ⚠️ No categories found. Please create a category first.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
