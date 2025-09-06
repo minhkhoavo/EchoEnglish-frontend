@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import CustomPagination from '@/components/ui/custom-pagination';
 import FlashcardItem from './FlashcardItem';
 import CategorySidebar from './CategorySidebar.tsx';
 import CreateEditFlashcardDialog from './CreateEditFlashcardDialog';
@@ -58,6 +59,10 @@ const FlashcardBoard: React.FC = () => {
   const [editingFlashcard, setEditingFlashcard] = useState<Flashcard | null>(
     null
   );
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(2);
 
   const isServerDisconnected =
     error &&
@@ -135,6 +140,19 @@ const FlashcardBoard: React.FC = () => {
     sortBy,
     sortDirection,
   ]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredFlashcards.length / pageSize);
+  const paginatedFlashcards = filteredFlashcards.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [filteredFlashcards.length, pageSize, currentPage, totalPages]);
 
   useEffect(() => {
     // Show different toast based on error type
@@ -477,7 +495,7 @@ const FlashcardBoard: React.FC = () => {
                 <Button variant="outline">Check Status</Button>
               </div>
             </div>
-          ) : filteredFlashcards.length === 0 ? (
+          ) : paginatedFlashcards.length === 0 ? (
             // Empty State (only when no server error)
             <div className="text-center py-12">
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -501,23 +519,34 @@ const FlashcardBoard: React.FC = () => {
               />
             </div>
           ) : (
-            <div
-              className={
-                viewMode === 'grid'
-                  ? 'scrollbar-hide grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6'
-                  : 'space-y-4'
-              }
-            >
-              {filteredFlashcards.map((flashcard: Flashcard) => (
-                <FlashcardItem
-                  key={flashcard._id || flashcard.id}
-                  flashcard={flashcard}
-                  viewMode={viewMode}
-                  onEdit={handleEditFlashcard}
-                  onDelete={handleDeleteFlashcard}
+            <>
+              <div
+                className={
+                  viewMode === 'grid'
+                    ? 'scrollbar-hide grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6'
+                    : 'space-y-4'
+                }
+              >
+                {paginatedFlashcards.map((flashcard: Flashcard) => (
+                  <FlashcardItem
+                    key={flashcard._id || flashcard.id}
+                    flashcard={flashcard}
+                    viewMode={viewMode}
+                    onEdit={handleEditFlashcard}
+                    onDelete={handleDeleteFlashcard}
+                  />
+                ))}
+              </div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <CustomPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  className="mt-6"
                 />
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
