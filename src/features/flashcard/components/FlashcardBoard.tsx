@@ -11,6 +11,7 @@ import {
 import {
   useGetFlashcardsQuery,
   useDeleteFlashcardMutation,
+  useGetCategoriesQuery,
 } from '../services/flashcardApi';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,7 @@ const FlashcardBoard: React.FC = () => {
   );
 
   const { data: flashcards = [], isLoading, error } = useGetFlashcardsQuery();
+  const { data: categories = [] } = useGetCategoriesQuery();
   const [deleteFlashcard] = useDeleteFlashcardMutation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { toast } = useToast();
@@ -227,6 +229,14 @@ const FlashcardBoard: React.FC = () => {
     setEditingFlashcard(flashcard);
   };
 
+  const getCategoryName = (categoryId: string | null): string => {
+    if (!categoryId) return 'All Flashcards';
+    const category = categories.find(
+      (cat) => (cat._id || cat.id) === categoryId
+    );
+    return category ? category.name : categoryId;
+  };
+
   const getActiveFiltersCount = () => {
     let count = 0;
     if (filters.difficulty) count++;
@@ -284,13 +294,13 @@ const FlashcardBoard: React.FC = () => {
             <div>
               <div className="flex items-center gap-1">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {selectedCategory || 'All Flashcards'}
+                  {getCategoryName(selectedCategory)}
                 </h1>
               </div>
               <p className="text-gray-600">
                 {filteredFlashcards.length} flashcard
                 {filteredFlashcards.length !== 1 ? 's' : ''}
-                {selectedCategory && ` in ${selectedCategory}`}
+                {selectedCategory && ` in ${getCategoryName(selectedCategory)}`}
               </p>
             </div>
             <div className="flex items-center gap-3">
