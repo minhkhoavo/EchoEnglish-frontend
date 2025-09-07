@@ -82,7 +82,6 @@ const LoginForm: React.FC = () => {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) {
       return;
     }
@@ -96,7 +95,7 @@ const LoginForm: React.FC = () => {
         password: formData.password,
       }).unwrap();
 
-      // Store token
+      // Store token before fetching profile, otherwise it will result in 401
       localStorage.setItem('accessToken', result.data.token);
 
       // Fetch profile
@@ -108,6 +107,7 @@ const LoginForm: React.FC = () => {
         setCredentials({
           user: profileResult.data,
           accessToken: result.data.token,
+          rememberMe: formData.rememberMe,
         })
       );
 

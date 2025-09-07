@@ -1,10 +1,25 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { User, AuthState } from '../types/auth.types';
 
+// Helper function to get user from storage
+const getUserFromStorage = (): User | null => {
+  const userStr =
+    localStorage.getItem('user') || sessionStorage.getItem('user');
+  try {
+    return userStr ? JSON.parse(userStr) : null;
+  } catch {
+    return null;
+  }
+};
+
 const initialState: AuthState = {
-  user: null,
-  accessToken: localStorage.getItem('accessToken'),
-  isAuthenticated: Boolean(localStorage.getItem('accessToken')),
+  user: getUserFromStorage(),
+  accessToken:
+    localStorage.getItem('accessToken') ||
+    sessionStorage.getItem('accessToken'),
+  isAuthenticated: Boolean(
+    localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+  ),
   isLoading: false,
   error: null,
 };
@@ -18,22 +33,38 @@ const authSlice = createSlice({
       action: PayloadAction<{
         user: User;
         accessToken: string;
+        rememberMe?: boolean;
       }>
     ) => {
-      const { user, accessToken } = action.payload;
+      const { user, accessToken, rememberMe = false } = action.payload;
       state.user = user;
       state.accessToken = accessToken;
       state.isAuthenticated = true;
       state.error = null;
 
-      // Store tokens in localStorage
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('user', JSON.stringify(user));
+      // Store token and user info according to "Remember me"
+      if (rememberMe) {
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('user', JSON.stringify(user));
+        // Ensure removal from sessionStorage
+        sessionStorage.removeItem('accessToken');
+        sessionStorage.removeItem('user');
+      } else {
+        sessionStorage.setItem('accessToken', accessToken);
+        sessionStorage.setItem('user', JSON.stringify(user));
+        // Ensure removal from localStorage
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+      }
     },
 
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
-      localStorage.setItem('user', JSON.stringify(action.payload));
+      if (localStorage.getItem('user')) {
+        localStorage.setItem('user', JSON.stringify(action.payload));
+      } else {
+        sessionStorage.setItem('user', JSON.stringify(action.payload));
+      }
     },
 
     logout: (state) => {
@@ -42,9 +73,10 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
 
-      // Clear localStorage
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
+      sessionStorage.removeItem('accessToken');
+      sessionStorage.removeItem('user');
     },
 
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -62,25 +94,10 @@ const authSlice = createSlice({
 
     updateAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
-      localStorage.setItem('accessToken', action.payload);
-    },
-
-    initializeAuth: (state) => {
-      // Initialize auth state from localStorage on app start
-      const storedUser = localStorage.getItem('user');
-      const storedAccessToken = localStorage.getItem('accessToken');
-
-      if (storedUser && storedAccessToken) {
-        try {
-          state.user = JSON.parse(storedUser);
-          state.accessToken = storedAccessToken;
-          state.isAuthenticated = true;
-        } catch (error) {
-          // Clear invalid stored data
-          localStorage.removeItem('user');
-          localStorage.removeItem('accessToken');
-          state.isAuthenticated = false;
-        }
+      if (localStorage.getItem('accessToken')) {
+        localStorage.setItem('accessToken', action.payload);
+      } else {
+        sessionStorage.setItem('accessToken', action.payload);
       }
     },
   },
@@ -94,7 +111,6 @@ export const {
   setError,
   clearError,
   updateAccessToken,
-  initializeAuth,
 } = authSlice.actions;
 
 // Selectors
