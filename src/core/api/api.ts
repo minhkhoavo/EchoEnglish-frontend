@@ -8,10 +8,11 @@ type Args = {
   data?: unknown;
   params?: Record<string, unknown>;
 };
+
 type Err = { status?: number; data?: unknown };
-const axiosBaseQuery =
-  (): BaseQueryFn<Args, unknown, Err> =>
-  async ({ url, method, data, params }, api) => {
+
+function axiosBaseQuery(): BaseQueryFn<Args, unknown, Err> {
+  return async function baseQuery({ url, method, data, params }, api) {
     try {
       const res = await axiosInstance.request({
         url,
@@ -31,10 +32,13 @@ const axiosBaseQuery =
       };
     }
   };
+}
 
+// Create API slice, similar to createSlice
 export const api = createApi({
-  reducerPath: 'api',
-  baseQuery: axiosBaseQuery(),
-  tagTypes: ['Profile', 'User', 'Category', 'Flashcard'],
-  endpoints: () => ({}),
+  reducerPath: 'api', // name of the slice in Redux store, state will be state.api
+  baseQuery: axiosBaseQuery(), // API calling engine (axios)
+  tagTypes: ['Profile', 'User', 'Category', 'Flashcard'], // tag types for cache management
+  endpoints: () => ({}), // specific endpoints will be added in other files
 });
+// createApi automatically generates a reducer to manage API slice state (cache, loading, error), located in api.reducer.

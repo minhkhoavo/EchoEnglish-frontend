@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ContentPage from './pages/ContentPage';
 import FlashcardPage from './pages/FlashcardPage';
-import TOEICTests from './pages/TOEICTests';
-import TestExam from './pages/TestExam';
+import TOEICTests from './pages/test/TOEICTests';
+import TestExam from './pages/test/TestExam';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
