@@ -145,40 +145,6 @@ export const Part2Question = ({ part }: Part2QuestionProps) => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left: Explanation and Transcript */}
                 <div className="space-y-4">
-                  {/* Explanation Section */}
-                  <Collapsible
-                    open={isExplanationExpanded}
-                    onOpenChange={() =>
-                      toggleExplanation(question.questionNumber)
-                    }
-                  >
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between"
-                      >
-                        Show explanation
-                        {isExplanationExpanded ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <Card className="mt-2">
-                        <CardContent className="p-4">
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: question.explanation,
-                            }}
-                            className="prose prose-sm max-w-none dark:prose-invert"
-                          />
-                        </CardContent>
-                      </Card>
-                    </CollapsibleContent>
-                  </Collapsible>
-
                   {/* Transcript Section */}
                   <Collapsible
                     open={isTranscriptExpanded}
@@ -205,6 +171,40 @@ export const Part2Question = ({ part }: Part2QuestionProps) => {
                           <div
                             dangerouslySetInnerHTML={{
                               __html: question.media.transcript,
+                            }}
+                            className="prose prose-sm max-w-none dark:prose-invert"
+                          />
+                        </CardContent>
+                      </Card>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Explanation Section */}
+                  <Collapsible
+                    open={isExplanationExpanded}
+                    onOpenChange={() =>
+                      toggleExplanation(question.questionNumber)
+                    }
+                  >
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between"
+                      >
+                        Show explanation
+                        {isExplanationExpanded ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <Card className="mt-2">
+                        <CardContent className="p-4">
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: question.explanation,
                             }}
                             className="prose prose-sm max-w-none dark:prose-invert"
                           />
