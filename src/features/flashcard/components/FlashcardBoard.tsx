@@ -63,11 +63,10 @@ const FlashcardBoard: React.FC = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(2);
-
   const isServerDisconnected =
     error &&
     (('message' in error && error.message === 'SERVER_DISCONNECTED') ||
-      ('status' in error && error.status === 0));
+      ('data' in error && error.data === 'Network Error'));
 
   // Filter and sort flashcards locally
   const filteredFlashcards = React.useMemo(() => {
