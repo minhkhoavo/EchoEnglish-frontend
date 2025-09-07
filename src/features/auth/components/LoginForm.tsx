@@ -27,7 +27,7 @@ const LoginForm: React.FC = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    rememberMe: false,
+    rememberMe: true,
   });
 
   // Form errors
