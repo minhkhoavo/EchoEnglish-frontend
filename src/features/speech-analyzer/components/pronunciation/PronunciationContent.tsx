@@ -2,18 +2,18 @@ import { useMemo } from 'react';
 import ScoreSummary from './ScoreSummary';
 import TopErrors from './TopErrors.tsx';
 import SkillsSection from './SkillsSection.tsx';
-import Transcript from './Transcript.tsx';
+import Transcript from '../shared/Transcript.tsx';
 import type {
   RecordingAnalysis,
   TranscriptData,
-} from '../types/pronunciation.types';
-import type { Recording } from '../../recordings/types/recordings.types';
+} from '../../types/pronunciation.types';
+import type { Recording } from '../../../recordings/types/recordings.types';
 
-export interface RecordingDetailContentProps {
+export interface PronunciationContentProps {
   recording?: Recording | null;
 }
 
-const RecordingDetailContent = ({ recording }: RecordingDetailContentProps) => {
+const PronunciationContent = ({ recording }: PronunciationContentProps) => {
   const analysis = (recording?.analysis as RecordingAnalysis) || undefined;
 
   const transcriptData = useMemo<TranscriptData | undefined>(() => {
@@ -48,10 +48,13 @@ const RecordingDetailContent = ({ recording }: RecordingDetailContentProps) => {
         <ScoreSummary percentage={Math.round(pronScore)} level={level} />
         <TopErrors chartData={chartData} topMistakes={topMistakes} />
         <SkillsSection topMistakes={topMistakes} />
-        <Transcript transcriptData={transcriptData ?? undefined} />
+        <Transcript
+          transcriptData={transcriptData ?? undefined}
+          mode="pronunciation"
+        />
       </div>
     </div>
   );
 };
 
-export default RecordingDetailContent;
+export default PronunciationContent;

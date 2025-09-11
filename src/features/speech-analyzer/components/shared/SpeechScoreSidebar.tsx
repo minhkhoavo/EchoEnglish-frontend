@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { RecordingOverallScores } from '../types/pronunciation.types';
+import type { RecordingOverallScores } from '../../types/pronunciation.types';
 
 const iconUrl = (id: string) =>
   `${import.meta.env.BASE_URL}icon/speech-analyzer/icon-${id}.svg`;
@@ -51,15 +51,22 @@ const baseMenuItems: Omit<MenuItem, 'level' | 'score' | 'scoreColor'>[] = [
 export interface SpeechScoreSidebarProps {
   overall?: RecordingOverallScores;
   currentView?: string;
+  onViewChange?: (view: string) => void;
 }
 
 const SpeechScoreSidebar = ({
   overall,
   currentView = 'pronunciation',
+  onViewChange,
 }: SpeechScoreSidebarProps) => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [activeItem, setActiveItem] = useState(currentView);
+
+  // Update activeItem when currentView changes
+  useEffect(() => {
+    setActiveItem(currentView);
+  }, [currentView]);
 
   const levelForScore = (score?: number) => {
     if (score == null) return 'N/A';
@@ -97,15 +104,18 @@ const SpeechScoreSidebar = ({
 
   const handleItemClick = (itemId: string) => {
     setActiveItem(itemId);
-    if (id) {
+    if (onViewChange) {
+      // Use internal view change callback
+      onViewChange(itemId);
+    } else if (id) {
+      // Fallback to URL navigation if no callback provided
       navigate(`/speech-analyze/${id}/${itemId}`);
     }
   };
 
   const handleBackClick = () => {
-    if (id) {
-      navigate(`/speech-analyze/${id}`);
-    }
+    // Navigate back to recordings page
+    navigate('/recordings');
   };
 
   return (

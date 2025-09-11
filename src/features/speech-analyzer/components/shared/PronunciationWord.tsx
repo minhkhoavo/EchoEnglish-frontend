@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import type {
   WordPronunciation,
   AccuracyLevel,
-} from '../types/pronunciation.types';
+} from '../../types/pronunciation.types';
 
 interface PronunciationWordProps {
   wordData: WordPronunciation;
@@ -168,7 +168,7 @@ const PronunciationWord: React.FC<PronunciationWordProps> = ({
   const visibleErrors = wordData.errors.filter((error) =>
     visibleErrorTypes.has(error.type)
   );
-  const hasErrors = visibleErrors.length > 0;
+  const hasVisibleErrors = visibleErrors.length > 0;
 
   const {
     displayText,
@@ -181,10 +181,14 @@ const PronunciationWord: React.FC<PronunciationWordProps> = ({
     wordStyles += ' ' + errorStyles;
   }
 
-  if (mergedFeatures.showAccuracyColors && !hasErrors) {
-    wordStyles += ' ' + getAccuracyStyles(accuracyLevel, hasErrors);
-  } else if (mergedFeatures.showAccuracyColors && hasErrors && !errorStyles) {
-    wordStyles += ' ' + getAccuracyStyles(accuracyLevel, hasErrors);
+  if (mergedFeatures.showAccuracyColors && !hasVisibleErrors) {
+    wordStyles += ' ' + getAccuracyStyles(accuracyLevel, hasVisibleErrors);
+  } else if (
+    mergedFeatures.showAccuracyColors &&
+    hasVisibleErrors &&
+    !errorStyles
+  ) {
+    wordStyles += ' ' + getAccuracyStyles(accuracyLevel, hasVisibleErrors);
   }
 
   if (mergedFeatures.showStressMarking && wordData.isStressed) {
@@ -221,7 +225,7 @@ const PronunciationWord: React.FC<PronunciationWordProps> = ({
         onMouseLeave={handleMouseLeave}
         data-offset={wordData.offset}
         data-accuracy={wordData.accuracy}
-        title={`Accuracy: ${wordData.accuracy}% | Click to play`}
+        title={`Accuracy: ${wordData.accuracy}% | ${hasVisibleErrors ? `${visibleErrors.length} visible error(s)` : 'No visible errors'} | Click to play`}
       >
         {displayText}
       </span>
