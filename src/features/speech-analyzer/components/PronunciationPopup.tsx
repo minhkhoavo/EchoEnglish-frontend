@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
+import { Volume2, Headphones } from 'lucide-react';
 import type { WordPronunciation } from '../types/pronunciation.types';
 
 interface PronunciationPopupProps {
   wordData: WordPronunciation;
   position: { x: number; y: number };
   isVisible: boolean;
+  audioUrl?: string;
   onClose?: () => void;
   className?: string;
 }
@@ -58,10 +60,39 @@ const PronunciationPopup: React.FC<PronunciationPopupProps> = ({
   wordData,
   position,
   isVisible,
+  audioUrl,
   onClose,
   className = '',
 }) => {
+  const [isPlayingTTS, setIsPlayingTTS] = useState(false);
+  const [isPlayingUser, setIsPlayingUser] = useState(false);
+  const ttsAudioRef = useRef<HTMLAudioElement>(null);
+  const userAudioRef = useRef<HTMLAudioElement>(null);
+
   if (!isVisible) return null;
+
+  const playTTSPronunciation = async () => {
+    if (isPlayingTTS || !ttsAudioRef.current) return;
+
+    setIsPlayingTTS(true);
+    ttsAudioRef.current.src = `https://classmate-vuive.vn/tts?text=${encodeURIComponent(wordData.word)}`;
+    ttsAudioRef.current.play().catch(console.error);
+  };
+
+  const playUserPronunciation = async () => {
+    if (isPlayingUser || !audioUrl || !userAudioRef.current) return;
+
+    setIsPlayingUser(true);
+    userAudioRef.current.src = audioUrl;
+    userAudioRef.current.currentTime = wordData.offset / 1000;
+    userAudioRef.current.play().catch(console.error);
+
+    setTimeout(() => {
+      userAudioRef.current?.pause();
+      setIsPlayingUser(false);
+    }, wordData.duration);
+  };
+
   const popupWidth = 280;
   const popupHeight = 360;
   const margin = 10;
@@ -93,6 +124,18 @@ const PronunciationPopup: React.FC<PronunciationPopupProps> = ({
           maxHeight: popupHeight,
         }}
       >
+        {/* Hidden audio elements */}
+        <audio
+          ref={ttsAudioRef}
+          onEnded={() => setIsPlayingTTS(false)}
+          onError={() => setIsPlayingTTS(false)}
+        />
+        <audio
+          ref={userAudioRef}
+          onEnded={() => setIsPlayingUser(false)}
+          onError={() => setIsPlayingUser(false)}
+        />
+
         {/* Compact Header */}
         <div className="bg-blue-500 text-white p-2 rounded-t-lg header">
           <div className="flex justify-between items-center">
@@ -104,14 +147,44 @@ const PronunciationPopup: React.FC<PronunciationPopupProps> = ({
                 {wordData.accuracy}%
               </span>
             </div>
-            {onClose && (
+
+            <div className="flex items-center space-x-1">
+              {/* TTS Pronunciation Button */}
               <button
-                onClick={onClose}
-                className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1 text-sm"
+                onClick={playTTSPronunciation}
+                disabled={isPlayingTTS}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1 text-sm transition-colors disabled:opacity-50"
+                title="Listen to correct pronunciation"
               >
-                ✕
+                <Volume2
+                  className={`w-4 h-4 ${isPlayingTTS ? 'animate-pulse' : ''}`}
+                />
               </button>
-            )}
+
+              {/* User Pronunciation Button */}
+              {audioUrl && (
+                <button
+                  onClick={playUserPronunciation}
+                  disabled={isPlayingUser}
+                  className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1 text-sm transition-colors disabled:opacity-50"
+                  title="Listen to your pronunciation"
+                >
+                  <Headphones
+                    className={`w-4 h-4 ${isPlayingUser ? 'animate-pulse' : ''}`}
+                  />
+                </button>
+              )}
+
+              {/* Close Button */}
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1 text-sm"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -162,14 +235,6 @@ const PronunciationPopup: React.FC<PronunciationPopupProps> = ({
                 {wordData.accuracy}%
               </span>
             </div>
-            {wordData.confidenceScore && (
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-xs text-gray-500">Confidence:</span>
-                <span className="text-xs text-gray-700">
-                  {wordData.confidenceScore}%
-                </span>
-              </div>
-            )}
           </div>
 
           {/* Phoneme comparison - focus on expected vs actual */}
@@ -191,7 +256,9 @@ const PronunciationPopup: React.FC<PronunciationPopupProps> = ({
                             /{phoneme.expectedPhoneme}/
                           </span>
                           <span className="text-gray-400">→</span>
-                          <span className="text-blue-600 font-mono">
+                          <span
+                            className={`text-blue-600 ${phoneme.isCorrect ? 'font-mono' : 'font-bold text-red-600'}`}
+                          >
                             /{phoneme.actualPhoneme}/
                           </span>
                         </>
@@ -243,9 +310,6 @@ const PronunciationPopup: React.FC<PronunciationPopupProps> = ({
                         {error.type.replace('_', ' ')}
                       </span>
                     </div>
-                    {error.confidence && (
-                      <span className="text-gray-500">{error.confidence}%</span>
-                    )}
                   </div>
                 ))}
               </div>

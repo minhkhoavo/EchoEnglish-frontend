@@ -104,3 +104,47 @@ export interface TranscriptData {
   };
   advancedFeatures?: AdvancedFeatures;
 }
+
+export interface SkillResource {
+  title: string;
+  url: string;
+  type?: string;
+}
+
+export interface SkillEntry {
+  title: string;
+  level: string;
+  resources: SkillResource[];
+}
+
+export interface TopMistake {
+  sound: string;
+  errorRate: number;
+  mistakeSummary: string;
+  wordsWithMistakes: Array<{
+    word: string;
+    phoneticTranscription?: string;
+  }>;
+  howToImprove: string;
+  skillsData: SkillEntry[];
+}
+
+export interface RecordingOverallScores {
+  AccuracyScore: number;
+  FluencyScore: number;
+  ProsodyScore: number;
+  CompletenessScore: number;
+  PronScore: number;
+}
+
+export interface RecordingAnalysis extends TranscriptData {
+  overall: RecordingOverallScores;
+  analyses: {
+    pronunciation: {
+      chartData: Array<{ sound: string; errorRate: number }>;
+      topMistakes: TopMistake[];
+    };
+    // optional sections, omitted for now
+    [key: string]: unknown;
+  };
+}

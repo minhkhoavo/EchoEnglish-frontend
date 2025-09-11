@@ -1,58 +1,92 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { RecordingOverallScores } from '../types/pronunciation.types';
 
 const iconUrl = (id: string) =>
   `${import.meta.env.BASE_URL}icon/speech-analyzer/icon-${id}.svg`;
 
-export const menuItems = [
+export type MenuItem = {
+  id: string;
+  icon: string;
+  title: string;
+  level: string;
+  score: string;
+  scoreColor: string;
+  activeGradient: string;
+};
+
+const baseMenuItems: Omit<MenuItem, 'level' | 'score' | 'scoreColor'>[] = [
   {
     id: 'pronunciation',
     icon: iconUrl('pronunciation'),
     title: 'Pronunciation',
-    level: 'Beginner',
-    score: '38%',
-    scoreColor: 'text-[#eb5757]',
     activeGradient: 'from-[#6ee8ff] to-[#3a87ff]',
   },
   {
     id: 'intonation',
     icon: iconUrl('intonation'),
     title: 'Intonation',
-    level: 'Elementary',
-    score: '47%',
-    scoreColor: 'text-[#eb5757]',
     activeGradient: 'from-[#ffb339] to-[#ff128e]',
   },
   {
     id: 'fluency',
     icon: iconUrl('fluency'),
     title: 'Fluency',
-    level: 'Intermediate',
-    score: '50%',
-    scoreColor: 'text-[#fe9500]',
     activeGradient: 'from-[#fff35c] to-[#ef7b32]',
   },
   {
     id: 'grammar',
     icon: iconUrl('grammar'),
     title: 'Grammar',
-    level: '',
-    score: 'N/A',
-    scoreColor: 'text-[#eb5757]',
     activeGradient: 'from-[#ff52e3] to-[#2980ff]',
   },
   {
     id: 'vocabulary',
     icon: iconUrl('vocabulary'),
     title: 'Vocabulary',
-    level: '',
-    score: 'N/A',
-    scoreColor: 'text-[#27ae60]',
     activeGradient: 'from-[#fc2ac2] to-[#ffb84e]',
   },
-] as const;
+];
 
-const SpeechScoreSidebar = () => {
+export interface SpeechScoreSidebarProps {
+  overall?: RecordingOverallScores;
+}
+
+const SpeechScoreSidebar = ({ overall }: SpeechScoreSidebarProps) => {
   const [activeItem, setActiveItem] = useState('pronunciation');
+
+  const levelForScore = (score?: number) => {
+    if (score == null) return 'N/A';
+    if (score >= 85) return 'Advanced';
+    if (score >= 70) return 'Intermediate';
+    if (score >= 50) return 'Elementary';
+    return 'Beginner';
+  };
+
+  const colorForScore = (score?: number) => {
+    if (score == null) return 'text-[#8181a5]';
+    if (score >= 85) return 'text-[#27ae60]';
+    if (score >= 70) return 'text-[#2d9cdb]';
+    if (score >= 50) return 'text-[#fe9500]';
+    return 'text-[#eb5757]';
+  };
+
+  const menuItems: MenuItem[] = useMemo(() => {
+    const scores = {
+      pronunciation: overall?.PronScore,
+      fluency: overall?.FluencyScore,
+      intonation: overall?.ProsodyScore,
+    } as Record<string, number | undefined>;
+
+    return baseMenuItems.map((item) => {
+      const sc = scores[item.id];
+      return {
+        ...item,
+        level: levelForScore(sc),
+        score: sc != null ? `${Math.round(sc)}%` : 'N/A',
+        scoreColor: colorForScore(sc),
+      };
+    });
+  }, [overall]);
 
   const handleItemClick = (id: string) => {
     setActiveItem(id);

@@ -1,10 +1,37 @@
 // components/SkillItem.tsx
 import { useState } from 'react';
 import { Play, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@/components/ui/dialog';
+
+// Convert various YouTube url formats to embed url
+const convertToEmbed = (url: string) => {
+  try {
+    const u = new URL(url);
+    const id = u.searchParams.get('v');
+    if (id) return `https://www.youtube.com/embed/${id}?autoplay=1`;
+    const parts = u.pathname.split('/');
+    const last = parts[parts.length - 1];
+    if (u.hostname.includes('youtu.be') && last) {
+      return `https://www.youtube.com/embed/${last}?autoplay=1`;
+    }
+  } catch (_) {
+    // fallthrough
+  }
+  return url;
+};
 
 interface Video {
   imgUrl: string;
   title: string;
+  url?: string;
 }
 
 interface VideoThumbnailProps {
@@ -18,8 +45,12 @@ interface SkillItemProps {
   videos: Video[];
 }
 
-const VideoThumbnail = ({ imgUrl, title }: VideoThumbnailProps) => (
-  <div className="group cursor-pointer">
+const VideoThumbnail = ({
+  imgUrl,
+  title,
+  onClick,
+}: VideoThumbnailProps & { onClick?: () => void }) => (
+  <div className="group cursor-pointer" onClick={onClick}>
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200">
       <div className="flex items-center space-x-3">
         {/* Compact Thumbnail */}
@@ -49,7 +80,8 @@ const VideoThumbnail = ({ imgUrl, title }: VideoThumbnailProps) => (
 
 const SkillItem = ({ title, level, videos }: SkillItemProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-
+  const [openUrl, setOpenUrl] = useState<string | null>(null);
+  console.log({ title, level, videos });
   const levelConfig = {
     'Needs Improvement': {
       color: 'bg-red-500',
@@ -58,6 +90,12 @@ const SkillItem = ({ title, level, videos }: SkillItemProps) => {
       borderColor: 'border-red-200',
     },
     Good: {
+      color: 'bg-yellow-500',
+      textColor: 'text-yellow-700',
+      bgColor: 'bg-yellow-50',
+      borderColor: 'border-yellow-200',
+    },
+    Fair: {
       color: 'bg-yellow-500',
       textColor: 'text-yellow-700',
       bgColor: 'bg-yellow-50',
@@ -108,7 +146,10 @@ const SkillItem = ({ title, level, videos }: SkillItemProps) => {
         {/* Show first video when collapsed or single video */}
         {(!hasMultipleVideos || !isExpanded) && (
           <div className="mt-3">
-            <VideoThumbnail {...videos[0]} />
+            <VideoThumbnail
+              {...videos[0]}
+              onClick={() => videos[0].url && setOpenUrl(videos[0].url)}
+            />
           </div>
         )}
       </div>
@@ -118,11 +159,37 @@ const SkillItem = ({ title, level, videos }: SkillItemProps) => {
         <div className="px-4 pb-4 border-t border-gray-100 pt-3">
           <div className="space-y-2">
             {videos.map((video, index) => (
-              <VideoThumbnail key={index} {...video} />
+              <VideoThumbnail
+                key={index}
+                {...video}
+                onClick={() => video.url && setOpenUrl(video.url)}
+              />
             ))}
           </div>
         </div>
       )}
+
+      {/* Dialog for playing video */}
+      <Dialog open={!!openUrl} onOpenChange={(v) => !v && setOpenUrl(null)}>
+        <DialogContent className="max-w-2xl w-full">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>Video tutorial</DialogDescription>
+          </DialogHeader>
+          <div className="w-full h-[56vh] bg-black rounded mt-2 overflow-hidden">
+            {openUrl ? (
+              <iframe
+                title="video-player"
+                src={convertToEmbed(openUrl)}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : null}
+          </div>
+          <DialogClose />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
