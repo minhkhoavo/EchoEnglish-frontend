@@ -4,6 +4,7 @@ import {
   type PayloadAction,
 } from '@reduxjs/toolkit';
 import type { ContentItem } from '../types/content.types';
+import type { RootState } from '@/core/store/store';
 
 export const addFilesToProcess = createAsyncThunk(
   'content/addFilesToProcess',
@@ -84,17 +85,5 @@ export const {
   setLoadedFiles,
   setLoading,
 } = contentSlice.actions;
-
-// Selectors
-export const selectAllContent = (state: { content: ContentState }) =>
-  state.content.items;
-export const selectReadyContent = (state: { content: ContentState }) =>
-  state.content.items.filter((item) => item.status === 'ready');
-export const selectProcessingContent = (state: { content: ContentState }) =>
-  state.content.items.filter((item) => item.status === 'processing');
-export const selectContentLoading = (state: { content: ContentState }) =>
-  state.content.loading;
-export const selectContentError = (state: { content: ContentState }) =>
-  state.content.error;
 
 export default contentSlice.reducer;
