@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
 import {
-  selectAllContent,
-  selectReadyContent,
   addFilesToProcess,
   addUrlToProcess,
   removeItem as removeContentItem,
@@ -25,8 +23,10 @@ export const ContentManager = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const contentItems = useAppSelector(selectAllContent);
-  const readyItems = useAppSelector(selectReadyContent);
+  const contentItems = useAppSelector((state) => state.content.items);
+  const readyItems = useAppSelector((state) =>
+    state.content.items.filter((item) => item.status === 'ready')
+  );
   const [fetchUserFiles] = useLazyFetchUserFilesQuery();
 
   const loadFiles = useCallback(async () => {
