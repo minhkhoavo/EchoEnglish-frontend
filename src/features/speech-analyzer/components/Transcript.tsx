@@ -19,7 +19,7 @@ interface WordFeatures {
 }
 
 interface TranscriptProps {
-  transcriptData: TranscriptData;
+  transcriptData?: TranscriptData;
   className?: string;
   features?: {
     enableWordClickToSeek?: boolean;
@@ -35,6 +35,7 @@ interface TranscriptSegmentProps {
   onSegmentPlay: (startTime: number) => void;
   currentTime: number;
   wordFeatures: WordFeatures;
+  audioUrl?: string;
 }
 
 const defaultFeatures = {
@@ -57,6 +58,7 @@ const TranscriptSegmentComponent: React.FC<TranscriptSegmentProps> = ({
   onSegmentPlay,
   currentTime,
   wordFeatures,
+  audioUrl,
 }) => {
   const [selectedWord, setSelectedWord] = useState<WordPronunciation | null>(
     null
@@ -174,6 +176,7 @@ const TranscriptSegmentComponent: React.FC<TranscriptSegmentProps> = ({
           wordData={selectedWord}
           position={popupPosition}
           isVisible={true}
+          audioUrl={audioUrl}
           onClose={closePopup}
         />
       )}
@@ -191,11 +194,11 @@ const Transcript: React.FC<TranscriptProps> = ({
   const transcriptRef = useRef<HTMLDivElement>(null);
 
   const mergedFeatures = { ...defaultFeatures, ...features };
-
   // Handle time updates from audio player
   const handleTimeUpdate = useCallback(
     (time: number) => {
       setCurrentTime(time);
+      if (!transcriptData) return;
       const currentSegment = transcriptData.segments.find(
         (segment) => time >= segment.startTime && time <= segment.endTime
       );
@@ -218,11 +221,7 @@ const Transcript: React.FC<TranscriptProps> = ({
         }
       }
     },
-    [
-      activeSegmentId,
-      transcriptData.segments,
-      mergedFeatures.autoScrollToCurrentSegment,
-    ]
+    [activeSegmentId, transcriptData, mergedFeatures.autoScrollToCurrentSegment]
   );
 
   // Handle word click to seek
@@ -242,6 +241,16 @@ const Transcript: React.FC<TranscriptProps> = ({
 
   // Calculate overall statistics
   const overallStats = React.useMemo(() => {
+    if (!transcriptData) {
+      return {
+        totalWords: 0,
+        totalErrors: 0,
+        averageAccuracy: 0,
+        totalSegments: 0,
+        errorBreakdown: {},
+      };
+    }
+
     const totalWords = transcriptData.segments.reduce(
       (sum, segment) => sum + segment.words.length,
       0
@@ -281,7 +290,7 @@ const Transcript: React.FC<TranscriptProps> = ({
       totalSegments: transcriptData.segments.length,
       errorBreakdown,
     };
-  }, [transcriptData.segments]);
+  }, [transcriptData]);
 
   const wordFeatures = {
     clickToSeek: mergedFeatures.enableWordClickToSeek,
@@ -291,6 +300,24 @@ const Transcript: React.FC<TranscriptProps> = ({
     showTooltip: false, // We use popup instead
     emphasizeStress: true,
   };
+
+  if (!transcriptData) {
+    return (
+      <div
+        className={`mt-5 bg-white rounded-xl border-2 border-purple-100 overflow-hidden ${className}`}
+      >
+        <div className="p-6 text-center text-gray-600">
+          <div className="text-lg font-medium mb-2">
+            No transcript data available
+          </div>
+          <div className="text-sm">
+            Recording details are loading or the recording has no transcript
+            yet.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -401,6 +428,7 @@ const Transcript: React.FC<TranscriptProps> = ({
               onSegmentPlay={handleSegmentPlay}
               currentTime={currentTime}
               wordFeatures={wordFeatures}
+              audioUrl={transcriptData.audioUrl}
             />
           </div>
         ))}

@@ -132,7 +132,7 @@ const RegisterForm: React.FC = () => {
     }
 
     setErrors(newErrors);
-    return Object.values(newErrors).every((v) => v === '');
+    return Object.values(newErrors).every((error) => error === '');
   }; // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -170,6 +170,7 @@ const RegisterForm: React.FC = () => {
     e.preventDefault();
 
     if (!validateForm()) {
+      alert('Please fix the errors in the form');
       return;
     }
 
@@ -193,6 +194,7 @@ const RegisterForm: React.FC = () => {
         toast.success(
           'Registration successful! Please check your email for verification code.'
         );
+        console.log('Form Data:', formData);
         navigate(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
       } else {
         toast.error('Registration failed. Please try again.');

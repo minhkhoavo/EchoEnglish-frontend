@@ -24,7 +24,7 @@ const ErrorCard = ({ sound, mistakes, improvement }: ErrorCardProps) => (
             <span>{mistake.description}</span>
             <div className="pl-4">
               {mistake.words.map((word, idx) => (
-                <div key={idx} dangerouslySetInnerHTML={{ __html: word }} />
+                <div key={idx}>{word}</div>
               ))}
             </div>
           </div>

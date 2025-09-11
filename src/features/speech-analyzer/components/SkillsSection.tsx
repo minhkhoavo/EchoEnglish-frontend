@@ -1,55 +1,42 @@
 // components/SkillsSection.tsx
 import SkillItem from './SkillItem';
 import { Info, TrendingUp } from 'lucide-react';
+import type { TopMistake } from '../types/pronunciation.types';
 
-const skillsData = [
-  {
-    title: 'Skill /æ/, /ʌ/, /ɑ/',
-    level: 'Needs Improvement',
-    videos: [
-      {
-        imgUrl: 'https://img.youtube.com/vi/msSHfmmZ-WA/1.jpg',
-        title: 'Tutorial for /æ/, /ʌ/, /ɑ/',
-      },
-    ],
-  },
-  {
-    title: 'Skill Nasals: /m/, /n/, /ŋ/',
-    level: 'Needs Improvement',
-    videos: [
-      {
-        imgUrl: 'https://img.youtube.com/vi/6ESY7ueSfrc/1.jpg',
-        title: 'Tutorial for Nasals',
-      },
-      {
-        imgUrl: 'https://img.youtube.com/vi/CoEh8cz-mS4/1.jpg',
-        title: 'Tutorial for Nasals',
-      },
-    ],
-  },
-  {
-    title: 'Skill /eɪ/, /ɛ/, /æ/',
-    level: 'Good',
-    videos: [
-      {
-        imgUrl: 'https://img.youtube.com/vi/XOuD6mFr6sQ/1.jpg',
-        title: 'Tutorial for /eɪ/, /ɛ/, /æ/',
-      },
-    ],
-  },
-  {
-    title: 'Skill /p/, /t/, /k/',
-    level: 'Correct',
-    videos: [
-      {
-        imgUrl: 'https://img.youtube.com/vi/UMGLa9L0o7U/1.jpg',
-        title: 'Tutorial for /p/, /t/, /k/',
-      },
-    ],
-  },
-];
+export interface SkillsSectionProps {
+  topMistakes: TopMistake[];
+}
 
-const SkillsSection = () => {
+const youtubeThumb = (url: string) => {
+  try {
+    const u = new URL(url);
+    const id = u.searchParams.get('v');
+    if (id) return `https://img.youtube.com/vi/${id}/1.jpg`;
+    const parts = u.pathname.split('/');
+    const last = parts[parts.length - 1];
+    if (u.hostname.includes('youtu.be') && last) {
+      return `https://img.youtube.com/vi/${last}/1.jpg`;
+    }
+  } catch (_) {
+    // ignore
+  }
+  return 'https://img.youtube.com/vi/dQw4w9WgXcQ/1.jpg';
+};
+
+const SkillsSection = ({ topMistakes }: SkillsSectionProps) => {
+  const skillsData = topMistakes
+    .flatMap((m) => m.skillsData)
+    .map((s) => ({
+      title: s.title,
+      level: s.level,
+      videos: s.resources
+        .filter((r) => r.type === 'video')
+        .map((r) => ({
+          imgUrl: youtubeThumb(r.url),
+          title: r.title,
+          url: r.url,
+        })),
+    }));
   const needsImprovement = skillsData.filter(
     (skill) => skill.level === 'Needs Improvement'
   ).length;

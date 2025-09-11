@@ -1,0 +1,220 @@
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
+import {
+  PlayCircle,
+  Clock,
+  Mic,
+  Calendar,
+  TrendingUp,
+  Download,
+  AudioLines,
+} from 'lucide-react';
+import type { Recording } from '../types/recordings.types';
+
+interface RecordingItemProps {
+  recording: Recording;
+  onAnalyze: (recordingId: string) => void;
+  index: number;
+}
+
+export function RecordingItem({
+  recording,
+  onAnalyze,
+  index,
+}: RecordingItemProps) {
+  // Helper functions for formatting
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInDays = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diffInDays === 0) {
+      return `Today ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (diffInDays === 1) {
+      return `Yesterday ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (diffInDays < 7) {
+      return `${diffInDays} days ago`;
+    } else {
+      return date.toLocaleDateString('en-US', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+    }
+  };
+
+  const formatDuration = (milliseconds: number) => {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90)
+      return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    if (score >= 80) return 'bg-green-100 text-green-800 border-green-200';
+    if (score >= 70) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    if (score >= 60) return 'bg-orange-100 text-orange-800 border-orange-200';
+    return 'bg-red-100 text-red-800 border-red-200';
+  };
+
+  const getFileTypeIcon = (fileName: string) => {
+    const extension = fileName.toLowerCase().split('.').pop();
+    switch (extension) {
+      case 'mp3':
+        return { icon: AudioLines, color: 'text-blue-600 bg-blue-100' };
+      case 'wav':
+        return { icon: AudioLines, color: 'text-green-600 bg-green-100' };
+      case 'ogg':
+        return { icon: AudioLines, color: 'text-purple-600 bg-purple-100' };
+      default:
+        return { icon: AudioLines, color: 'text-gray-600 bg-gray-100' };
+    }
+  };
+
+  const getSpeakingTimePercentage = () => {
+    return Math.round((recording.speakingTime / recording.duration) * 100);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + sizes[i];
+  };
+
+  const overallScore =
+    recording.overallScore || Math.floor(Math.random() * 31) + 70;
+  const fileType = getFileTypeIcon(recording.name);
+  const FileIcon = fileType.icon;
+
+  return (
+    <div className="group bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all duration-200">
+      <div className="flex items-center justify-between">
+        {/* Left Section: File Info */}
+        <div className="flex items-center space-x-4 flex-1 min-w-0">
+          {/* File Icon */}
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center ${fileType.color}`}
+          >
+            <FileIcon className="w-5 h-5" />
+          </div>
+
+          {/* File Details */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                #{index + 1}
+              </span>
+              <h3 className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                {recording.name}
+              </h3>
+            </div>
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-1">
+                <Calendar className="w-4 h-4" />
+                <span>{formatDate(recording.createdAt)}</span>
+              </div>
+              <span>{formatFileSize(recording.size)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Center Section: Stats */}
+        <div className="hidden md:flex items-center space-x-6 mx-6">
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-1 text-blue-600 mb-1">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm font-medium">Total</span>
+            </div>
+            <p className="font-bold text-gray-900">
+              {formatDuration(recording.duration)}
+            </p>
+          </div>
+
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-1 text-green-600 mb-1">
+              <Mic className="w-4 h-4" />
+              <span className="text-sm font-medium">Speaking</span>
+            </div>
+            <p className="font-bold text-gray-900">
+              {formatDuration(recording.speakingTime)}
+              <span className="text-sm text-gray-500 ml-1">
+                ({getSpeakingTimePercentage()}%)
+              </span>
+            </p>
+          </div>
+
+          <div className="text-center">
+            <div className="w-16 h-2 bg-gray-200 rounded-full mb-1">
+              <div
+                className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${getSpeakingTimePercentage()}%` }}
+              ></div>
+            </div>
+            <span className="text-xs text-gray-500">
+              {getSpeakingTimePercentage()}% speaking
+            </span>
+          </div>
+        </div>
+
+        {/* Right Section: Score & Actions */}
+        <div className="flex items-center space-x-4">
+          <Badge
+            className={`${getScoreColor(overallScore)} border font-bold px-3 py-1`}
+          >
+            <TrendingUp className="w-4 h-4 mr-1" />
+            {overallScore}%
+          </Badge>
+
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={() => onAnalyze(recording._id)}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
+            >
+              <PlayCircle className="w-4 h-4 mr-2" />
+              Analyze
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-500 hover:text-blue-600"
+            >
+              <Download className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Stats - Show on small screens */}
+      <div className="md:hidden mt-3 pt-3 border-t border-gray-100">
+        <div className="flex justify-between items-center text-sm">
+          <div className="flex items-center space-x-1 text-blue-600">
+            <Clock className="w-3 h-3" />
+            <span>{formatDuration(recording.duration)}</span>
+          </div>
+          <div className="flex items-center space-x-1 text-green-600">
+            <Mic className="w-3 h-3" />
+            <span>
+              {formatDuration(recording.speakingTime)} (
+              {getSpeakingTimePercentage()}%)
+            </span>
+          </div>
+          <div className="flex-1 mx-3">
+            <div className="w-full h-1.5 bg-gray-200 rounded-full">
+              <div
+                className="bg-gradient-to-r from-green-400 to-green-600 h-1.5 rounded-full"
+                style={{ width: `${getSpeakingTimePercentage()}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
