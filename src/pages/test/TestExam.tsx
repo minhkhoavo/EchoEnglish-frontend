@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Volume2, Settings } from 'lucide-react';
+import { ArrowLeft, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { AudioPlayer } from '@/components/AudioPlayer';
 import { QuestionNavigation } from '@/features/test/components/QuestionNavigation';
 import { Part1Question } from '@/features/test/components/questions/Part1Question';
 import { Part2Question } from '@/features/test/components/questions/Part2Question';
@@ -13,201 +11,23 @@ import { Part4Question } from '@/features/test/components/questions/Part4Questio
 import { Part5Question } from '@/features/test/components/questions/Part5Question';
 import { Part6Question } from '@/features/test/components/questions/Part6Question';
 import { Part7Question } from '@/features/test/components/questions/Part7Question';
-import axiosInstance from '@/core/api/axios';
-
-interface TestData {
-  testId: string;
-  testTitle: string;
-  resultId: string;
-  parts: {
-    part1?: {
-      partName: string;
-      partId: string;
-      questions: Array<{
-        questionNumber: number;
-        questionText: null;
-        options: Array<{ label: string; text: string }>;
-        correctAnswer: string;
-        userAnswer?: string;
-        explanation: string;
-        media: {
-          audioUrl: string;
-          imageUrls: string[];
-          transcript: string;
-          translation?: string;
-        };
-      }>;
-    };
-    part2?: {
-      partName: string;
-      partId: string;
-      questions: Array<{
-        questionNumber: number;
-        questionText: null;
-        options: Array<{ label: string; text: string }>;
-        correctAnswer: string;
-        userAnswer?: string;
-        explanation: string;
-        media: {
-          audioUrl: string;
-          transcript: string;
-          translation?: string;
-        };
-      }>;
-    };
-    part3?: {
-      partName: string;
-      partId: string;
-      questionGroups: Array<{
-        groupContext: {
-          audioUrl: string;
-          transcript: string;
-          translation: string;
-        };
-        questions: Array<{
-          questionNumber: number;
-          questionText: string;
-          options: Array<{ label: string; text: string }>;
-          correctAnswer: string;
-          userAnswer?: string;
-          explanation: string;
-        }>;
-      }>;
-    };
-    part4?: {
-      partName: string;
-      partId: string;
-      questionGroups: Array<{
-        groupContext: {
-          audioUrl: string;
-          transcript: string;
-          translation: string;
-        };
-        questions: Array<{
-          questionNumber: number;
-          questionText: string;
-          options: Array<{ label: string; text: string }>;
-          correctAnswer: string;
-          userAnswer?: string;
-          explanation: string;
-        }>;
-      }>;
-    };
-    part5?: {
-      partName: string;
-      partId: string;
-      questions: Array<{
-        questionNumber: number;
-        questionText: string;
-        options: Array<{ label: string; text: string }>;
-        correctAnswer: string;
-        userAnswer?: string;
-        explanation: string;
-        media: {
-          audioUrl: null;
-          imageUrls: null;
-          passageHtml: null;
-          transcript: null;
-          translation: null;
-        };
-      }>;
-    };
-    part6?: {
-      partName: string;
-      partId: string;
-      questionGroups: Array<{
-        groupContext: {
-          audioUrl: null;
-          imageUrls: string[] | null;
-          passageHtml: string;
-          transcript: string;
-          translation: string;
-        };
-        questions: Array<{
-          questionNumber: number;
-          questionText: null;
-          options: Array<{ label: string; text: string }>;
-          correctAnswer: string;
-          userAnswer?: string;
-          explanation: string;
-        }>;
-      }>;
-    };
-    part7?: {
-      partName: string;
-      partId: string;
-      questionGroups: Array<{
-        groupContext: {
-          audioUrl: null;
-          imageUrls: string[] | null;
-          passageHtml: string;
-          transcript: string;
-          translation?: string;
-        };
-        questions: Array<{
-          questionNumber: number;
-          questionText: string;
-          options: Array<{ label: string; text: string }>;
-          correctAnswer: string;
-          userAnswer?: string;
-          explanation: string;
-        }>;
-      }>;
-    };
-  };
-}
+import { useGetTOEICTestByIdQuery } from '@/features/test/services/testApi';
+import type { TOEICTestDetail } from '@/features/test/types/test.types';
 
 const TestExam = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
   const [selectedPart, setSelectedPart] = useState('part1');
   const [currentQuestion, setCurrentQuestion] = useState(1);
-  const [testData, setTestData] = useState<TestData | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchTestData = async () => {
-      if (!testId) return;
-
-      try {
-        setLoading(true);
-
-        // Fetch all parts 1-7
-        const responses = await Promise.all([
-          axiosInstance.get(`/tests/${testId}/part/1`),
-          axiosInstance.get(`/tests/${testId}/part/2`),
-          axiosInstance.get(`/tests/${testId}/part/3`),
-          axiosInstance.get(`/tests/${testId}/part/4`),
-          axiosInstance.get(`/tests/${testId}/part/5`),
-          axiosInstance.get(`/tests/${testId}/part/6`),
-          axiosInstance.get(`/tests/${testId}/part/7`),
-        ]);
-
-        const combinedTestData = {
-          testId: responses[0].data.testId,
-          testTitle: responses[0].data.testTitle,
-          resultId: responses[0].data.resultId,
-          parts: {
-            part1: responses[0].data.parts[0],
-            part2: responses[1].data.parts[0],
-            part3: responses[2].data.parts[0],
-            part4: responses[3].data.parts[0],
-            part5: responses[4].data.parts[0],
-            part6: responses[5].data.parts[0],
-            part7: responses[6].data.parts[0],
-          },
-        };
-
-        setTestData(combinedTestData);
-      } catch (error) {
-        console.error('Error fetching test data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTestData();
-  }, [testId]);
+  // Use RTK Query hook instead of manual fetch
+  const {
+    data: testData,
+    isLoading: loading,
+    error,
+  } = useGetTOEICTestByIdQuery(testId || '', {
+    skip: !testId,
+  });
 
   const handleBackToTests = () => {
     navigate('/');
@@ -228,7 +48,18 @@ const TestExam = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">Loading test...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-lg text-red-500">
+          Error loading test:{' '}
+          {error instanceof Error ? error.message : 'Unknown error'}
+        </div>
       </div>
     );
   }
@@ -236,7 +67,7 @@ const TestExam = () => {
   if (!testData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg text-red-500">Unable to load test data</div>
+        <div className="text-lg text-red-500">Test not found</div>
       </div>
     );
   }
@@ -290,44 +121,44 @@ const TestExam = () => {
 
                 <div className="p-6">
                   <TabsContent value="part1" className="mt-0">
-                    {testData.parts.part1 && (
-                      <Part1Question part={testData.parts.part1} />
+                    {testData?.parts[0] && (
+                      <Part1Question part={testData.parts[0]} />
                     )}
                   </TabsContent>
 
                   <TabsContent value="part2" className="mt-0">
-                    {testData.parts.part2 && (
-                      <Part2Question part={testData.parts.part2} />
+                    {testData?.parts[1] && (
+                      <Part2Question part={testData.parts[1]} />
                     )}
                   </TabsContent>
 
                   <TabsContent value="part3" className="mt-0">
-                    {testData.parts.part3 && (
-                      <Part3Question part={testData.parts.part3} />
+                    {testData?.parts[2] && (
+                      <Part3Question part={testData.parts[2]} />
                     )}
                   </TabsContent>
 
                   <TabsContent value="part4" className="mt-0">
-                    {testData.parts.part4 && (
-                      <Part4Question part={testData.parts.part4} />
+                    {testData?.parts[3] && (
+                      <Part4Question part={testData.parts[3]} />
                     )}
                   </TabsContent>
 
                   <TabsContent value="part5" className="mt-0">
-                    {testData.parts.part5 && (
-                      <Part5Question part={testData.parts.part5} />
+                    {testData?.parts[4] && (
+                      <Part5Question part={testData.parts[4]} />
                     )}
                   </TabsContent>
 
                   <TabsContent value="part6" className="mt-0">
-                    {testData.parts.part6 && (
-                      <Part6Question part={testData.parts.part6} />
+                    {testData?.parts[5] && (
+                      <Part6Question part={testData.parts[5]} />
                     )}
                   </TabsContent>
 
                   <TabsContent value="part7" className="mt-0">
-                    {testData.parts.part7 && (
-                      <Part7Question part={testData.parts.part7} />
+                    {testData?.parts[6] && (
+                      <Part7Question part={testData.parts[6]} />
                     )}
                   </TabsContent>
                 </div>

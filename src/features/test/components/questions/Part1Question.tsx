@@ -9,26 +9,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import type { TestPart } from '../../types/test.types';
 
 interface Part1QuestionProps {
-  part: {
-    partName: string;
-    partId: string;
-    questions: Array<{
-      questionNumber: number;
-      questionText: null;
-      options: Array<{ label: string; text: string }>;
-      correctAnswer: string;
-      userAnswer?: string;
-      explanation: string;
-      media: {
-        audioUrl: string;
-        imageUrls: string[];
-        transcript: string;
-        translation?: string;
-      };
-    }>;
-  };
+  part: TestPart;
 }
 
 export const Part1Question = ({ part }: Part1QuestionProps) => {
@@ -92,8 +76,8 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
           {part.partName}
         </Badge>
         <span className="text-muted-foreground">
-          Questions {part.questions[0]?.questionNumber} -{' '}
-          {part.questions[part.questions.length - 1]?.questionNumber}
+          Questions {part.questions?.[0]?.questionNumber} -{' '}
+          {part.questions?.[part.questions.length - 1]?.questionNumber}
         </span>
       </div>
 
@@ -114,7 +98,7 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
 
       {/* All Questions */}
       <div className="space-y-8">
-        {part.questions.map((question) => {
+        {part.questions?.map((question) => {
           const mockUserAnswer = getMockUserAnswer(question.questionNumber);
           const isCorrect = mockUserAnswer === question.correctAnswer;
           const isExplanationExpanded = expandedExplanations.includes(
@@ -142,7 +126,7 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
 
               {/* Audio Player */}
               <div className="mb-6">
-                <AudioPlayer audioUrl={question.media.audioUrl} />
+                <AudioPlayer audioUrl={question.media?.audioUrl || ''} />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -185,7 +169,7 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
                         <CardContent className="p-4">
                           <div
                             dangerouslySetInnerHTML={{
-                              __html: question.media.transcript,
+                              __html: question.media?.transcript || '',
                             }}
                             className="prose prose-sm max-w-none dark:prose-invert"
                           />

@@ -15,6 +15,22 @@ export interface TOEICTestsResponse {
   limit?: number;
 }
 
+// API Response types
+export interface TOEICTestsApiResponse {
+  data: TOEICTest[];
+  message?: string;
+}
+
+export interface TOEICTestDetailApiResponse {
+  data: TOEICTestDetail;
+  message?: string;
+}
+
+export interface TOEICTestPartApiResponse {
+  data: TOEICTestPartDetail;
+  message?: string;
+}
+
 // Detailed test structure for /tests/:testId endpoint
 export interface TestOption {
   label: string;
@@ -36,6 +52,7 @@ export interface TestQuestion {
   correctAnswer: string;
   explanation: string;
   media: TestMedia;
+  userAnswer?: string; // For storing user answers
 }
 
 export interface TestQuestionGroup {
@@ -65,35 +82,4 @@ export interface TOEICTestPartDetail {
   testTitle: string;
   resultId: string;
   parts: [TestPart]; // Only one part in the array
-}
-
-// UI and session types
-export interface TestFilters {
-  search: string;
-  difficulty: string;
-  category: string;
-  completed: boolean;
-  favorites: boolean;
-}
-
-export interface TestSession {
-  testId: string;
-  startTime: number;
-  currentQuestionIndex: number;
-  answers: Record<string, string>;
-  timeRemaining: number;
-  isPaused: boolean;
-}
-
-export interface TestResult {
-  testId: string;
-  score: number;
-  totalQuestions: number;
-  correctAnswers: number;
-  timeSpent: number;
-  completedAt: number;
-  sections: {
-    listening: { score: number; total: number };
-    reading: { score: number; total: number };
-  };
 }

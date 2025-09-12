@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AudioPlayer } from '@/components/AudioPlayer';
+import type { TestPart } from '@/features/test/types/test.types';
 import {
   Collapsible,
   CollapsibleContent,
@@ -11,23 +12,7 @@ import {
 } from '@/components/ui/collapsible';
 
 interface Part2QuestionProps {
-  part: {
-    partName: string;
-    partId: string;
-    questions: Array<{
-      questionNumber: number;
-      questionText: null;
-      options: Array<{ label: string; text: string }>;
-      correctAnswer: string;
-      userAnswer?: string;
-      explanation: string;
-      media: {
-        audioUrl: string;
-        transcript: string;
-        translation?: string;
-      };
-    }>;
-  };
+  part: TestPart;
 }
 
 export const Part2Question = ({ part }: Part2QuestionProps) => {
@@ -91,8 +76,8 @@ export const Part2Question = ({ part }: Part2QuestionProps) => {
           {part.partName}
         </Badge>
         <span className="text-muted-foreground">
-          Questions {part.questions[0]?.questionNumber} -{' '}
-          {part.questions[part.questions.length - 1]?.questionNumber}
+          Questions {part.questions?.[0]?.questionNumber} -{' '}
+          {part.questions?.[part.questions.length - 1]?.questionNumber}
         </span>
       </div>
 
@@ -111,7 +96,7 @@ export const Part2Question = ({ part }: Part2QuestionProps) => {
 
       {/* All Questions */}
       <div className="space-y-8">
-        {part.questions.map((question) => {
+        {part.questions?.map((question) => {
           const mockUserAnswer = getMockUserAnswer(question.questionNumber);
           const isCorrect = mockUserAnswer === question.correctAnswer;
           const isExplanationExpanded = expandedExplanations.includes(
@@ -139,7 +124,7 @@ export const Part2Question = ({ part }: Part2QuestionProps) => {
 
               {/* Audio Player */}
               <div className="mb-6">
-                <AudioPlayer audioUrl={question.media.audioUrl} />
+                <AudioPlayer audioUrl={question.media?.audioUrl || ''} />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -170,7 +155,7 @@ export const Part2Question = ({ part }: Part2QuestionProps) => {
                         <CardContent className="p-4">
                           <div
                             dangerouslySetInnerHTML={{
-                              __html: question.media.transcript,
+                              __html: question.media?.transcript || '',
                             }}
                             className="prose prose-sm max-w-none dark:prose-invert"
                           />
@@ -214,7 +199,7 @@ export const Part2Question = ({ part }: Part2QuestionProps) => {
                   </Collapsible>
 
                   {/* Translation Section (if available) */}
-                  {question.media.translation && (
+                  {question.media?.translation && (
                     <Collapsible
                       open={isTranslationExpanded}
                       onOpenChange={() =>
@@ -239,7 +224,7 @@ export const Part2Question = ({ part }: Part2QuestionProps) => {
                           <CardContent className="p-4">
                             <div
                               dangerouslySetInnerHTML={{
-                                __html: question.media.translation,
+                                __html: question.media?.translation || '',
                               }}
                               className="prose prose-sm max-w-none dark:prose-invert"
                             />

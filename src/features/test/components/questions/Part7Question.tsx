@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import type { TestPart } from '@/features/test/types/test.types';
 import {
   Collapsible,
   CollapsibleContent,
@@ -10,27 +11,7 @@ import {
 } from '@/components/ui/collapsible';
 
 interface Part7QuestionProps {
-  part: {
-    partName: string;
-    partId: string;
-    questionGroups: Array<{
-      groupContext: {
-        audioUrl: null;
-        imageUrls: string[] | null;
-        passageHtml: string;
-        transcript: string;
-        translation?: string;
-      };
-      questions: Array<{
-        questionNumber: number;
-        questionText: string;
-        options: Array<{ label: string; text: string }>;
-        correctAnswer: string;
-        userAnswer?: string;
-        explanation: string;
-      }>;
-    }>;
-  };
+  part: TestPart;
 }
 
 export const Part7Question = ({ part }: Part7QuestionProps) => {
@@ -107,11 +88,11 @@ export const Part7Question = ({ part }: Part7QuestionProps) => {
           {part.partName}
         </Badge>
         <span className="text-muted-foreground">
-          Questions {part.questionGroups[0]?.questions[0]?.questionNumber} -{' '}
+          Questions {part.questionGroups?.[0]?.questions?.[0]?.questionNumber} -{' '}
           {
-            part.questionGroups[part.questionGroups.length - 1]?.questions[
+            part.questionGroups?.[part.questionGroups.length - 1]?.questions?.[
               part.questionGroups[part.questionGroups.length - 1]?.questions
-                .length - 1
+                ?.length - 1
             ]?.questionNumber
           }
         </span>
@@ -133,7 +114,7 @@ export const Part7Question = ({ part }: Part7QuestionProps) => {
 
       {/* Question Groups */}
       <div className="space-y-8">
-        {part.questionGroups.map((group, groupIndex) => (
+        {part.questionGroups?.map((group, groupIndex) => (
           <div key={groupIndex} className="border rounded-lg p-6 bg-background">
             {/* Group Header */}
             <div className="flex items-center gap-4 mb-6">
@@ -177,7 +158,7 @@ export const Part7Question = ({ part }: Part7QuestionProps) => {
                       </h3>
                       <div
                         dangerouslySetInnerHTML={{
-                          __html: group.groupContext.passageHtml,
+                          __html: group.groupContext?.passageHtml || '',
                         }}
                         className="prose prose-sm max-w-none dark:prose-invert leading-relaxed"
                       />
