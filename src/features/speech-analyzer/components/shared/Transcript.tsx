@@ -3,6 +3,14 @@ import { Play, Filter, X } from 'lucide-react';
 import TranscriptAudioPlayer from './TranscriptAudioPlayer';
 import PronunciationWord from './PronunciationWord';
 import PronunciationPopup from './PronunciationPopup';
+import { useAppDispatch, useAppSelector } from '@/core/store/store';
+import {
+  toggleErrorFilter,
+  setAllErrorFilters,
+  setShowErrorFilter,
+  selectVisibleErrorTypes,
+} from '../../slices/speechAnalyzerSlice';
+import type { ErrorFilterSettings } from '../../slices/speechAnalyzerSlice';
 import type {
   TranscriptData,
   TranscriptSegment,
@@ -19,19 +27,9 @@ interface WordFeatures {
   visibleErrorTypes: Set<string>;
 }
 
-interface ErrorFilterSettings {
-  mispronunciation: boolean;
-  omission: boolean;
-  insertion: boolean;
-  unexpected_break: boolean;
-  missing_break: boolean;
-  monotone: boolean;
-}
-
 interface TranscriptProps {
   transcriptData?: TranscriptData;
   className?: string;
-  mode?: 'pronunciation' | 'intonation' | 'fluency' | 'grammar' | 'vocabulary';
   features?: {
     enableWordClickToSeek?: boolean;
     showAccuracyColors?: boolean;
@@ -198,20 +196,15 @@ const TranscriptSegmentComponent: React.FC<TranscriptSegmentProps> = ({
 const Transcript: React.FC<TranscriptProps> = ({
   transcriptData,
   className = '',
-  mode = 'pronunciation',
   features = defaultFeatures,
 }) => {
+  const dispatch = useAppDispatch();
+  const { errorFilter, showErrorFilter } = useAppSelector(
+    (state) => state.speechAnalyzer
+  );
+  const visibleErrorTypes = useAppSelector(selectVisibleErrorTypes);
   const [currentTime, setCurrentTime] = useState(0);
   const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
-  const [showErrorFilter, setShowErrorFilter] = useState(false);
-  const [errorFilter, setErrorFilter] = useState<ErrorFilterSettings>({
-    mispronunciation: true,
-    omission: true,
-    insertion: true,
-    unexpected_break: true,
-    missing_break: true,
-    monotone: true,
-  });
   const transcriptRef = useRef<HTMLDivElement>(null);
 
   const mergedFeatures = { ...defaultFeatures, ...features };
@@ -263,36 +256,19 @@ const Transcript: React.FC<TranscriptProps> = ({
   // Handle error filter toggle
   const handleErrorFilterToggle = useCallback(
     (errorType: keyof ErrorFilterSettings) => {
-      setErrorFilter((prev) => ({
-        ...prev,
-        [errorType]: !prev[errorType],
-      }));
+      dispatch(toggleErrorFilter(errorType));
     },
-    []
+    [dispatch]
   );
 
   // Handle select all/none error filters
   const handleSelectAllErrors = useCallback(() => {
-    setErrorFilter({
-      mispronunciation: true,
-      omission: true,
-      insertion: true,
-      unexpected_break: true,
-      missing_break: true,
-      monotone: true,
-    });
-  }, []);
+    dispatch(setAllErrorFilters(true));
+  }, [dispatch]);
 
   const handleSelectNoneErrors = useCallback(() => {
-    setErrorFilter({
-      mispronunciation: false,
-      omission: false,
-      insertion: false,
-      unexpected_break: false,
-      missing_break: false,
-      monotone: false,
-    });
-  }, []);
+    dispatch(setAllErrorFilters(false));
+  }, [dispatch]);
 
   // Calculate overall statistics
   const overallStats = React.useMemo(() => {
@@ -364,17 +340,12 @@ const Transcript: React.FC<TranscriptProps> = ({
 
   const wordFeatures = {
     clickToSeek: mergedFeatures.enableWordClickToSeek,
-    showAccuracyColors:
-      mode === 'pronunciation' ? mergedFeatures.showAccuracyColors : false,
-    showStressMarking: mode === 'intonation' || mode === 'pronunciation',
-    showErrorHighlight: mode === 'pronunciation',
+    showAccuracyColors: mergedFeatures.showAccuracyColors,
+    showStressMarking: true,
+    showErrorHighlight: true,
     showTooltip: false, // We use popup instead
-    emphasizeStress: mode === 'intonation',
-    visibleErrorTypes: new Set(
-      Object.entries(errorFilter)
-        .filter(([, isVisible]) => isVisible)
-        .map(([errorType]) => errorType)
-    ),
+    emphasizeStress: false,
+    visibleErrorTypes,
   };
 
   if (!transcriptData) {
@@ -409,126 +380,116 @@ const Transcript: React.FC<TranscriptProps> = ({
       {/* Header with stats */}
       <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 border-b border-purple-100">
         <div className="flex justify-between items-center mb-2">
-          <h3 className="text-lg font-bold text-gray-800">
-            {mode === 'pronunciation' && 'Pronunciation Analysis'}
-            {mode === 'intonation' && 'Intonation Analysis'}
-            {mode === 'fluency' && 'Fluency Analysis'}
-            {mode === 'grammar' && 'Grammar Analysis'}
-            {mode === 'vocabulary' && 'Vocabulary Analysis'}
-          </h3>
+          <h3 className="text-lg font-bold text-gray-800">Speech Analysis</h3>
           <div className="flex items-center gap-3">
             <div className="text-sm text-gray-600">
               {transcriptData.metadata.language} •{' '}
               {transcriptData.metadata.assessmentType}
             </div>
-            {mode === 'pronunciation' && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowErrorFilter(!showErrorFilter)}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <Filter className="w-4 h-4" />
-                  Filter Errors
-                </button>
+            <div className="relative">
+              <button
+                onClick={() => dispatch(setShowErrorFilter(!showErrorFilter))}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Filter className="w-4 h-4" />
+                Filter Errors
+              </button>
 
-                {/* Error Filter Dropdown */}
-                {showErrorFilter && (
-                  <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                    <div className="p-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-medium text-gray-900">
-                          Error Types
-                        </h4>
-                        <button
-                          onClick={() => setShowErrorFilter(false)}
-                          className="text-gray-400 hover:text-gray-600"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
+              {/* Error Filter Dropdown */}
+              {showErrorFilter && (
+                <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                  <div className="p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-medium text-gray-900">Error Types</h4>
+                      <button
+                        onClick={() => dispatch(setShowErrorFilter(false))}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
 
-                      <div className="flex gap-2 mb-3">
-                        <button
-                          onClick={handleSelectAllErrors}
-                          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                        >
-                          Select All
-                        </button>
-                        <button
-                          onClick={handleSelectNoneErrors}
-                          className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                        >
-                          Select None
-                        </button>
-                      </div>
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        onClick={handleSelectAllErrors}
+                        className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                      >
+                        Select All
+                      </button>
+                      <button
+                        onClick={handleSelectNoneErrors}
+                        className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                      >
+                        Select None
+                      </button>
+                    </div>
 
-                      <div className="space-y-2">
-                        {[
-                          {
-                            key: 'mispronunciation',
-                            label: 'Mispronunciation',
-                            color: 'text-orange-600',
-                            icon: '🔄',
-                          },
-                          {
-                            key: 'omission',
-                            label: 'Omission',
-                            color: 'text-red-600',
-                            icon: '❌',
-                          },
-                          {
-                            key: 'insertion',
-                            label: 'Insertion',
-                            color: 'text-purple-600',
-                            icon: '➕',
-                          },
-                          {
-                            key: 'unexpected_break',
-                            label: 'Unexpected Break',
-                            color: 'text-blue-600',
-                            icon: '⏸️',
-                          },
-                          {
-                            key: 'missing_break',
-                            label: 'Missing Break',
-                            color: 'text-green-600',
-                            icon: '⏩',
-                          },
-                          {
-                            key: 'monotone',
-                            label: 'Monotone',
-                            color: 'text-gray-600',
-                            icon: '📏',
-                          },
-                        ].map(({ key, label, color, icon }) => (
-                          <label
-                            key={key}
-                            className="flex items-center gap-3 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={
-                                errorFilter[key as keyof ErrorFilterSettings]
-                              }
-                              onChange={() =>
-                                handleErrorFilterToggle(
-                                  key as keyof ErrorFilterSettings
-                                )
-                              }
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="text-sm">{icon}</span>
-                            <span className={`text-sm font-medium ${color}`}>
-                              {label}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
+                    <div className="space-y-2">
+                      {[
+                        {
+                          key: 'mispronunciation',
+                          label: 'Mispronunciation',
+                          color: 'text-orange-600',
+                          icon: '🔄',
+                        },
+                        {
+                          key: 'omission',
+                          label: 'Omission',
+                          color: 'text-red-600',
+                          icon: '❌',
+                        },
+                        {
+                          key: 'insertion',
+                          label: 'Insertion',
+                          color: 'text-purple-600',
+                          icon: '➕',
+                        },
+                        {
+                          key: 'unexpected_break',
+                          label: 'Unexpected Break',
+                          color: 'text-blue-600',
+                          icon: '⏸️',
+                        },
+                        {
+                          key: 'missing_break',
+                          label: 'Missing Break',
+                          color: 'text-green-600',
+                          icon: '⏩',
+                        },
+                        {
+                          key: 'monotone',
+                          label: 'Monotone',
+                          color: 'text-gray-600',
+                          icon: '📏',
+                        },
+                      ].map(({ key, label, color, icon }) => (
+                        <label
+                          key={key}
+                          className="flex items-center gap-3 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={
+                              errorFilter[key as keyof ErrorFilterSettings]
+                            }
+                            onChange={() =>
+                              handleErrorFilterToggle(
+                                key as keyof ErrorFilterSettings
+                              )
+                            }
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm">{icon}</span>
+                          <span className={`text-sm font-medium ${color}`}>
+                            {label}
+                          </span>
+                        </label>
+                      ))}
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

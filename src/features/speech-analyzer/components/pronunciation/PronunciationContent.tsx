@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import ScoreSummary from './ScoreSummary';
 import TopErrors from './TopErrors.tsx';
 import SkillsSection from './SkillsSection.tsx';
 import Transcript from '../shared/Transcript.tsx';
+import { useAppDispatch } from '@/core/store/store';
+import { resetErrorFilters } from '../../slices/speechAnalyzerSlice';
 import type {
   RecordingAnalysis,
   TranscriptData,
@@ -14,7 +16,12 @@ export interface PronunciationContentProps {
 }
 
 const PronunciationContent = ({ recording }: PronunciationContentProps) => {
+  const dispatch = useAppDispatch();
   const analysis = (recording?.analysis as RecordingAnalysis) || undefined;
+
+  useEffect(() => {
+    dispatch(resetErrorFilters());
+  }, [dispatch]);
 
   const transcriptData = useMemo<TranscriptData | undefined>(() => {
     if (!recording) return undefined;
@@ -48,10 +55,7 @@ const PronunciationContent = ({ recording }: PronunciationContentProps) => {
         <ScoreSummary percentage={Math.round(pronScore)} level={level} />
         <TopErrors chartData={chartData} topMistakes={topMistakes} />
         <SkillsSection topMistakes={topMistakes} />
-        <Transcript
-          transcriptData={transcriptData ?? undefined}
-          mode="pronunciation"
-        />
+        <Transcript transcriptData={transcriptData ?? undefined} />
       </div>
     </div>
   );

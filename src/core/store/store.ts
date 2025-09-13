@@ -5,6 +5,7 @@ import quizReducer from '../../features/quiz/slices/quizSlice';
 import flashcardReducer from '../../features/flashcard/slices/flashcardSlice';
 import testReducer from '../../features/test/slices/testSlice';
 import authReducer from '../../features/auth/slices/authSlice';
+import speechAnalyzerReducer from '../../features/speech-analyzer/slices/speechAnalyzerSlice';
 import { api } from '../api/api';
 import { quizApi } from '../../features/quiz/services/quizApi';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,6 +19,7 @@ export const store = configureStore({
     flashcard: flashcardReducer,
     test: testReducer,
     auth: authReducer,
+    speechAnalyzer: speechAnalyzerReducer,
     [api.reducerPath]: api.reducer,
     [quizApi.reducerPath]: quizApi.reducer,
   },

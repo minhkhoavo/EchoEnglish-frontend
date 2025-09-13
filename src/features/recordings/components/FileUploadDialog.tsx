@@ -9,8 +9,16 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '../../../components/ui/dialog';
-import { Upload, File, X, CheckCircle, AlertCircle } from 'lucide-react';
+import {
+  Upload,
+  File as FileIcon,
+  X,
+  CheckCircle,
+  AlertCircle,
+} from 'lucide-react';
 import { Progress } from '../../../components/ui/progress';
+import axiosInstance from '../../../core/api/axios';
+import type { AxiosProgressEvent } from 'axios';
 
 interface FileUploadDialogProps {
   onUploadComplete?: (fileName: string) => void;
@@ -30,21 +38,20 @@ export function FileUploadDialog({
   const [isOpen, setIsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const acceptedFileTypes = '.mp3,.wav,.ogg,.m4a,.aac,.flac';
+  // Only accept mp3 and wav as requested
+  const acceptedFileTypes = '.mp3,.wav';
   const maxFileSize = 50 * 1024 * 1024; // 50MB
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check file type
+    // Check file type - only mp3 and wav allowed
     const fileExtension = file.name.toLowerCase().split('.').pop();
-    const allowedExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'];
+    const allowedExtensions = ['mp3', 'wav'];
 
     if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
-      alert(
-        'Please select a valid audio file (.mp3, .wav, .ogg, .m4a, .aac, .flac)'
-      );
+      alert('Please select a valid audio file (.mp3, .wav)');
       return;
     }
 
@@ -65,27 +72,41 @@ export function FileUploadDialog({
     setUploadStatus('uploading');
     setUploadProgress(0);
 
+    const form = new FormData();
+    // server expects field name 'file' (assumption). If different, adjust accordingly.
+    form.append('file', selectedFile);
+
     try {
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 95) {
-            clearInterval(interval);
-            return prev;
+      const res = await axiosInstance.post('/speech/assess', form, {
+        headers: {
+          // override default application/json header on instance
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent?: AxiosProgressEvent) => {
+          const loaded = progressEvent?.loaded ?? 0;
+          const total = progressEvent?.total ?? 0;
+          if (total) {
+            const percent = Math.round((loaded / total) * 100);
+            setUploadProgress(percent);
+          } else if (loaded) {
+            // approximate progress when total is not available
+            setUploadProgress((p) =>
+              Math.min(99, p + Math.round((loaded / (1024 * 1024)) * 5))
+            );
+          } else {
+            setUploadProgress((p) => Math.min(99, p + 5));
           }
-          return prev + Math.random() * 15;
-        });
-      }, 200);
+        },
+      });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      clearInterval(interval);
       setUploadProgress(100);
       setUploadStatus('success');
 
-      // Call callback after successful upload
-      onUploadComplete?.(selectedFile.name);
+      // Pass a string filename to callback. Prefer server-provided fileName when available.
+      const serverFileName = res?.data?.fileName;
+      const fileNameToSend =
+        typeof serverFileName === 'string' ? serverFileName : selectedFile.name;
+      onUploadComplete?.(fileNameToSend);
 
       // Close dialog after a short delay
       setTimeout(() => {
@@ -128,8 +149,8 @@ export function FileUploadDialog({
             Upload Audio File
           </DialogTitle>
           <DialogDescription>
-            Select an audio file for pronunciation analysis. Supports MP3, WAV,
-            OGG, M4A, AAC, FLAC (max 50MB).
+            Select an audio file for pronunciation analysis. Supports MP3 and
+            WAV (max 50MB).
           </DialogDescription>
         </DialogHeader>
 
@@ -161,7 +182,7 @@ export function FileUploadDialog({
           {selectedFile && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <div className="flex items-center space-x-3">
-                <File className="w-8 h-8 text-blue-500" />
+                <FileIcon className="w-8 h-8 text-blue-500" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">
                     {selectedFile.name}

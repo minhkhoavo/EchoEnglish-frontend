@@ -11,6 +11,7 @@ import type {
   RecordingOverallScores,
 } from '@/features/speech-analyzer/types/pronunciation.types';
 import { skipToken } from '@reduxjs/toolkit/query/react';
+import FluencyContent from '@/features/speech-analyzer/components/fluency/FluencyContent';
 
 const SpeechAnalyzePage = () => {
   const { id, view } = useParams<{ id: string; view?: string }>();
@@ -19,7 +20,6 @@ const SpeechAnalyzePage = () => {
   const overall: RecordingOverallScores | undefined = (
     recording?.analysis as RecordingAnalysis | undefined
   )?.overall;
-
   // Update currentView when URL params change
   useEffect(() => {
     setCurrentView(view || 'pronunciation');
@@ -30,12 +30,7 @@ const SpeechAnalyzePage = () => {
       case 'intonation':
         return <IntonationContent recording={recording} />;
       case 'fluency':
-        // TODO: Create FluencyContent component
-        return (
-          <div className="p-6 text-center text-gray-500">
-            Fluency analysis coming soon...
-          </div>
-        );
+        return <FluencyContent recording={recording} />;
       case 'grammar':
         // TODO: Create GrammarContent component
         return (

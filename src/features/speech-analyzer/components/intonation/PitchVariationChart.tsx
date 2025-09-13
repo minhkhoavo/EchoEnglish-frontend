@@ -5,9 +5,11 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
+import type { TooltipProps } from 'recharts';
 
 interface PitchVariationChartProps {
   data?: Array<{
@@ -19,23 +21,47 @@ interface PitchVariationChartProps {
     max: number;
   };
   currentFrequency?: number;
+  prosody?: {
+    pitch_points?: Array<{ time: number; value: number }>;
+    pitch_range_min?: number;
+    pitch_range_max?: number;
+  };
 }
 
 const PitchVariationChart: React.FC<PitchVariationChartProps> = ({
   data = [],
-  targetRange = { min: 100, max: 200 },
+  targetRange,
   currentFrequency,
+  prosody,
 }) => {
-  // Sample data if none provided
-  const chartData =
-    data.length > 0
-      ? data
-      : [
-          { time: 0, frequency: 250 },
-          { time: 5, frequency: 120 },
-          { time: 10, frequency: 180 },
-          { time: 15, frequency: 160 },
-        ];
+  const chartData: Array<{ time: number; frequency: number }> =
+    prosody?.pitch_points && prosody.pitch_points.length > 0
+      ? prosody.pitch_points.map((p) => ({ time: p.time, frequency: p.value }))
+      : data && data.length > 0
+        ? data
+        : [];
+
+  // Determine target range from prosody or prop
+  const derivedTargetRange =
+    targetRange ??
+    (prosody &&
+    typeof prosody.pitch_range_min === 'number' &&
+    typeof prosody.pitch_range_max === 'number'
+      ? { min: prosody.pitch_range_min, max: prosody.pitch_range_max }
+      : undefined);
+
+  // Compute y-axis domain from available data and target range with padding
+  const allValues: number[] = [
+    ...chartData.map((d) => d.frequency),
+    ...(derivedTargetRange
+      ? [derivedTargetRange.min, derivedTargetRange.max]
+      : []),
+  ];
+
+  const dataMin = allValues.length > 0 ? Math.min(...allValues) : 0;
+  const dataMax = allValues.length > 0 ? Math.max(...allValues) : 300;
+  const yMin = Math.max(0, Math.floor(dataMin - 20));
+  const yMax = Math.ceil(dataMax + 20);
 
   return (
     <div className="bg-white rounded-xl border-2 border-purple-100 p-6">
@@ -55,6 +81,27 @@ const PitchVariationChart: React.FC<PitchVariationChartProps> = ({
             data={chartData}
             margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
           >
+            {/* Tooltip for hover details */}
+            <Tooltip
+              wrapperStyle={{ outline: 'none' }}
+              content={(props: TooltipProps<number, string>) => {
+                const { active, payload } = props;
+                if (!active || !payload || !payload.length) return null;
+                type TooltipPayload = { time: number; frequency: number };
+                const point: TooltipPayload = payload[0]
+                  .payload as TooltipPayload;
+                return (
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-md p-2 text-sm">
+                    <div className="font-medium text-gray-900">
+                      Time: {point.time}s
+                    </div>
+                    <div className="text-gray-700">
+                      Pitch: {point.frequency} Hz
+                    </div>
+                  </div>
+                );
+              }}
+            />
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 
             {/* Target range background */}
@@ -70,18 +117,22 @@ const PitchVariationChart: React.FC<PitchVariationChartProps> = ({
             </defs>
 
             {/* Target range area */}
-            <ReferenceLine
-              y={targetRange.min}
-              stroke="#10b981"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-            />
-            <ReferenceLine
-              y={targetRange.max}
-              stroke="#10b981"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-            />
+            {derivedTargetRange && (
+              <>
+                <ReferenceLine
+                  y={derivedTargetRange.min}
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                />
+                <ReferenceLine
+                  y={derivedTargetRange.max}
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                />
+              </>
+            )}
 
             <XAxis
               dataKey="time"
@@ -100,12 +151,12 @@ const PitchVariationChart: React.FC<PitchVariationChartProps> = ({
               }}
             />
             <YAxis
-              domain={[0, 300]}
+              domain={[yMin, yMax]}
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 12, fill: '#6b7280' }}
               label={{
-                value: '300Hz',
+                value: `${yMax}Hz`,
                 position: 'insideTopLeft',
                 style: { fontSize: '12px', fill: '#6b7280' },
               }}
@@ -149,7 +200,7 @@ const PitchVariationChart: React.FC<PitchVariationChartProps> = ({
             <div className="w-3 h-1 bg-green-500 border-dashed border border-green-500"></div>
             <span className="text-gray-700">Target Range</span>
           </div>
-          {currentFrequency && (
+          {currentFrequency !== undefined && (
             <div className="flex items-center gap-2">
               <div className="w-3 h-1 bg-red-500"></div>
               <span className="text-gray-700">
@@ -160,8 +211,14 @@ const PitchVariationChart: React.FC<PitchVariationChartProps> = ({
         </div>
 
         <div className="text-xs text-gray-500">
-          <div>Excessive: above {targetRange.max}Hz</div>
-          <div>Monotone: below {targetRange.min}Hz</div>
+          <div>
+            Excessive: above{' '}
+            {derivedTargetRange ? derivedTargetRange.max : yMax}Hz
+          </div>
+          <div>
+            Monotone: below {derivedTargetRange ? derivedTargetRange.min : yMin}
+            Hz
+          </div>
         </div>
       </div>
 
