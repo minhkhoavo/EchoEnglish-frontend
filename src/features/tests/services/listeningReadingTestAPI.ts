@@ -6,7 +6,7 @@ import type {
   TOEICTestsApiResponse,
   TOEICTestDetailApiResponse,
   TOEICTestPartApiResponse,
-} from '../types/test.types';
+} from '@/features/tests/types/toeic-test.types';
 
 export const testApi = api.injectEndpoints({
   endpoints: (builder) => ({

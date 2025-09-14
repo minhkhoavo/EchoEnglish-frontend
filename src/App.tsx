@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ContentPage from './pages/ContentPage';
 import FlashcardPage from './pages/FlashcardPage';
-import TOEICTests from './pages/test/TOEICTests';
-import TestExam from './pages/test/TestExam';
+import AllTestsPage from './pages/test/AllTestsPage';
+import SpeakingExam from './pages/test/SpeakingExam';
+import WritingExam from './pages/test/WritingExam';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
@@ -12,6 +13,7 @@ import ProfilePage from './pages/auth/ProfilePage';
 import { Toaster } from './components/ui/sonner';
 import { QuizInterface } from './features/quiz/QuizInterface';
 import { useLocation } from 'react-router-dom';
+import TestExam from './pages/test/TestExam';
 
 const QuizRouteWrapper = () => {
   const location = useLocation();
@@ -37,7 +39,9 @@ function App() {
         <Route path="/" element={<ContentPage />} />
         <Route path="/flashcards" element={<FlashcardPage />} />
         <Route path="/quiz" element={<QuizRouteWrapper />} />
-        <Route path="/tests" element={<TOEICTests />} />
+        <Route path="/tests" element={<AllTestsPage />} />
+        <Route path="/speaking-exam/:testId" element={<SpeakingExam />} />
+        <Route path="/writing-exam/:testId" element={<WritingExam />} />
         <Route path="/test-exam/:testId" element={<TestExam />} />
       </Routes>
       <Toaster />

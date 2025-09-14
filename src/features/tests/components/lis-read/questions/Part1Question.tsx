@@ -9,7 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import type { TestPart } from '../../types/test.types';
+import type { TestPart } from '@/features/tests/types/toeic-test.types';
 
 interface Part1QuestionProps {
   part: TestPart;
@@ -165,7 +165,7 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
                       </Button>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <Card className="mt-2">
+                      <Card className="mt-2 ">
                         <CardContent className="p-4">
                           <div
                             dangerouslySetInnerHTML={{

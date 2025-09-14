@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AudioPlayer } from '@/components/AudioPlayer';
-import type { TestPart } from '@/features/test/types/test.types';
+import type { TestPart } from '@/features/tests/types/toeic-test.types';
 import {
   Collapsible,
   CollapsibleContent,

@@ -1,15 +1,40 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { TOEICTest } from '../types/test.types';
-import type {
-  TestFilters,
-  TestSession,
-  TestResult,
-  TestUIState,
-} from '../types/ui.types';
+import type { TOEICTest as ListeningReadingTest } from '../types/toeic-test.types';
 
-interface TestState extends TestUIState {
-  // Active test
-  activeTest: TOEICTest | null;
+interface TestState {
+  filters: {
+    search: string;
+    difficulty: string;
+    category: string;
+    completed: boolean;
+    favorites: boolean;
+  };
+  viewMode: 'grid' | 'list';
+  sortBy: 'title' | 'difficulty' | 'createdAt' | 'completedAt';
+  sortDirection: 'asc' | 'desc';
+  searchQuery: string;
+  activeTest: ListeningReadingTest | null;
+  currentSession: {
+    testId: string;
+    testType: 'listening-reading';
+    startTime: number;
+    currentQuestionIndex: number;
+    answers: Record<string, string>;
+    timeRemaining: number;
+    isPaused: boolean;
+  } | null;
+  lastResult: {
+    testId: string;
+    testType: 'listening-reading';
+    score: number;
+    totalQuestions: number;
+    correctAnswers: number;
+    timeSpent: number;
+    completedAt: number;
+  } | null;
+  showResults: boolean;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: TestState = {
@@ -40,7 +65,10 @@ const testSlice = createSlice({
   initialState,
   reducers: {
     // Filter and search actions
-    setFilters: (state, action: PayloadAction<Partial<TestFilters>>) => {
+    setFilters: (
+      state,
+      action: PayloadAction<Partial<TestState['filters']>>
+    ) => {
       state.filters = { ...state.filters, ...action.payload };
     },
     setSearchQuery: (state, action: PayloadAction<string>) => {
@@ -68,11 +96,12 @@ const testSlice = createSlice({
     // Test session actions
     startTest: (
       state,
-      action: PayloadAction<{ test: TOEICTest; timeLimit: number }>
+      action: PayloadAction<{ test: ListeningReadingTest; timeLimit: number }>
     ) => {
       state.activeTest = action.payload.test;
       state.currentSession = {
         testId: action.payload.test.testId,
+        testType: action.payload.test.type,
         startTime: Date.now(),
         currentQuestionIndex: 0,
         answers: {},
@@ -132,7 +161,7 @@ const testSlice = createSlice({
       }
     },
 
-    submitTest: (state, action: PayloadAction<TestResult>) => {
+    submitTest: (state, action: PayloadAction<TestState['lastResult']>) => {
       state.lastResult = action.payload;
       state.showResults = true;
       state.currentSession = null;

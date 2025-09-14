@@ -1,7 +1,13 @@
-// Basic types for test list
+// TOEIC test types (independent structure, different from speaking/writing)
+
+// Basic TOEIC test interface
 export interface TOEICTest {
-  testId: string;
+  testId: string; // TOEIC uses string IDs
   testTitle: string;
+  type: 'listening-reading';
+  duration?: number;
+  number_of_questions?: number;
+  number_of_parts?: number;
 }
 
 export interface TestCardProps {
@@ -15,7 +21,7 @@ export interface TOEICTestsResponse {
   limit?: number;
 }
 
-// API Response types
+// API Response types for TOEIC
 export interface TOEICTestsApiResponse {
   data: TOEICTest[];
   message?: string;
@@ -31,7 +37,7 @@ export interface TOEICTestPartApiResponse {
   message?: string;
 }
 
-// Detailed test structure for /tests/:testId endpoint
+// TOEIC test specific structures
 export interface TestOption {
   label: string;
   text: string;
@@ -52,7 +58,7 @@ export interface TestQuestion {
   correctAnswer: string;
   explanation: string;
   media: TestMedia;
-  userAnswer?: string; // For storing user answers
+  userAnswer?: string;
 }
 
 export interface TestQuestionGroup {
@@ -71,7 +77,7 @@ export interface TOEICTestDetail {
   _id: string;
   testId: string;
   testTitle: string;
-  resultId: string;
+  type: 'listening-reading';
   parts: TestPart[];
 }
 
@@ -80,6 +86,6 @@ export interface TOEICTestPartDetail {
   _id: string;
   testId: string;
   testTitle: string;
-  resultId: string;
+  type: 'listening-reading';
   parts: [TestPart]; // Only one part in the array
 }

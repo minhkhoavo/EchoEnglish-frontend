@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, RotateCcw } from 'lucide-react';
+import { Play, Pause, VolumeX, Volume2, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 
@@ -12,7 +12,7 @@ export const AudioPlayer = ({ audioUrl, className = '' }: AudioPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0.7);
+  const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -64,14 +64,12 @@ export const AudioPlayer = ({ audioUrl, className = '' }: AudioPlayerProps) => {
     setCurrentTime(newTime);
   };
 
-  const handleVolumeChange = (value: number[]) => {
+  const toggleMute = () => {
     const audio = audioRef.current;
-    const newVolume = value[0] / 100;
+    if (!audio) return;
 
-    setVolume(newVolume);
-    if (audio) {
-      audio.volume = newVolume;
-    }
+    audio.muted = !audio.muted;
+    setIsMuted(audio.muted);
   };
 
   const formatTime = (time: number) => {
@@ -83,7 +81,7 @@ export const AudioPlayer = ({ audioUrl, className = '' }: AudioPlayerProps) => {
   const progressPercent = duration ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className={`bg-card border rounded-lg p-4 ${className}`}>
+    <div className={`bg-card border rounded-lg p-2 ${className}`}>
       <audio
         ref={audioRef}
         src={audioUrl}
@@ -91,58 +89,60 @@ export const AudioPlayer = ({ audioUrl, className = '' }: AudioPlayerProps) => {
         onEnded={() => setIsPlaying(false)}
       />
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {/* Control Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button
             variant="outline"
             size="sm"
             onClick={handleRestart}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-3 w-3" />
           </Button>
 
           <Button
             variant="default"
             size="sm"
             onClick={togglePlayPause}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
           >
             {isPlaying ? (
-              <Pause className="h-4 w-4" />
+              <Pause className="h-3 w-3" />
             ) : (
-              <Play className="h-4 w-4" />
+              <Play className="h-3 w-3" />
             )}
           </Button>
         </div>
 
         {/* Progress Bar */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <Slider
             value={[progressPercent]}
             onValueChange={handleProgressChange}
             max={100}
             step={1}
-            className="w-full"
+            className="w-full h-5"
           />
-          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+          <div className="flex justify-between text-xs text-muted-foreground mt-0.5">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
         </div>
 
-        {/* Volume Control */}
-        <div className="flex items-center gap-2 w-24">
-          <Volume2 className="h-4 w-4 text-muted-foreground" />
-          <Slider
-            value={[volume * 100]}
-            onValueChange={handleVolumeChange}
-            max={100}
-            step={1}
-            className="flex-1"
-          />
-        </div>
+        {/* Mute Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleMute}
+          className="h-7 w-7 p-0"
+        >
+          {isMuted ? (
+            <VolumeX className="h-3 w-3" />
+          ) : (
+            <Volume2 className="h-3 w-3" />
+          )}
+        </Button>
       </div>
     </div>
   );

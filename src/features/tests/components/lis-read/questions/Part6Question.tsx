@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import type { TestPart } from '@/features/test/types/test.types';
+import type { TestPart } from '@/features/tests/types/toeic-test.types';
 import {
   Collapsible,
   CollapsibleContent,
@@ -147,7 +147,6 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
                 )}
 
                 {/* Translation Section */}
-                {/* Translation Section */}
                 {(group.groupContext.translation ||
                   group.groupContext.transcript) && (
                   <Collapsible
@@ -187,7 +186,13 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
               </div>
 
               {/* Questions and Options */}
-              <div className="space-y-6">
+              <div
+                className="space-y-6 max-h-[80vh] overflow-y-auto pr-2 scroll-smooth"
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#d1d5db #f3f4f6',
+                }}
+              >
                 {group.questions.map((question) => {
                   const mockUserAnswer = getMockUserAnswer(
                     question.questionNumber

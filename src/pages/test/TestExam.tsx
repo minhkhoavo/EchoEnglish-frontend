@@ -3,16 +3,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { QuestionNavigation } from '@/features/test/components/QuestionNavigation';
-import { Part1Question } from '@/features/test/components/questions/Part1Question';
-import { Part2Question } from '@/features/test/components/questions/Part2Question';
-import { Part3Question } from '@/features/test/components/questions/Part3Question';
-import { Part4Question } from '@/features/test/components/questions/Part4Question';
-import { Part5Question } from '@/features/test/components/questions/Part5Question';
-import { Part6Question } from '@/features/test/components/questions/Part6Question';
-import { Part7Question } from '@/features/test/components/questions/Part7Question';
-import { useGetTOEICTestByIdQuery } from '@/features/test/services/testApi';
-import type { TOEICTestDetail } from '@/features/test/types/test.types';
+import { QuestionNavigation } from '@/features/tests/components/lis-read/QuestionNavigation';
+import { Part1Question } from '@/features/tests/components/lis-read/questions/Part1Question';
+import { Part2Question } from '@/features/tests/components/lis-read/questions/Part2Question';
+import { Part3Question } from '@/features/tests/components/lis-read/questions/Part3Question';
+import { Part4Question } from '@/features/tests/components/lis-read/questions/Part4Question';
+import { Part5Question } from '@/features/tests/components/lis-read/questions/Part5Question';
+import { Part6Question } from '@/features/tests/components/lis-read/questions/Part6Question';
+import { Part7Question } from '@/features/tests/components/lis-read/questions/Part7Question';
+import { useGetTOEICTestByIdQuery } from '@/features/tests/services/listeningReadingTestAPI';
 
 const TestExam = () => {
   const { testId } = useParams();
