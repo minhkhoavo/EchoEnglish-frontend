@@ -193,15 +193,16 @@ const CreateEditCategoryDialog: React.FC<CreateEditCategoryDialogProps> = ({
           }
         }}
       >
-        <DialogContent className="scrollbar-hide max-w-md max-h-[94vh] overflow-y-auto p-6">
+        {/* Ensure DialogContent uses full width and box-sizing so children sizes are constrained */}
+        <DialogContent className="scrollbar-hide max-w-md w-full box-border max-h-[94vh] overflow-y-auto p-6">
           <DialogHeader className="pb-4">
             <DialogTitle>
               {isEdit ? 'Edit Category' : 'Create New Category'}
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={handleSubmit} className="space-y-4 min-w-0">
+            <div className="space-y-2 min-w-0">
               <Label htmlFor="name">Category Name *</Label>
               <Input
                 id="name"
@@ -214,7 +215,7 @@ const CreateEditCategoryDialog: React.FC<CreateEditCategoryDialogProps> = ({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
@@ -231,14 +232,14 @@ const CreateEditCategoryDialog: React.FC<CreateEditCategoryDialogProps> = ({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
               <Label htmlFor="icon">Icon (Optional)</Label>
-              <div className="flex gap-2 mb-3 overflow-x-auto pb-2 scrollbar-thin">
+              <div className="flex gap-2 mb-3 overflow-x-auto pb-2 scrollbar-thin min-w-0">
                 {categoryIcons.slice(0, 20).map((icon) => (
                   <button
                     key={icon}
                     type="button"
-                    className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center text-lg transition-all hover:scale-110 flex-shrink-0 ${
+                    className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center text-lg transition-all hover:scale-110 flex-shrink-0 min-w-0 ${
                       formData.icon === icon
                         ? 'border-blue-500 bg-blue-50 scale-110'
                         : 'border-gray-200 hover:border-gray-300'
@@ -257,6 +258,7 @@ const CreateEditCategoryDialog: React.FC<CreateEditCategoryDialogProps> = ({
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, icon: e.target.value }))
                 }
+                className="min-w-0"
               />
               {formData.icon && (
                 <div className="flex items-center gap-2 mt-2">
@@ -271,7 +273,7 @@ const CreateEditCategoryDialog: React.FC<CreateEditCategoryDialogProps> = ({
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
               <Label className="flex items-center gap-2">
                 <Palette size={16} />
                 Color
@@ -302,18 +304,18 @@ const CreateEditCategoryDialog: React.FC<CreateEditCategoryDialogProps> = ({
               </div>
             </div>
 
-            <div className="flex gap-2 pt-4">
+            <div className="flex gap-2 pt-4 min-w-0">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
-                className="flex-1"
+                className="flex-1 min-w-0"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="flex-1"
+                className="flex-1 min-w-0"
                 disabled={isCreating || isUpdating}
               >
                 {isCreating || isUpdating

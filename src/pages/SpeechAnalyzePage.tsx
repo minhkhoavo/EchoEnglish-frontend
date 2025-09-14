@@ -12,6 +12,7 @@ import type {
 } from '@/features/speech-analyzer/types/pronunciation.types';
 import { skipToken } from '@reduxjs/toolkit/query/react';
 import FluencyContent from '@/features/speech-analyzer/components/fluency/FluencyContent';
+import VocabularyPage from '@/features/speech-analyzer/pages/VocabularyPage';
 
 const SpeechAnalyzePage = () => {
   const { id, view } = useParams<{ id: string; view?: string }>();
@@ -40,11 +41,7 @@ const SpeechAnalyzePage = () => {
         );
       case 'vocabulary':
         // TODO: Create VocabularyContent component
-        return (
-          <div className="p-6 text-center text-gray-500">
-            Vocabulary analysis coming soon...
-          </div>
-        );
+        return <VocabularyPage></VocabularyPage>;
       case 'pronunciation':
       default:
         return <PronunciationContent recording={recording} />;
