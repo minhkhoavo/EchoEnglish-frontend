@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,8 +16,33 @@ import { useGetTOEICTestByIdQuery } from '@/features/tests/services/listeningRea
 const TestExam = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [selectedPart, setSelectedPart] = useState('part1');
   const [currentQuestion, setCurrentQuestion] = useState(1);
+
+  // Get test mode and parameters from URL
+  const testMode = searchParams.get('mode') || 'full'; // 'full' or 'custom'
+  const selectedParts = useMemo(
+    () => searchParams.get('parts')?.split(',') || [],
+    [searchParams]
+  );
+  const testTime = parseInt(searchParams.get('time') || '120', 10);
+  const isHistoryView = searchParams.get('history') === 'true';
+
+  // Determine which parts to show based on mode
+  const partsToShow = useMemo(() => {
+    const showAllParts = testMode === 'full' || selectedParts.length === 0;
+    return showAllParts
+      ? ['part1', 'part2', 'part3', 'part4', 'part5', 'part6', 'part7']
+      : selectedParts;
+  }, [testMode, selectedParts]);
+
+  // Set initial part based on available parts
+  useEffect(() => {
+    if (partsToShow.length > 0 && !partsToShow.includes(selectedPart)) {
+      setSelectedPart(partsToShow[0]);
+    }
+  }, [partsToShow, selectedPart]);
 
   // Use RTK Query hook instead of manual fetch
   const {
@@ -89,6 +114,11 @@ const TestExam = () => {
             <h1 className="text-2xl font-bold text-foreground">
               {testData.testTitle}
             </h1>
+            {testMode === 'custom' && (
+              <span className="text-sm text-muted-foreground">
+                ({partsToShow.length} parts - {testTime} minutes)
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -107,59 +137,110 @@ const TestExam = () => {
             >
               <Tabs value={selectedPart} onValueChange={setSelectedPart}>
                 <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm z-10 p-4 border-b border-border/50">
-                  <TabsList className="grid w-full grid-cols-7">
-                    <TabsTrigger value="part1">Part 1</TabsTrigger>
-                    <TabsTrigger value="part2">Part 2</TabsTrigger>
-                    <TabsTrigger value="part3">Part 3</TabsTrigger>
-                    <TabsTrigger value="part4">Part 4</TabsTrigger>
-                    <TabsTrigger value="part5">Part 5</TabsTrigger>
-                    <TabsTrigger value="part6">Part 6</TabsTrigger>
-                    <TabsTrigger value="part7">Part 7</TabsTrigger>
+                  <TabsList
+                    className={`grid w-full grid-cols-${partsToShow.length}`}
+                  >
+                    {partsToShow.includes('part1') && (
+                      <TabsTrigger value="part1">Part 1</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part2') && (
+                      <TabsTrigger value="part2">Part 2</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part3') && (
+                      <TabsTrigger value="part3">Part 3</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part4') && (
+                      <TabsTrigger value="part4">Part 4</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part5') && (
+                      <TabsTrigger value="part5">Part 5</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part6') && (
+                      <TabsTrigger value="part6">Part 6</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part7') && (
+                      <TabsTrigger value="part7">Part 7</TabsTrigger>
+                    )}
                   </TabsList>
                 </div>
 
                 <div className="p-6">
-                  <TabsContent value="part1" className="mt-0">
-                    {testData?.parts[0] && (
-                      <Part1Question part={testData.parts[0]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part1') && (
+                    <TabsContent value="part1" className="mt-0">
+                      {testData?.parts[0] && (
+                        <Part1Question
+                          part={testData.parts[0]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part2" className="mt-0">
-                    {testData?.parts[1] && (
-                      <Part2Question part={testData.parts[1]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part2') && (
+                    <TabsContent value="part2" className="mt-0">
+                      {testData?.parts[1] && (
+                        <Part2Question
+                          part={testData.parts[1]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part3" className="mt-0">
-                    {testData?.parts[2] && (
-                      <Part3Question part={testData.parts[2]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part3') && (
+                    <TabsContent value="part3" className="mt-0">
+                      {testData?.parts[2] && (
+                        <Part3Question
+                          part={testData.parts[2]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part4" className="mt-0">
-                    {testData?.parts[3] && (
-                      <Part4Question part={testData.parts[3]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part4') && (
+                    <TabsContent value="part4" className="mt-0">
+                      {testData?.parts[3] && (
+                        <Part4Question
+                          part={testData.parts[3]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part5" className="mt-0">
-                    {testData?.parts[4] && (
-                      <Part5Question part={testData.parts[4]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part5') && (
+                    <TabsContent value="part5" className="mt-0">
+                      {testData?.parts[4] && (
+                        <Part5Question
+                          part={testData.parts[4]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part6" className="mt-0">
-                    {testData?.parts[5] && (
-                      <Part6Question part={testData.parts[5]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part6') && (
+                    <TabsContent value="part6" className="mt-0">
+                      {testData?.parts[5] && (
+                        <Part6Question
+                          part={testData.parts[5]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part7" className="mt-0">
-                    {testData?.parts[6] && (
-                      <Part7Question part={testData.parts[6]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part7') && (
+                    <TabsContent value="part7" className="mt-0">
+                      {testData?.parts[6] && (
+                        <Part7Question
+                          part={testData.parts[6]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
                 </div>
 
                 {/* Bottom padding for smooth scrolling */}
@@ -175,6 +256,8 @@ const TestExam = () => {
                 currentQuestion={currentQuestion}
                 onQuestionSelect={jumpToQuestion}
                 testData={testData}
+                showParts={partsToShow}
+                isHistoryView={isHistoryView}
               />
             </div>
           </div>

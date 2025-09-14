@@ -7,12 +7,16 @@ interface QuestionNavigationProps {
   currentQuestion: number;
   onQuestionSelect: (questionNumber: number) => void;
   testData: TOEICTestDetail;
+  showParts?: string[];
+  isHistoryView?: boolean;
 }
 
 export const QuestionNavigation = ({
   currentQuestion,
   onQuestionSelect,
   testData,
+  showParts = ['part1', 'part2', 'part3', 'part4', 'part5', 'part6', 'part7'],
+  isHistoryView = false,
 }: QuestionNavigationProps) => {
   // Scroll to question function
   const scrollToQuestion = (questionNumber: number) => {
@@ -29,8 +33,10 @@ export const QuestionNavigation = ({
     onQuestionSelect(questionNumber);
   };
 
-  // Generate question status for all 200 questions
+  // Generate question status for all 200 questions - only show when in history view
   const getQuestionStatus = (questionNum: number) => {
+    if (!isHistoryView) return null;
+
     // Mock user answers for demonstration
     const mockAnswers = {
       1: { userAnswer: 'A', correctAnswer: 'A' },
@@ -133,14 +139,14 @@ export const QuestionNavigation = ({
   };
 
   const parts = [
-    { name: 'Part 1', start: 1, end: 6 },
-    { name: 'Part 2', start: 7, end: 31 },
-    { name: 'Part 3', start: 32, end: 70 },
-    { name: 'Part 4', start: 71, end: 100 },
-    { name: 'Part 5', start: 101, end: 130 },
-    { name: 'Part 6', start: 131, end: 146 },
-    { name: 'Part 7', start: 147, end: 200 },
-  ];
+    { name: 'Part 1', start: 1, end: 6, id: 'part1' },
+    { name: 'Part 2', start: 7, end: 31, id: 'part2' },
+    { name: 'Part 3', start: 32, end: 70, id: 'part3' },
+    { name: 'Part 4', start: 71, end: 100, id: 'part4' },
+    { name: 'Part 5', start: 101, end: 130, id: 'part5' },
+    { name: 'Part 6', start: 131, end: 146, id: 'part6' },
+    { name: 'Part 7', start: 147, end: 200, id: 'part7' },
+  ].filter((part) => showParts.includes(part.id));
 
   return (
     <div
@@ -176,21 +182,23 @@ export const QuestionNavigation = ({
           </div>
         </ScrollArea>
       </div>
-      {/* Legend - Fixed at bottom */}
-      <div className="mt-4 pt-4 border-t space-y-2 text-xs flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-green-500 rounded flex-shrink-0"></div>
-          <span className="text-muted-foreground">Correct</span>
+      {/* Legend - Fixed at bottom - only show in history view */}
+      {isHistoryView && (
+        <div className="mt-4 pt-4 border-t space-y-2 text-xs flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded flex-shrink-0"></div>
+            <span className="text-muted-foreground">Correct</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-500 rounded flex-shrink-0"></div>
+            <span className="text-muted-foreground">Incorrect</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-muted border rounded flex-shrink-0"></div>
+            <span className="text-muted-foreground">Unanswered</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-red-500 rounded flex-shrink-0"></div>
-          <span className="text-muted-foreground">Incorrect</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-muted border rounded flex-shrink-0"></div>
-          <span className="text-muted-foreground">Unanswered</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

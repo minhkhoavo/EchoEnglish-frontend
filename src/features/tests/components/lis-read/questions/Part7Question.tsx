@@ -12,9 +12,13 @@ import {
 
 interface Part7QuestionProps {
   part: TestPart;
+  showCorrectAnswers?: boolean;
 }
 
-export const Part7Question = ({ part }: Part7QuestionProps) => {
+export const Part7Question = ({
+  part,
+  showCorrectAnswers = false,
+}: Part7QuestionProps) => {
   const [expandedExplanations, setExpandedExplanations] = useState<number[]>(
     []
   );
@@ -279,9 +283,11 @@ export const Part7Question = ({ part }: Part7QuestionProps) => {
                           <div
                             key={option.label}
                             className={`p-3 rounded-lg border-2 transition-colors ${
+                              showCorrectAnswers &&
                               option.label === question.correctAnswer
                                 ? 'border-green-500 bg-green-50 dark:bg-green-950'
-                                : option.label === mockUserAnswer &&
+                                : showCorrectAnswers &&
+                                    option.label === mockUserAnswer &&
                                     mockUserAnswer !== question.correctAnswer
                                   ? 'border-red-500 bg-red-50 dark:bg-red-950'
                                   : 'border-gray-200 dark:border-gray-700'
@@ -290,13 +296,15 @@ export const Part7Question = ({ part }: Part7QuestionProps) => {
                             <div className="flex items-center gap-3">
                               <div
                                 className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
+                                  showCorrectAnswers &&
                                   option.label === question.correctAnswer
                                     ? 'border-green-500 bg-green-500 text-white'
-                                    : option.label === mockUserAnswer &&
+                                    : showCorrectAnswers &&
+                                        option.label === mockUserAnswer &&
                                         mockUserAnswer !==
                                           question.correctAnswer
                                       ? 'border-red-500 bg-red-500 text-white'
-                                      : 'border-gray-400 text-gray-600'
+                                      : 'border-gray-400 text-gray-600 hover:border-blue-500'
                                 }`}
                               >
                                 {option.label}
@@ -304,15 +312,17 @@ export const Part7Question = ({ part }: Part7QuestionProps) => {
                               <span className="text-sm flex-1">
                                 {option.text}
                               </span>
-                              {option.label === question.correctAnswer && (
-                                <Badge
-                                  variant="secondary"
-                                  className="bg-green-500 text-white"
-                                >
-                                  Correct
-                                </Badge>
-                              )}
-                              {option.label === mockUserAnswer &&
+                              {showCorrectAnswers &&
+                                option.label === question.correctAnswer && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="bg-green-500 text-white"
+                                  >
+                                    Correct
+                                  </Badge>
+                                )}
+                              {showCorrectAnswers &&
+                                option.label === mockUserAnswer &&
                                 mockUserAnswer !== question.correctAnswer && (
                                   <Badge variant="destructive">
                                     Your choice

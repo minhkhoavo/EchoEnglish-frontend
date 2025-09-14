@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Home, Upload, BookOpen, BarChart3, FileText } from 'lucide-react';
 
@@ -16,12 +17,17 @@ import { Button } from '@/components/ui/button';
 import { ContentManager } from '@/features/content-manager/ContentManager';
 import FlashcardPage from './FlashcardPage';
 import AllTestsPage from './test/AllTestsPage';
+import { ToeicTestDetail } from '@/features/tests/components/TOEICTestDetail';
 
 const ContentPage = () => {
   const dispatch: AppDispatch = useDispatch();
   const { activeTab, isSidebarOpen } = useSelector(
     (state: RootState) => state.ui
   );
+
+  // State for test detail view
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [showTestDetail, setShowTestDetail] = useState(false);
 
   const navigation = [
     {
@@ -58,6 +64,21 @@ const ContentPage = () => {
 
   const handleTabClick = (tabId: string) => {
     dispatch(setActiveTab(tabId as ActiveTab));
+    // Reset test detail view when switching tabs
+    if (tabId !== 'tests') {
+      setShowTestDetail(false);
+      setSelectedTestId(null);
+    }
+  };
+
+  const handleTestSelect = (testId: string) => {
+    setSelectedTestId(testId);
+    setShowTestDetail(true);
+  };
+
+  const handleBackToTests = () => {
+    setShowTestDetail(false);
+    setSelectedTestId(null);
   };
 
   const renderContent = () => {
@@ -69,7 +90,15 @@ const ContentPage = () => {
       case 'flashcards':
         return <FlashcardPage />;
       case 'tests':
-        return <AllTestsPage />;
+        if (showTestDetail && selectedTestId) {
+          return (
+            <ToeicTestDetail
+              testId={selectedTestId}
+              onBack={handleBackToTests}
+            />
+          );
+        }
+        return <AllTestsPage onTestSelect={handleTestSelect} />;
       case 'analytics':
         return (
           <div className="space-y-6 text-center">

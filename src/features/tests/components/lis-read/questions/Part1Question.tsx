@@ -13,9 +13,13 @@ import type { TestPart } from '@/features/tests/types/toeic-test.types';
 
 interface Part1QuestionProps {
   part: TestPart;
+  showCorrectAnswers?: boolean;
 }
 
-export const Part1Question = ({ part }: Part1QuestionProps) => {
+export const Part1Question = ({
+  part,
+  showCorrectAnswers = false,
+}: Part1QuestionProps) => {
   const [expandedExplanations, setExpandedExplanations] = useState<number[]>(
     []
   );
@@ -23,18 +27,35 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
   const [expandedTranslations, setExpandedTranslations] = useState<number[]>(
     []
   );
+  // State to manage user answers when not in history view
+  const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
 
-  // Mock user answers for demonstration
-  const getMockUserAnswer = (questionNumber: number) => {
-    const mockAnswers: { [key: number]: string } = {
-      1: 'A',
-      2: 'C',
-      3: 'B',
-      4: 'D',
-      5: 'C',
-      6: 'C',
-    };
-    return mockAnswers[questionNumber] || 'A';
+  // Function to get user answer (mock for history view, state for current test)
+  const getUserAnswer = (questionNumber: number) => {
+    if (showCorrectAnswers) {
+      // Return mock answer for history view
+      const mockAnswers: { [key: number]: string } = {
+        1: 'A',
+        2: 'C',
+        3: 'B',
+        4: 'D',
+        5: 'C',
+        6: 'C',
+      };
+      return mockAnswers[questionNumber] || null;
+    }
+    // Return actual user answer for current test
+    return userAnswers[questionNumber] || null;
+  };
+
+  // Handle answer selection
+  const handleAnswerSelect = (questionNumber: number, answer: string) => {
+    if (!showCorrectAnswers) {
+      setUserAnswers((prev) => ({
+        ...prev,
+        [questionNumber]: answer,
+      }));
+    }
   };
 
   const toggleExplanation = (questionNumber: number) => {
@@ -99,8 +120,9 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
       {/* All Questions */}
       <div className="space-y-8">
         {part.questions?.map((question) => {
-          const mockUserAnswer = getMockUserAnswer(question.questionNumber);
-          const isCorrect = mockUserAnswer === question.correctAnswer;
+          const userAnswer = getUserAnswer(question.questionNumber);
+          const isCorrect =
+            showCorrectAnswers && userAnswer === question.correctAnswer;
           const isExplanationExpanded = expandedExplanations.includes(
             question.questionNumber
           );
@@ -258,24 +280,39 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
                           <div
                             key={option.label}
                             className={`p-3 rounded-lg border-2 transition-colors ${
+                              showCorrectAnswers &&
                               option.label === question.correctAnswer
                                 ? 'border-green-500 bg-green-50 dark:bg-green-950'
-                                : option.label === mockUserAnswer &&
-                                    mockUserAnswer !== question.correctAnswer
+                                : showCorrectAnswers &&
+                                    option.label === userAnswer &&
+                                    userAnswer !== question.correctAnswer
                                   ? 'border-red-500 bg-red-50 dark:bg-red-950'
-                                  : 'border-gray-200 dark:border-gray-700'
+                                  : !showCorrectAnswers &&
+                                      option.label === userAnswer
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 cursor-pointer'
                             }`}
+                            onClick={() =>
+                              handleAnswerSelect(
+                                question.questionNumber,
+                                option.label
+                              )
+                            }
                           >
                             <div className="flex items-center gap-3">
                               <div
                                 className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
+                                  showCorrectAnswers &&
                                   option.label === question.correctAnswer
                                     ? 'border-green-500 bg-green-500 text-white'
-                                    : option.label === mockUserAnswer &&
-                                        mockUserAnswer !==
-                                          question.correctAnswer
+                                    : showCorrectAnswers &&
+                                        option.label === userAnswer &&
+                                        userAnswer !== question.correctAnswer
                                       ? 'border-red-500 bg-red-500 text-white'
-                                      : 'border-gray-400'
+                                      : !showCorrectAnswers &&
+                                          option.label === userAnswer
+                                        ? 'border-blue-500 bg-blue-500 text-white'
+                                        : 'border-gray-400 hover:border-blue-500'
                                 }`}
                               >
                                 {option.label}
@@ -283,16 +320,18 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
                               <span className="text-sm text-muted-foreground">
                                 (Listening options - no text displayed)
                               </span>
-                              {option.label === question.correctAnswer && (
-                                <Badge
-                                  variant="secondary"
-                                  className="ml-auto bg-green-500 text-white"
-                                >
-                                  Correct answer
-                                </Badge>
-                              )}
-                              {option.label === mockUserAnswer &&
-                                mockUserAnswer !== question.correctAnswer && (
+                              {showCorrectAnswers &&
+                                option.label === question.correctAnswer && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="ml-auto bg-green-500 text-white"
+                                  >
+                                    Correct answer
+                                  </Badge>
+                                )}
+                              {showCorrectAnswers &&
+                                option.label === userAnswer &&
+                                userAnswer !== question.correctAnswer && (
                                   <Badge
                                     variant="destructive"
                                     className="ml-auto"

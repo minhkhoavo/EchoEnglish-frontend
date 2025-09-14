@@ -13,9 +13,13 @@ import {
 
 interface Part4QuestionProps {
   part: TestPart;
+  showCorrectAnswers?: boolean;
 }
 
-export const Part4Question = ({ part }: Part4QuestionProps) => {
+export const Part4Question = ({
+  part,
+  showCorrectAnswers = false,
+}: Part4QuestionProps) => {
   const [expandedTranscripts, setExpandedTranscripts] = useState<number[]>([]);
   const [expandedTranslations, setExpandedTranslations] = useState<number[]>(
     []
@@ -24,8 +28,10 @@ export const Part4Question = ({ part }: Part4QuestionProps) => {
     []
   );
 
-  // Mock user answers for demonstration
+  // Mock user answers for demonstration - only show when viewing history
   const getMockUserAnswer = (questionNumber: number) => {
+    if (!showCorrectAnswers) return null;
+
     const mockAnswers: { [key: number]: string } = {
       71: 'B',
       72: 'A',
@@ -225,39 +231,45 @@ export const Part4Question = ({ part }: Part4QuestionProps) => {
                               <div
                                 key={option.label}
                                 className={`p-3 rounded-lg border-2 transition-colors ${
+                                  showCorrectAnswers &&
                                   option.label === question.correctAnswer
                                     ? 'border-green-500 bg-green-50 dark:bg-green-950'
-                                    : option.label === mockUserAnswer &&
+                                    : showCorrectAnswers &&
+                                        option.label === mockUserAnswer &&
                                         mockUserAnswer !==
                                           question.correctAnswer
                                       ? 'border-red-500 bg-red-50 dark:bg-red-950'
-                                      : 'border-gray-200 dark:border-gray-700'
+                                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 cursor-pointer'
                                 }`}
                               >
                                 <div className="flex items-start gap-3">
                                   <div
                                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
+                                      showCorrectAnswers &&
                                       option.label === question.correctAnswer
                                         ? 'border-green-500 bg-green-500 text-white'
-                                        : option.label === mockUserAnswer &&
+                                        : showCorrectAnswers &&
+                                            option.label === mockUserAnswer &&
                                             mockUserAnswer !==
                                               question.correctAnswer
                                           ? 'border-red-500 bg-red-500 text-white'
-                                          : 'border-gray-400'
+                                          : 'border-gray-400 hover:border-blue-500'
                                     }`}
                                   >
                                     {option.label}
                                   </div>
                                   <span className="flex-1">{option.text}</span>
-                                  {option.label === question.correctAnswer && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="bg-green-500 text-white"
-                                    >
-                                      Correct answer
-                                    </Badge>
-                                  )}
-                                  {option.label === mockUserAnswer &&
+                                  {showCorrectAnswers &&
+                                    option.label === question.correctAnswer && (
+                                      <Badge
+                                        variant="secondary"
+                                        className="bg-green-500 text-white"
+                                      >
+                                        Correct answer
+                                      </Badge>
+                                    )}
+                                  {showCorrectAnswers &&
+                                    option.label === mockUserAnswer &&
                                     mockUserAnswer !==
                                       question.correctAnswer && (
                                       <Badge variant="destructive">
