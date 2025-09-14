@@ -1,39 +1,20 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import type { TestPart } from '@/features/tests/types/toeic-test.types';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 
-interface Part6QuestionProps {
-  part: {
-    partName: string;
-    partId: string;
-    questionGroups: Array<{
-      groupContext: {
-        audioUrl: null;
-        imageUrls: string[] | null;
-        passageHtml: string;
-        transcript: string;
-        translation: string;
-      };
-      questions: Array<{
-        questionNumber: number;
-        questionText: null;
-        options: Array<{ label: string; text: string }>;
-        correctAnswer: string;
-        userAnswer?: string;
-        explanation: string;
-      }>;
-    }>;
-  };
+interface Part7QuestionProps {
+  part: TestPart;
 }
 
-export const Part6Question = ({ part }: Part6QuestionProps) => {
+export const Part7Question = ({ part }: Part7QuestionProps) => {
   const [expandedExplanations, setExpandedExplanations] = useState<number[]>(
     []
   );
@@ -45,22 +26,32 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
   // Mock user answers for demonstration
   const getMockUserAnswer = (questionNumber: number) => {
     const mockAnswers: { [key: number]: string } = {
-      131: 'D', // correct
-      132: 'D', // correct
-      133: 'A', // correct
-      134: 'B', // correct
-      135: 'C', // correct
-      136: 'A', // correct
-      137: 'B', // correct
-      138: 'B', // correct
-      139: 'A', // incorrect - should be B
-      140: 'C', // correct
-      141: 'D', // correct
-      142: 'A', // correct
-      143: 'B', // incorrect - should be C
-      144: 'C', // correct
-      145: 'D', // correct
-      146: 'A', // correct
+      // Single passage questions (147-200)
+      147: 'C', // correct
+      148: 'B', // correct
+      149: 'B', // correct
+      150: 'C', // correct
+      151: 'B', // correct
+      152: 'D', // correct
+      153: 'A', // correct
+      154: 'B', // correct
+      155: 'A', // correct
+      156: 'D', // correct
+      157: 'B', // correct
+      158: 'B', // correct
+      159: 'A', // correct
+      160: 'B', // correct
+      161: 'C', // incorrect - should be A
+      162: 'B', // correct
+      163: 'D', // incorrect - should be C
+      164: 'A', // correct
+      165: 'B', // correct
+      // Multiple passage questions would continue...
+      196: 'A', // correct
+      197: 'C', // correct
+      198: 'C', // correct
+      199: 'D', // correct
+      200: 'B', // correct
     };
     return mockAnswers[questionNumber] || 'A';
   };
@@ -97,11 +88,11 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
           {part.partName}
         </Badge>
         <span className="text-muted-foreground">
-          Questions {part.questionGroups[0]?.questions[0]?.questionNumber} -{' '}
+          Questions {part.questionGroups?.[0]?.questions?.[0]?.questionNumber} -{' '}
           {
-            part.questionGroups[part.questionGroups.length - 1]?.questions[
+            part.questionGroups?.[part.questionGroups.length - 1]?.questions?.[
               part.questionGroups[part.questionGroups.length - 1]?.questions
-                .length - 1
+                ?.length - 1
             ]?.questionNumber
           }
         </span>
@@ -111,17 +102,19 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
       <Card className="bg-blue-50 dark:bg-blue-950">
         <CardContent className="p-4">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>Instructions:</strong> Read the texts that follow. A word,
-            phrase, or sentence is missing in parts of each text. Four answer
-            choices for each question are given below the text. Select the best
-            answer to complete the text.
+            <strong>Instructions:</strong> In this part you will read a
+            selection of texts, such as magazine and newspaper articles,
+            e-mails, memos, instant messages, advertisements, and notices. Each
+            text or set of texts is followed by several questions. Select the
+            best answer for each question and mark the letter (A), (B), (C), or
+            (D) on your answer sheet.
           </p>
         </CardContent>
       </Card>
 
       {/* Question Groups */}
       <div className="space-y-8">
-        {part.questionGroups.map((group, groupIndex) => (
+        {part.questionGroups?.map((group, groupIndex) => (
           <div key={groupIndex} className="border rounded-lg p-6 bg-background">
             {/* Group Header */}
             <div className="flex items-center gap-4 mb-6">
@@ -129,6 +122,14 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
                 Questions {group.questions[0]?.questionNumber} -{' '}
                 {group.questions[group.questions.length - 1]?.questionNumber}
               </Badge>
+
+              <span className="text-sm text-muted-foreground">
+                {group.questions.length === 1
+                  ? 'Single passage'
+                  : group.questions.length <= 4
+                    ? 'Single passage (multiple questions)'
+                    : 'Multiple passages'}
+              </span>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -147,7 +148,7 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
                     </div>
                   ))}
 
-                {/* Passage with blanks - only show if no images */}
+                {/* Reading Passage - only show if no images */}
                 {(!group.groupContext.imageUrls ||
                   group.groupContext.imageUrls.length === 0) && (
                   <Card>
@@ -157,7 +158,7 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
                       </h3>
                       <div
                         dangerouslySetInnerHTML={{
-                          __html: group.groupContext.passageHtml,
+                          __html: group.groupContext?.passageHtml || '',
                         }}
                         className="prose prose-sm max-w-none dark:prose-invert leading-relaxed"
                       />
@@ -166,9 +167,7 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
                 )}
 
                 {/* Translation Section */}
-                {/* Translation Section */}
-                {(group.groupContext.translation ||
-                  group.groupContext.transcript) && (
+                {group.groupContext.translation && (
                   <Collapsible
                     open={expandedTranslations.includes(groupIndex)}
                     onOpenChange={() => toggleTranslation(groupIndex)}
@@ -191,9 +190,7 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
                         <CardContent className="p-4">
                           <div
                             dangerouslySetInnerHTML={{
-                              __html:
-                                group.groupContext.translation ||
-                                group.groupContext.transcript,
+                              __html: group.groupContext.translation,
                             }}
                             className="prose prose-sm max-w-none dark:prose-invert"
                           />
@@ -202,10 +199,51 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
                     </CollapsibleContent>
                   </Collapsible>
                 )}
+
+                {/* Vietnamese Translation fallback */}
+                {!group.groupContext.translation &&
+                  group.groupContext.transcript && (
+                    <Collapsible
+                      open={expandedTranslations.includes(groupIndex)}
+                      onOpenChange={() => toggleTranslation(groupIndex)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-between"
+                        >
+                          Show Translation
+                          {expandedTranslations.includes(groupIndex) ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <Card className="mt-2">
+                          <CardContent className="p-4">
+                            <div
+                              dangerouslySetInnerHTML={{
+                                __html: group.groupContext.transcript,
+                              }}
+                              className="prose prose-sm max-w-none dark:prose-invert"
+                            />
+                          </CardContent>
+                        </Card>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
               </div>
 
               {/* Questions and Options */}
-              <div className="space-y-6">
+              <div
+                className="space-y-6 max-h-[80vh] overflow-y-auto pr-2 scroll-smooth"
+                style={{
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#d1d5db #f3f4f6',
+                }}
+              >
                 {group.questions.map((question) => {
                   const mockUserAnswer = getMockUserAnswer(
                     question.questionNumber
@@ -226,6 +264,13 @@ export const Part6Question = ({ part }: Part6QuestionProps) => {
                         <h3 className="text-lg font-semibold mb-2">
                           Question {question.questionNumber}
                         </h3>
+                      </div>
+
+                      {/* Question Text */}
+                      <div className="mb-4">
+                        <p className="text-base font-medium">
+                          {question.questionText}
+                        </p>
                       </div>
 
                       {/* Options */}

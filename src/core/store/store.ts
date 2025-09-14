@@ -3,7 +3,7 @@ import uiReducer from '../store/slices/uiSlice.';
 import contentReducer from '../../features/content-manager/slices/contentSlice';
 import quizReducer from '../../features/quiz/slices/quizSlice';
 import flashcardReducer from '../../features/flashcard/slices/flashcardSlice';
-import testReducer from '../../features/test/slices/testSlice';
+import testReducer from '../../features/tests/slices/testSlice';
 import authReducer from '../../features/auth/slices/authSlice';
 import speechAnalyzerReducer from '../../features/speech-analyzer/slices/speechAnalyzerSlice';
 import { api } from '../api/api';

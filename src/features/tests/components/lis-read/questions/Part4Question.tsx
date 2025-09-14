@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AudioPlayer } from '@/components/AudioPlayer';
+import type { TestPart } from '@/features/tests/types/toeic-test.types';
 import {
   Collapsible,
   CollapsibleContent,
@@ -11,25 +12,7 @@ import {
 } from '@/components/ui/collapsible';
 
 interface Part4QuestionProps {
-  part: {
-    partName: string;
-    partId: string;
-    questionGroups: Array<{
-      groupContext: {
-        audioUrl: string;
-        transcript: string;
-        translation: string;
-      };
-      questions: Array<{
-        questionNumber: number;
-        questionText: string;
-        options: Array<{ label: string; text: string }>;
-        correctAnswer: string;
-        userAnswer?: string;
-        explanation: string;
-      }>;
-    }>;
-  };
+  part: TestPart;
 }
 
 export const Part4Question = ({ part }: Part4QuestionProps) => {
@@ -89,7 +72,8 @@ export const Part4Question = ({ part }: Part4QuestionProps) => {
   };
 
   // Get all questions for navigation
-  const allQuestions = part.questionGroups.flatMap((group) => group.questions);
+  const allQuestions =
+    part.questionGroups?.flatMap((group) => group.questions) || [];
 
   return (
     <div className="space-y-6">
@@ -120,7 +104,7 @@ export const Part4Question = ({ part }: Part4QuestionProps) => {
 
       {/* All Question Groups */}
       <div className="space-y-12">
-        {part.questionGroups.map((group, groupIndex) => {
+        {part.questionGroups?.map((group, groupIndex) => {
           const isTranscriptExpanded = expandedTranscripts.includes(groupIndex);
           const isTranslationExpanded =
             expandedTranslations.includes(groupIndex);
@@ -141,7 +125,7 @@ export const Part4Question = ({ part }: Part4QuestionProps) => {
 
               {/* Audio Player */}
               <div className="mb-6">
-                <AudioPlayer audioUrl={group.groupContext.audioUrl} />
+                <AudioPlayer audioUrl={group.groupContext?.audioUrl || ''} />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -170,7 +154,7 @@ export const Part4Question = ({ part }: Part4QuestionProps) => {
                         <CardContent className="p-4">
                           <div
                             dangerouslySetInnerHTML={{
-                              __html: group.groupContext.transcript,
+                              __html: group.groupContext?.transcript || '',
                             }}
                             className="prose prose-sm max-w-none dark:prose-invert"
                           />
@@ -202,7 +186,7 @@ export const Part4Question = ({ part }: Part4QuestionProps) => {
                         <CardContent className="p-4">
                           <div
                             dangerouslySetInnerHTML={{
-                              __html: group.groupContext.translation,
+                              __html: group.groupContext?.translation || '',
                             }}
                             className="prose prose-sm max-w-none dark:prose-invert"
                           />
@@ -214,7 +198,7 @@ export const Part4Question = ({ part }: Part4QuestionProps) => {
 
                 {/* Questions */}
                 <div className="lg:col-span-2 space-y-4">
-                  {group.questions.map((question) => {
+                  {group.questions?.map((question) => {
                     const mockUserAnswer = getMockUserAnswer(
                       question.questionNumber
                     );

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import type { TestPart } from '@/features/tests/types/toeic-test.types';
 import {
   Collapsible,
   CollapsibleContent,
@@ -10,25 +12,7 @@ import {
 } from '@/components/ui/collapsible';
 
 interface Part5QuestionProps {
-  part: {
-    partName: string;
-    partId: string;
-    questions: Array<{
-      questionNumber: number;
-      questionText: string;
-      options: Array<{ label: string; text: string }>;
-      correctAnswer: string;
-      userAnswer?: string;
-      explanation: string;
-      media: {
-        audioUrl: null;
-        imageUrls: null;
-        passageHtml: null;
-        transcript: null;
-        translation: null;
-      };
-    }>;
-  };
+  part: TestPart;
 }
 
 export const Part5Question = ({ part }: Part5QuestionProps) => {
@@ -89,8 +73,8 @@ export const Part5Question = ({ part }: Part5QuestionProps) => {
           {part.partName}
         </Badge>
         <span className="text-muted-foreground">
-          Questions {part.questions[0]?.questionNumber} -{' '}
-          {part.questions[part.questions.length - 1]?.questionNumber}
+          Questions {part.questions?.[0]?.questionNumber} -{' '}
+          {part.questions?.[part.questions.length - 1]?.questionNumber}
         </span>
       </div>
 
@@ -107,7 +91,7 @@ export const Part5Question = ({ part }: Part5QuestionProps) => {
 
       {/* All Questions */}
       <div className="space-y-6">
-        {part.questions.map((question) => {
+        {part.questions?.map((question) => {
           const mockUserAnswer = getMockUserAnswer(question.questionNumber);
           const isCorrect = mockUserAnswer === question.correctAnswer;
           const isExplanationExpanded = expandedExplanations.includes(
@@ -174,7 +158,7 @@ export const Part5Question = ({ part }: Part5QuestionProps) => {
                         Sentence Completion
                       </h3>
                       <div className="text-base leading-relaxed">
-                        {question.questionText
+                        {(question.questionText || '')
                           .split('--')
                           .map((part, index, array) => (
                             <React.Fragment key={index}>

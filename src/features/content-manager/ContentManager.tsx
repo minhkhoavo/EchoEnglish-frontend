@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Sparkles, Zap, Upload, File, Brain } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -24,8 +24,9 @@ export const ContentManager = () => {
   const navigate = useNavigate();
 
   const contentItems = useAppSelector((state) => state.content.items);
-  const readyItems = useAppSelector((state) =>
-    state.content.items.filter((item) => item.status === 'ready')
+  const readyItems = useMemo(
+    () => contentItems.filter((item) => item.status === 'ready'),
+    [contentItems]
   );
   const [fetchUserFiles] = useLazyFetchUserFilesQuery();
 

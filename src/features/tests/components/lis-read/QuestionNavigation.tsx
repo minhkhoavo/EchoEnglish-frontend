@@ -1,154 +1,12 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-
-interface TestData {
-  testId: string;
-  testTitle: string;
-  resultId: string;
-  parts: {
-    part1?: {
-      partName: string;
-      partId: string;
-      questions: Array<{
-        questionNumber: number;
-        questionText: string | null;
-        options: Array<{ label: string; text: string }>;
-        correctAnswer: string;
-        userAnswer?: string;
-        explanation: string;
-        media: {
-          audioUrl: string;
-          imageUrls?: string[];
-          transcript: string;
-          translation?: string;
-        };
-      }>;
-    };
-    part2?: {
-      partName: string;
-      partId: string;
-      questions: Array<{
-        questionNumber: number;
-        questionText: string | null;
-        options: Array<{ label: string; text: string }>;
-        correctAnswer: string;
-        userAnswer?: string;
-        explanation: string;
-        media: {
-          audioUrl: string;
-          transcript: string;
-          translation?: string;
-        };
-      }>;
-    };
-    part3?: {
-      partName: string;
-      partId: string;
-      questionGroups: Array<{
-        groupContext: {
-          audioUrl: string;
-          transcript: string;
-          translation: string;
-        };
-        questions: Array<{
-          questionNumber: number;
-          questionText: string;
-          options: Array<{ label: string; text: string }>;
-          correctAnswer: string;
-          userAnswer?: string;
-          explanation: string;
-        }>;
-      }>;
-    };
-    part4?: {
-      partName: string;
-      partId: string;
-      questionGroups: Array<{
-        groupContext: {
-          audioUrl: string;
-          transcript: string;
-          translation: string;
-        };
-        questions: Array<{
-          questionNumber: number;
-          questionText: string;
-          options: Array<{ label: string; text: string }>;
-          correctAnswer: string;
-          userAnswer?: string;
-          explanation: string;
-        }>;
-      }>;
-    };
-    part5?: {
-      partName: string;
-      partId: string;
-      questions: Array<{
-        questionNumber: number;
-        questionText: string;
-        options: Array<{ label: string; text: string }>;
-        correctAnswer: string;
-        userAnswer?: string;
-        explanation: string;
-        media: {
-          audioUrl: null;
-          imageUrls: null;
-          passageHtml: null;
-          transcript: null;
-          translation: null;
-        };
-      }>;
-    };
-    part6?: {
-      partName: string;
-      partId: string;
-      questionGroups: Array<{
-        groupContext: {
-          audioUrl: null;
-          imageUrls: string[] | null;
-          passageHtml: string;
-          transcript: string;
-          translation: string;
-        };
-        questions: Array<{
-          questionNumber: number;
-          questionText: null;
-          options: Array<{ label: string; text: string }>;
-          correctAnswer: string;
-          userAnswer?: string;
-          explanation: string;
-        }>;
-      }>;
-    };
-    part7?: {
-      partName: string;
-      partId: string;
-      questionGroups: Array<{
-        groupContext: {
-          audioUrl: null;
-          imageUrls: string[] | null;
-          passageHtml: string;
-          transcript: string;
-          translation?: string;
-        };
-        questions: Array<{
-          questionNumber: number;
-          questionText: string;
-          options: Array<{ label: string; text: string }>;
-          correctAnswer: string;
-          userAnswer?: string;
-          explanation: string;
-        }>;
-      }>;
-    };
-  };
-}
+import type { TOEICTestDetail } from '@/features/tests/types/toeic-test.types';
 
 interface QuestionNavigationProps {
   currentQuestion: number;
   onQuestionSelect: (questionNumber: number) => void;
-  testData: TestData;
+  testData: TOEICTestDetail;
 }
 
 export const QuestionNavigation = ({
@@ -160,12 +18,7 @@ export const QuestionNavigation = ({
   const scrollToQuestion = (questionNumber: number) => {
     const element = document.getElementById(`question-${questionNumber}`);
     if (element) {
-      // Get the scrollable container
-      const scrollContainer =
-        element.closest('[data-testid="main-scroll-container"]') ||
-        document.querySelector('.overflow-y-auto') ||
-        window;
-
+      // Scroll smoothly to the selected question element
       element.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
@@ -248,7 +101,6 @@ export const QuestionNavigation = ({
 
   const getButtonVariant = (questionNum: number) => {
     const status = getQuestionStatus(questionNum);
-    if (questionNum === currentQuestion) return 'default';
 
     switch (status) {
       case 'correct':
@@ -262,7 +114,8 @@ export const QuestionNavigation = ({
 
   const getButtonClassName = (questionNum: number) => {
     const status = getQuestionStatus(questionNum);
-    const baseClass = 'w-8 h-8 text-xs';
+    const baseClass = 'w-8 h-8 ml-1 text-xs hover:ring-2 hover:ring-blue-300';
+
     switch (status) {
       case 'correct':
         return cn(
@@ -275,10 +128,7 @@ export const QuestionNavigation = ({
           'bg-red-500 hover:bg-red-600 text-white border-red-500'
         );
       default:
-        return cn(
-          baseClass,
-          'bg-muted hover:bg-muted-foreground/10 text-black'
-        );
+        return cn(baseClass, 'hover:bg-muted-foreground/10 text-black');
     }
   };
 
@@ -294,7 +144,7 @@ export const QuestionNavigation = ({
 
   return (
     <div
-      className="bg-card border rounded-lg p-4 shadow-md flex flex-col"
+      className="bg-card border rounded-lg p-2 shadow-md flex flex-col"
       style={{ height: 'calc(100vh - 120px)' }}
     >
       <h3 className="font-semibold mb-4 text-card-foreground">Question List</h3>

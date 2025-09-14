@@ -15,7 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ContentManager } from '@/features/content-manager/ContentManager';
 import FlashcardPage from './FlashcardPage';
-import TOEICTestsContent from '@/features/test/components/TOEICTestsContent';
+import AllTestsPage from './test/AllTestsPage';
 
 const ContentPage = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -69,7 +69,7 @@ const ContentPage = () => {
       case 'flashcards':
         return <FlashcardPage />;
       case 'tests':
-        return <TOEICTestsContent testsPerPage={1} />;
+        return <AllTestsPage />;
       case 'analytics':
         return (
           <div className="space-y-6 text-center">

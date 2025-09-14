@@ -1,53 +1,38 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { TOEICTest } from '../types/test.types';
-
-export interface TestFilters {
-  search: string;
-  difficulty: string;
-  category: string;
-  completed: boolean;
-  favorites: boolean;
-}
-
-export interface TestSession {
-  testId: string;
-  startTime: number;
-  currentQuestionIndex: number;
-  answers: Record<string, string>; // { questionId: answer }
-  timeRemaining: number;
-  isPaused: boolean;
-}
-
-export interface TestResult {
-  testId: string;
-  score: number;
-  totalQuestions: number;
-  correctAnswers: number;
-  timeSpent: number;
-  completedAt: number;
-  sections: {
-    listening: { score: number; total: number };
-    reading: { score: number; total: number };
-  };
-}
+import type { TOEICTest as ListeningReadingTest } from '../types/toeic-test.types';
 
 interface TestState {
-  // Test list state
-  filters: TestFilters;
+  filters: {
+    search: string;
+    difficulty: string;
+    category: string;
+    completed: boolean;
+    favorites: boolean;
+  };
   viewMode: 'grid' | 'list';
   sortBy: 'title' | 'difficulty' | 'createdAt' | 'completedAt';
   sortDirection: 'asc' | 'desc';
   searchQuery: string;
-
-  // Active test session
-  activeTest: TOEICTest | null;
-  currentSession: TestSession | null;
-
-  // Test results
-  lastResult: TestResult | null;
+  activeTest: ListeningReadingTest | null;
+  currentSession: {
+    testId: string;
+    testType: 'listening-reading';
+    startTime: number;
+    currentQuestionIndex: number;
+    answers: Record<string, string>;
+    timeRemaining: number;
+    isPaused: boolean;
+  } | null;
+  lastResult: {
+    testId: string;
+    testType: 'listening-reading';
+    score: number;
+    totalQuestions: number;
+    correctAnswers: number;
+    timeSpent: number;
+    completedAt: number;
+  } | null;
   showResults: boolean;
-
-  // UI state
   isLoading: boolean;
   error: string | null;
 }
@@ -80,7 +65,10 @@ const testSlice = createSlice({
   initialState,
   reducers: {
     // Filter and search actions
-    setFilters: (state, action: PayloadAction<Partial<TestFilters>>) => {
+    setFilters: (
+      state,
+      action: PayloadAction<Partial<TestState['filters']>>
+    ) => {
       state.filters = { ...state.filters, ...action.payload };
     },
     setSearchQuery: (state, action: PayloadAction<string>) => {
@@ -108,11 +96,12 @@ const testSlice = createSlice({
     // Test session actions
     startTest: (
       state,
-      action: PayloadAction<{ test: TOEICTest; timeLimit: number }>
+      action: PayloadAction<{ test: ListeningReadingTest; timeLimit: number }>
     ) => {
       state.activeTest = action.payload.test;
       state.currentSession = {
         testId: action.payload.test.testId,
+        testType: action.payload.test.type,
         startTime: Date.now(),
         currentQuestionIndex: 0,
         answers: {},
@@ -172,7 +161,7 @@ const testSlice = createSlice({
       }
     },
 
-    submitTest: (state, action: PayloadAction<TestResult>) => {
+    submitTest: (state, action: PayloadAction<TestState['lastResult']>) => {
       state.lastResult = action.payload;
       state.showResults = true;
       state.currentSession = null;

@@ -1,15 +1,17 @@
-import React from 'react';
 import { Calendar, Target, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { useAppSelector } from '@/core/store/store';
 
 export const UserSidebar = () => {
+  const { user } = useAppSelector((state) => state.auth);
   // Mock user data
   const userData = {
-    username: 'John Doe',
+    username: user?.fullName || 'John Doe',
     avatar:
+      user?.image ||
       'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
     examDate: '05/09/2026',
     daysToExam: 365,
@@ -34,7 +36,7 @@ export const UserSidebar = () => {
                 {userData.username}
               </h3>
               <Badge variant="secondary" className="mt-1">
-                TOEIC
+                TOEIC Learner
               </Badge>
             </div>
           </div>
@@ -99,27 +101,27 @@ export const UserSidebar = () => {
         <CardContent>
           <div className="grid grid-cols-2 gap-4 text-center">
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <div className="text-2xl font-bold text-blue-600">12</div>
+              <div className="text-2xl font-bold text-blue-600">24</div>
               <div className="text-xs text-blue-700 font-medium">
                 Tests Taken
               </div>
             </div>
             <div className="p-3 bg-green-50 rounded-lg border border-green-100">
-              <div className="text-2xl font-bold text-green-600">610</div>
+              <div className="text-2xl font-bold text-green-600">750</div>
               <div className="text-xs text-green-700 font-medium">
                 Highest Score
               </div>
             </div>
             <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
-              <div className="text-2xl font-bold text-purple-600">85%</div>
+              <div className="text-2xl font-bold text-purple-600">18</div>
               <div className="text-xs text-purple-700 font-medium">
-                Accuracy
+                Speaking Tests
               </div>
             </div>
             <div className="p-3 bg-orange-50 rounded-lg border border-orange-100">
-              <div className="text-2xl font-bold text-orange-600">45h</div>
+              <div className="text-2xl font-bold text-orange-600">15</div>
               <div className="text-xs text-orange-700 font-medium">
-                Practice Time
+                Writing Tests
               </div>
             </div>
           </div>
