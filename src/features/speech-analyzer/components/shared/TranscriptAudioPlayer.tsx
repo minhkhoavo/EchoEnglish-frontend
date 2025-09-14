@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Play, Pause, Volume2, VolumeX, RotateCcw, RotateCw } from 'lucide-react'; // prettier-ignore
-import type { AudioPlayerState } from '../types/pronunciation.types';
+import type { AudioPlayerState } from '../../types/pronunciation.types';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -53,7 +53,7 @@ const TranscriptAudioPlayer: React.FC<AudioPlayerProps> = ({
   const handleTimeUpdate = useCallback(() => {
     if (audioRef.current) {
       const currentTime = audioRef.current.currentTime * 1000; // Convert to milliseconds
-      setPlayerState((prev) => ({ ...prev, currentTime }));
+      setPlayerState((prev: AudioPlayerState) => ({ ...prev, currentTime }));
       onTimeUpdate?.(currentTime);
     }
   }, [onTimeUpdate]);
@@ -62,7 +62,7 @@ const TranscriptAudioPlayer: React.FC<AudioPlayerProps> = ({
   const handleLoadedMetadata = useCallback(() => {
     if (audioRef.current) {
       const duration = audioRef.current.duration * 1000; // Convert to milliseconds
-      setPlayerState((prev) => ({ ...prev, duration }));
+      setPlayerState((prev: AudioPlayerState) => ({ ...prev, duration }));
       onDurationChange?.(duration);
     }
   }, [onDurationChange]);
@@ -83,7 +83,10 @@ const TranscriptAudioPlayer: React.FC<AudioPlayerProps> = ({
     (timeInMs: number) => {
       if (audioRef.current) {
         audioRef.current.currentTime = timeInMs / 1000;
-        setPlayerState((prev) => ({ ...prev, currentTime: timeInMs }));
+        setPlayerState((prev: AudioPlayerState) => ({
+          ...prev,
+          currentTime: timeInMs,
+        }));
         onTimeUpdate?.(timeInMs);
       }
     },
@@ -109,14 +112,17 @@ const TranscriptAudioPlayer: React.FC<AudioPlayerProps> = ({
     if (audioRef.current) {
       const newVolume = playerState.volume > 0 ? 0 : 1;
       audioRef.current.volume = newVolume;
-      setPlayerState((prev) => ({ ...prev, volume: newVolume }));
+      setPlayerState((prev: AudioPlayerState) => ({
+        ...prev,
+        volume: newVolume,
+      }));
     }
   }, [playerState.volume]);
 
   const setVolume = useCallback((volume: number) => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
-      setPlayerState((prev) => ({ ...prev, volume }));
+      setPlayerState((prev: AudioPlayerState) => ({ ...prev, volume }));
     }
   }, []);
 
@@ -140,26 +146,38 @@ const TranscriptAudioPlayer: React.FC<AudioPlayerProps> = ({
     if (!audio) return;
 
     const handlePlay = () => {
-      setPlayerState((prev) => ({ ...prev, isPlaying: true }));
+      setPlayerState((prev: AudioPlayerState) => ({
+        ...prev,
+        isPlaying: true,
+      }));
       onPlayStateChange?.(true);
     };
 
     const handlePause = () => {
-      setPlayerState((prev) => ({ ...prev, isPlaying: false }));
+      setPlayerState((prev: AudioPlayerState) => ({
+        ...prev,
+        isPlaying: false,
+      }));
       onPlayStateChange?.(false);
     };
 
     const handleLoadStart = () => {
-      setPlayerState((prev) => ({ ...prev, isLoading: true }));
+      setPlayerState((prev: AudioPlayerState) => ({
+        ...prev,
+        isLoading: true,
+      }));
     };
 
     const handleCanPlay = () => {
-      setPlayerState((prev) => ({ ...prev, isLoading: false }));
+      setPlayerState((prev: AudioPlayerState) => ({
+        ...prev,
+        isLoading: false,
+      }));
     };
 
     const handleError = (e: Event) => {
       console.error('Audio error:', e);
-      setPlayerState((prev) => ({
+      setPlayerState((prev: AudioPlayerState) => ({
         ...prev,
         isLoading: false,
         error: 'Failed to load audio',

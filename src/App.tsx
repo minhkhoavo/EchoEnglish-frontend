@@ -10,10 +10,12 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import VerifyOtpPage from './pages/auth/VerifyOtpPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import ProfilePage from './pages/auth/ProfilePage';
+import RecordingsPage from './pages/RecordingsPage';
 import { Toaster } from './components/ui/sonner';
 import { QuizInterface } from './features/quiz/QuizInterface';
 import { useLocation } from 'react-router-dom';
 import TestExam from './pages/test/TestExam';
+import SpeechAnalyzePage from './pages/SpeechAnalyzePage';
 
 const QuizRouteWrapper = () => {
   const location = useLocation();
@@ -36,7 +38,10 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
 
         {/* Main App Routes */}
+        {/* <Route path="/" element={<ContentPage />} /> */}
         <Route path="/" element={<ContentPage />} />
+        <Route path="/speech/recordings/:id" element={<SpeechAnalyzePage />} />
+        <Route path="/recordings" element={<RecordingsPage />} />
         <Route path="/flashcards" element={<FlashcardPage />} />
         <Route path="/quiz" element={<QuizRouteWrapper />} />
         <Route path="/tests" element={<AllTestsPage />} />

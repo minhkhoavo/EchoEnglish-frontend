@@ -1,20 +1,27 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import ScoreSummary from './ScoreSummary';
 import TopErrors from './TopErrors.tsx';
 import SkillsSection from './SkillsSection.tsx';
-import Transcript from './Transcript.tsx';
+import Transcript from '../shared/Transcript.tsx';
+import { useAppDispatch } from '@/core/store/store';
+import { resetErrorFilters } from '../../slices/speechAnalyzerSlice';
 import type {
   RecordingAnalysis,
   TranscriptData,
-} from '../types/pronunciation.types';
-import type { Recording } from '../../recordings/types/recordings.types';
+} from '../../types/pronunciation.types';
+import type { Recording } from '../../../recordings/types/recordings.types';
 
-export interface RecordingDetailContentProps {
+export interface PronunciationContentProps {
   recording?: Recording | null;
 }
 
-const RecordingDetailContent = ({ recording }: RecordingDetailContentProps) => {
+const PronunciationContent = ({ recording }: PronunciationContentProps) => {
+  const dispatch = useAppDispatch();
   const analysis = (recording?.analysis as RecordingAnalysis) || undefined;
+
+  useEffect(() => {
+    dispatch(resetErrorFilters());
+  }, [dispatch]);
 
   const transcriptData = useMemo<TranscriptData | undefined>(() => {
     if (!recording) return undefined;
@@ -54,4 +61,4 @@ const RecordingDetailContent = ({ recording }: RecordingDetailContentProps) => {
   );
 };
 
-export default RecordingDetailContent;
+export default PronunciationContent;

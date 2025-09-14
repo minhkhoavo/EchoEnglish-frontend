@@ -1,7 +1,7 @@
 // components/TopErrors.tsx
 import ErrorCard from './ErrorCard';
 import TopErrorsChart from './TopErrorsChart';
-import type { TopMistake } from '../types/pronunciation.types';
+import type { TopMistake } from '../../types/pronunciation.types';
 
 export interface TopErrorsProps {
   chartData: Array<{ sound: string; errorRate: number }>;
@@ -23,10 +23,11 @@ const TopErrors = ({ chartData, topMistakes }: TopErrorsProps) => (
             mistakes={[
               {
                 description: mistake.mistakeSummary,
-                words: mistake.wordsWithMistakes.map((w) =>
-                  w.phoneticTranscription
-                    ? `${w.word} ${w.phoneticTranscription}`
-                    : w.word
+                words: mistake.wordsWithMistakes.map(
+                  (w: { word: string; phoneticTranscription?: string }) =>
+                    w.phoneticTranscription
+                      ? `${w.word} ${w.phoneticTranscription}`
+                      : w.word
                 ),
               },
             ]}

@@ -1,7 +1,10 @@
 // components/SkillsSection.tsx
 import SkillItem from './SkillItem';
 import { Info, TrendingUp } from 'lucide-react';
-import type { TopMistake } from '../types/pronunciation.types';
+import type {
+  TopMistake,
+  SkillResource,
+} from '../../types/pronunciation.types';
 
 export interface SkillsSectionProps {
   topMistakes: TopMistake[];
@@ -30,8 +33,8 @@ const SkillsSection = ({ topMistakes }: SkillsSectionProps) => {
       title: s.title,
       level: s.level,
       videos: s.resources
-        .filter((r) => r.type === 'video')
-        .map((r) => ({
+        .filter((r: SkillResource) => r.type === 'video')
+        .map((r: SkillResource) => ({
           imgUrl: youtubeThumb(r.url),
           title: r.title,
           url: r.url,

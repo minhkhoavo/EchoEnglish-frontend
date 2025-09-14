@@ -74,29 +74,40 @@ const ScoreChart = ({ percentage, level }: ScoreChartProps) => {
 export interface ScoreSummaryProps {
   percentage?: number;
   level?: string;
+  title?: string;
+  description?: string;
 }
 
-const ScoreSummary = ({ percentage = 0, level = 'N/A' }: ScoreSummaryProps) => (
+const ScoreSummary = ({
+  percentage = 0,
+  level = 'N/A',
+  title = 'Pronunciation Score',
+  description,
+}: ScoreSummaryProps) => (
   <div className="flex items-center space-x-6 p-4 bg-white">
     <div className="flex-shrink-0">
       <ScoreChart percentage={Math.round(percentage)} level={level} />
     </div>
     <div className="flex-grow">
       <div className="flex items-center space-x-2 mb-2">
-        <h2 className="text-3xl font-bold text-gray-800 mb-3">
-          Pronunciation Score
-        </h2>
+        <h2 className="text-3xl font-bold text-gray-800 mb-3">{title}</h2>
         <Info className="w-4 h-4 text-gray-500" />
       </div>
       <div className="text-gray-600 space-y-1 text-sm">
         <p>
-          Your pronunciation level is <strong>{level}.</strong> Let's make that
-          better!
+          {description || (
+            <>
+              Your pronunciation level is <strong>{level}.</strong> Let's make
+              that better!
+            </>
+          )}
         </p>
-        <p>
-          Time to work on your Top Errors! Follow our 'Suggestions for
-          Improvement' to get to the next level.
-        </p>
+        {!description && (
+          <p>
+            Time to work on your Top Errors! Follow our 'Suggestions for
+            Improvement' to get to the next level.
+          </p>
+        )}
       </div>
     </div>
   </div>

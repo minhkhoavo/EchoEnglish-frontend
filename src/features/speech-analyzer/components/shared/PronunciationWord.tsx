@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import type {
   WordPronunciation,
   AccuracyLevel,
-} from '../types/pronunciation.types';
+} from '../../types/pronunciation.types';
 
 interface PronunciationWordProps {
   wordData: WordPronunciation;
@@ -15,6 +15,7 @@ interface PronunciationWordProps {
     showErrorHighlight?: boolean;
     showTooltip?: boolean;
     emphasizeStress?: boolean;
+    visibleErrorTypes?: Set<string>;
   };
 }
 
@@ -25,6 +26,14 @@ const defaultFeatures = {
   showErrorHighlight: true,
   showTooltip: true,
   emphasizeStress: true,
+  visibleErrorTypes: new Set([
+    'mispronunciation',
+    'omission',
+    'insertion',
+    'unexpected_break',
+    'missing_break',
+    'monotone',
+  ]),
 };
 
 const ACCURACY_THRESHOLDS = {
@@ -66,28 +75,30 @@ const getAccuracyStyles = (
 };
 
 const getWordDisplayFormat = (
-  wordData: WordPronunciation
+  wordData: WordPronunciation,
+  visibleErrorTypes: Set<string>
 ): { displayText: string; styles: string; prefix?: string } => {
   let displayText = wordData.word;
   let styles = '';
   let prefix = '';
 
-  const hasOmission = wordData.errors.some(
-    (error) => error.type === 'omission'
+  // Filter errors based on visible types
+  const visibleErrors = wordData.errors.filter((error) =>
+    visibleErrorTypes.has(error.type)
   );
-  const hasMissingBreak = wordData.errors.some(
+
+  const hasOmission = visibleErrors.some((error) => error.type === 'omission');
+  const hasMissingBreak = visibleErrors.some(
     (error) => error.type === 'missing_break'
   );
-  const hasInsertion = wordData.errors.some(
+  const hasInsertion = visibleErrors.some(
     (error) => error.type === 'insertion'
   );
-  const hasUnexpectedBreak = wordData.errors.some(
+  const hasUnexpectedBreak = visibleErrors.some(
     (error) => error.type === 'unexpected_break'
   );
-  const hasMonotone = wordData.errors.some(
-    (error) => error.type === 'monotone'
-  );
-  const hasMispronunciation = wordData.errors.some(
+  const hasMonotone = visibleErrors.some((error) => error.type === 'monotone');
+  const hasMispronunciation = visibleErrors.some(
     (error) => error.type === 'mispronunciation'
   );
 
@@ -153,23 +164,31 @@ const PronunciationWord: React.FC<PronunciationWordProps> = ({
   }, []);
 
   const accuracyLevel = getAccuracyLevel(wordData.accuracy);
-  const hasErrors = wordData.errors.length > 0;
+  const visibleErrorTypes = mergedFeatures.visibleErrorTypes || new Set();
+  const visibleErrors = wordData.errors.filter((error) =>
+    visibleErrorTypes.has(error.type)
+  );
+  const hasVisibleErrors = visibleErrors.length > 0;
 
   const {
     displayText,
     styles: errorStyles,
     prefix,
-  } = getWordDisplayFormat(wordData);
+  } = getWordDisplayFormat(wordData, visibleErrorTypes);
 
   let wordStyles = className;
   if (mergedFeatures.showErrorHighlight) {
     wordStyles += ' ' + errorStyles;
   }
 
-  if (mergedFeatures.showAccuracyColors && !hasErrors) {
-    wordStyles += ' ' + getAccuracyStyles(accuracyLevel, hasErrors);
-  } else if (mergedFeatures.showAccuracyColors && hasErrors && !errorStyles) {
-    wordStyles += ' ' + getAccuracyStyles(accuracyLevel, hasErrors);
+  if (mergedFeatures.showAccuracyColors && !hasVisibleErrors) {
+    wordStyles += ' ' + getAccuracyStyles(accuracyLevel, hasVisibleErrors);
+  } else if (
+    mergedFeatures.showAccuracyColors &&
+    hasVisibleErrors &&
+    !errorStyles
+  ) {
+    wordStyles += ' ' + getAccuracyStyles(accuracyLevel, hasVisibleErrors);
   }
 
   if (mergedFeatures.showStressMarking && wordData.isStressed) {
@@ -206,7 +225,7 @@ const PronunciationWord: React.FC<PronunciationWordProps> = ({
         onMouseLeave={handleMouseLeave}
         data-offset={wordData.offset}
         data-accuracy={wordData.accuracy}
-        title={`Accuracy: ${wordData.accuracy}% | Click to play`}
+        title={`Accuracy: ${wordData.accuracy}% | ${hasVisibleErrors ? `${visibleErrors.length} visible error(s)` : 'No visible errors'} | Click to play`}
       >
         {displayText}
       </span>
@@ -241,9 +260,9 @@ const PronunciationWord: React.FC<PronunciationWordProps> = ({
               <div className="text-xs text-blue-400">⭐ Stressed</div>
             )}
 
-            {wordData.errors.length > 0 && (
+            {visibleErrors.length > 0 && (
               <div className="text-xs text-red-400 mt-1">
-                {wordData.errors[0].description}
+                {visibleErrors[0].description}
               </div>
             )}
           </div>

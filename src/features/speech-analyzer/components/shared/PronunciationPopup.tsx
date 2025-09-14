@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Volume2, Headphones } from 'lucide-react';
-import type { WordPronunciation } from '../types/pronunciation.types';
+import type { WordPronunciation } from '../../types/pronunciation.types';
 
 interface PronunciationPopupProps {
   wordData: WordPronunciation;

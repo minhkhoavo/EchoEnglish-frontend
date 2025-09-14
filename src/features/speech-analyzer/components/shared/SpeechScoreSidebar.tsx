@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
-import type { RecordingOverallScores } from '../types/pronunciation.types';
+import { useMemo, useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import type { RecordingOverallScores } from '../../types/pronunciation.types';
 
 const iconUrl = (id: string) =>
   `${import.meta.env.BASE_URL}icon/speech-analyzer/icon-${id}.svg`;
@@ -49,10 +50,23 @@ const baseMenuItems: Omit<MenuItem, 'level' | 'score' | 'scoreColor'>[] = [
 
 export interface SpeechScoreSidebarProps {
   overall?: RecordingOverallScores;
+  currentView?: string;
+  onViewChange?: (view: string) => void;
 }
 
-const SpeechScoreSidebar = ({ overall }: SpeechScoreSidebarProps) => {
-  const [activeItem, setActiveItem] = useState('pronunciation');
+const SpeechScoreSidebar = ({
+  overall,
+  currentView = 'pronunciation',
+  onViewChange,
+}: SpeechScoreSidebarProps) => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const [activeItem, setActiveItem] = useState(currentView);
+
+  // Update activeItem when currentView changes
+  useEffect(() => {
+    setActiveItem(currentView);
+  }, [currentView]);
 
   const levelForScore = (score?: number) => {
     if (score == null) return 'N/A';
@@ -88,13 +102,28 @@ const SpeechScoreSidebar = ({ overall }: SpeechScoreSidebarProps) => {
     });
   }, [overall]);
 
-  const handleItemClick = (id: string) => {
-    setActiveItem(id);
+  const handleItemClick = (itemId: string) => {
+    setActiveItem(itemId);
+    if (onViewChange) {
+      // Use internal view change callback
+      onViewChange(itemId);
+    } else if (id) {
+      // Fallback to URL navigation if no callback provided
+      navigate(`/speech-analyze/${id}/${itemId}`);
+    }
+  };
+
+  const handleBackClick = () => {
+    // Navigate back to recordings page
+    navigate('/recordings');
   };
 
   return (
     <div className="sticky top-0 self-start flex flex-col w-[20rem] pr-[1.5625rem]">
-      <span className="flex items-center cursor-pointer text-[#8181a5] pb-[0.5rem] border-b-2 border-[#f3f1ff]">
+      <span
+        onClick={handleBackClick}
+        className="flex items-center cursor-pointer text-[#8181a5] pb-[0.5rem] border-b-2 border-[#f3f1ff] hover:text-[#6666cc] transition-colors"
+      >
         <span>&larr;</span>
         <span className="text-base font-medium ml-4">
           Back to Overall Score
