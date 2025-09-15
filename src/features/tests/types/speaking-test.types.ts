@@ -61,6 +61,12 @@ export interface SpeakingQuestionProps {
   userAnswer?: string;
   isReviewMode?: boolean;
   absoluteQuestionNumber?: number;
+  // Attempt context for submitting recordings
+  testAttemptId?: string;
+  onSubmitRecording?: (params: {
+    questionNumber: number;
+    file: Blob | File;
+  }) => Promise<void> | void;
 }
 
 export interface SpeakingPartProps {
@@ -69,4 +75,9 @@ export interface SpeakingPartProps {
   userAnswers?: Record<number, string>;
   isReviewMode?: boolean;
   baseQuestionNumber?: number;
+  testAttemptId?: string;
+  onSubmitRecording?: (params: {
+    questionNumber: number;
+    file: Blob | File;
+  }) => Promise<void> | void;
 }

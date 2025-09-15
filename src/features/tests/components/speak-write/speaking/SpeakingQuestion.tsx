@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Clock } from 'lucide-react';
 import type { SpeakingQuestionProps } from '@/features/tests/types/speaking-test.types';
+import { Loader2, Upload } from 'lucide-react';
 
 // Import new shared components
 import { QuestionTimer } from '../QuestionTimer';
@@ -16,6 +17,7 @@ import {
 } from '../AnswerDisplays';
 import { RecordingPlayback } from '../RecordingPlayback';
 import { QuestionHeader } from '../QuestionHeader';
+import { toast } from 'sonner';
 
 export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
   question,
@@ -26,6 +28,8 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
   userAnswer = '',
   isReviewMode = false,
   absoluteQuestionNumber,
+  testAttemptId,
+  onSubmitRecording,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -39,6 +43,7 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
   const [showSampleAnswer, setShowSampleAnswer] = useState(false);
   const [showIdea, setShowIdea] = useState(false);
   const [hasStartedPreparation, setHasStartedPreparation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -180,6 +185,21 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
     startRecording();
   };
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleSubmitRecorded = async () => {
+    if (!recordedBlob || !absoluteQuestionNumber || !onSubmitRecording) return;
+    try {
+      setIsSubmitting(true);
+      await onSubmitRecording({
+        questionNumber: absoluteQuestionNumber,
+        file: recordedBlob,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Card className="w-full border-l-4 border-cyan-500">
       <CardHeader>
@@ -257,6 +277,80 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
             onToggleSampleAnswer={() => setShowSampleAnswer(!showSampleAnswer)}
             onToggleSuggestions={() => {}}
           />
+
+          {/* Submit button (only when attemptId present) */}
+          {testAttemptId && (
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleSubmitRecorded}
+                variant="default"
+                disabled={!recordedBlob || isSubmitting}
+                title={!recordedBlob ? 'Record first to enable submit' : ''}
+              >
+                {isSubmitting ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Submitting
+                  </span>
+                ) : (
+                  'Submit Answer'
+                )}
+              </Button>
+            </div>
+          )}
+
+          {/* TEMP testing helper: manual upload ALWAYS VISIBLE */}
+          {/* NOTE: This helper is intentionally always visible for quick QA. Remove later. */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/*"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              if (onSubmitRecording && absoluteQuestionNumber) {
+                // If backend is wired, call it
+                try {
+                  setIsSubmitting(true);
+                  await onSubmitRecording({
+                    questionNumber: absoluteQuestionNumber,
+                    file,
+                  });
+                } finally {
+                  setIsSubmitting(false);
+                }
+              } else {
+                // No backend handler - load file locally for playback and show info toast
+                const blob = file;
+                setRecordedBlob(blob);
+                toast(
+                  'Loaded audio locally for playback (no backend submit configured)',
+                  { duration: 4000 }
+                );
+              }
+              // reset so same file can be selected again
+              e.currentTarget.value = '';
+            }}
+          />
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="outline"
+              disabled={isSubmitting}
+              title="Temporary helper to upload an audio file manually for this question"
+            >
+              {isSubmitting ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Uploading
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-2">
+                  <Upload className="h-4 w-4" /> Upload (temp)
+                </span>
+              )}
+            </Button>
+          </div>
         </div>
         <AnswerDisplay
           currentPhase={currentPhase}

@@ -11,6 +11,8 @@ export const SpeakingPart: React.FC<SpeakingPartProps> = ({
   userAnswers = {},
   isReviewMode = false,
   baseQuestionNumber = 0, // New prop for calculating absolute question numbers
+  testAttemptId,
+  onSubmitRecording,
 }) => {
   return (
     <Card className="w-full">
@@ -58,6 +60,8 @@ export const SpeakingPart: React.FC<SpeakingPartProps> = ({
               onAnswer={onAnswer}
               userAnswer={userAnswers[question.id]}
               isReviewMode={isReviewMode}
+              testAttemptId={testAttemptId}
+              onSubmitRecording={onSubmitRecording}
             />
           ))}
         </div>
