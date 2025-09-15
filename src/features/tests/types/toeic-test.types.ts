@@ -106,4 +106,5 @@ export interface TestSession {
   testMode?: 'full' | 'custom';
   selectedParts?: string;
   partsKey?: string; // Combined key of selected parts for IndexedDB key
+  savedAt?: string; // ISO string timestamp for when session was last saved
 }

@@ -103,6 +103,7 @@ export interface TestSession {
   answers: Record<string | number, string | Record<string, string>>;
   timeRemaining: number;
   isPaused: boolean;
+  savedAt?: string; // ISO string timestamp for when session was last saved
 }
 
 export interface TestResult {

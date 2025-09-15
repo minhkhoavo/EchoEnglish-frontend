@@ -37,19 +37,8 @@ export const useTestSession = () => {
 
           // Validate that the session is still compatible
           if (!currentSession.testMode) {
-            console.warn('⚠️ Session missing testMode, skipping auto-save');
             return;
           }
-
-          console.log('💾 Auto-saving session:', {
-            userId,
-            testId: currentSession.testId,
-            testMode,
-            selectedParts: currentSession.selectedParts,
-            partsKey: currentSession.partsKey,
-            answers: Object.keys(currentSession.answers).length,
-            sessionTestMode: currentSession.testMode,
-          });
 
           await testStorageService.saveTestSession(
             userId,
@@ -57,8 +46,6 @@ export const useTestSession = () => {
             testMode,
             currentSession
           );
-
-          console.log('✅ Auto-save completed successfully');
         } catch (error) {
           console.error('❌ Failed to save test session to IndexedDB:', error);
         }
@@ -72,18 +59,6 @@ export const useTestSession = () => {
 
   // Initialize IndexedDB on first load
   useEffect(() => {
-    // Debug log for user authentication
-    console.log('🔐 Current user for test sessions:', {
-      userId,
-      isAuthenticated: !!user,
-    });
-
-    // Debug: Show all sessions in IndexedDB
-    const debugSessions = async () => {
-      await testStorageService.debugListAllSessions();
-    };
-    debugSessions();
-
     // Clean up old sessions periodically - DISABLED FOR TESTING
     // testStorageService.clearOldSessions().catch(console.error);
   }, [userId, user]);
@@ -101,13 +76,6 @@ export const useTestSession = () => {
       restartSession?: () => Promise<void>;
     }> => {
       try {
-        console.log('🔍 Checking existing session:', {
-          userId,
-          testId: test.testId,
-          testMode,
-          selectedParts,
-        });
-
         // Check if there's an existing session for this test configuration
         const existingSession = await testStorageService.getTestSession(
           userId,
@@ -141,11 +109,6 @@ export const useTestSession = () => {
               };
 
               dispatch(restoreSession(sessionToRestore));
-              console.log('Restored existing test session:', test.testId, {
-                testMode,
-                answers: Object.keys(existingSession.answers).length,
-                correctedTestMode: testMode,
-              });
             },
             restartSession: async () => {
               // Set flag to prevent auto-save during restart
@@ -165,9 +128,6 @@ export const useTestSession = () => {
                     : typeof selectedParts === 'string'
                       ? (selectedParts as string).split('-')
                       : []
-                );
-                console.log(
-                  '✅ Successfully deleted old session before restart'
                 );
               } catch (error) {
                 console.error('❌ Failed to delete old session:', error);
@@ -194,11 +154,6 @@ export const useTestSession = () => {
               setTimeout(() => {
                 isRestarting.current = false;
               }, 500);
-
-              console.log('🔄 Restarted fresh test session:', test.testId, {
-                testMode,
-                clearedOldAnswers: true,
-              });
             },
           };
         } else {
@@ -215,7 +170,6 @@ export const useTestSession = () => {
                   : [],
             })
           );
-          console.log('Started new test session:', test.testId);
           return { hasExisting: false };
         }
       } catch (error) {
@@ -248,16 +202,6 @@ export const useTestSession = () => {
       selectedParts?: string[]
     ): Promise<void> => {
       try {
-        console.log(
-          '🆕 Force starting fresh session (bypass existing checks):',
-          {
-            userId,
-            testId: test.testId,
-            testMode,
-            selectedParts,
-          }
-        );
-
         // First, ensure any existing session is deleted
         try {
           await testStorageService.deleteTestSession(
@@ -270,12 +214,8 @@ export const useTestSession = () => {
                 ? (selectedParts as string).split('-')
                 : []
           );
-          console.log('🗑️ Ensured old session is deleted');
         } catch (error) {
-          console.log(
-            'ℹ️ No existing session to delete (or delete failed):',
-            error
-          );
+          // Ignore delete errors as session may not exist
         }
 
         // Clear Redux state completely first
@@ -296,10 +236,6 @@ export const useTestSession = () => {
                 ? (selectedParts as string).split('-')
                 : [],
           })
-        );
-
-        console.log(
-          '✅ Successfully started fresh session without existing data'
         );
       } catch (error) {
         console.error('❌ Failed to force start fresh session:', error);
@@ -325,24 +261,36 @@ export const useTestSession = () => {
   );
 
   const endTest = useCallback(async () => {
+    console.log('🔚 endTest called', { currentSession, userId });
     if (currentSession) {
       try {
+        console.log('🗑️ Deleting IndexedDB session:', {
+          userId,
+          testId: currentSession.testId,
+          testMode: currentSession.testMode || 'full',
+          selectedParts: currentSession.selectedParts,
+        });
+
         // Clean up IndexedDB entry when test is completed
         await testStorageService.deleteTestSession(
           userId,
           currentSession.testId,
           currentSession.testMode || 'full',
           typeof currentSession.selectedParts === 'string'
-            ? (currentSession.selectedParts as string).split('-')
+            ? currentSession.selectedParts === ''
+              ? [] // Empty string should become empty array for 'full' partsKey
+              : (currentSession.selectedParts as string).split('-')
             : []
         );
-        console.log('🗑️ Cleaned up test session from IndexedDB');
+        console.log('✅ IndexedDB record deleted successfully');
       } catch (error) {
         console.error('❌ Failed to clean up IndexedDB:', error);
       }
     }
 
+    console.log('🔄 Clearing Redux state');
     dispatch(endTestAction());
+    console.log('✅ endTest completed');
   }, [currentSession, dispatch, userId]);
 
   const checkExistingSession = useCallback(
@@ -352,13 +300,6 @@ export const useTestSession = () => {
       selectedParts?: string[]
     ): Promise<TestSession | null> => {
       try {
-        console.log('🔍 checkExistingSession called with:', {
-          userId,
-          testId,
-          testMode,
-          selectedParts,
-        });
-
         const existingSession = await testStorageService.getTestSession(
           userId,
           testId,
@@ -369,22 +310,6 @@ export const useTestSession = () => {
               ? (selectedParts as string).split('-')
               : []
         );
-
-        if (existingSession) {
-          console.log('⚠️ FOUND EXISTING SESSION:', {
-            sessionTestMode: existingSession.testMode,
-            requestedTestMode: testMode,
-            matches: existingSession.testMode === testMode,
-            sessionUserId: existingSession.userId,
-            sessionAnswers: Object.keys(existingSession.answers).length,
-          });
-        } else {
-          console.log('✅ No existing session found for:', {
-            userId,
-            testId,
-            testMode,
-          });
-        }
 
         return existingSession;
       } catch (error) {
@@ -400,6 +325,7 @@ export const useTestSession = () => {
       updates: Partial<{
         answers: Record<string, string>;
         timeRemaining: number;
+        savedAt: string;
       }>
     ) => {
       dispatch(updateSession(updates));
@@ -437,75 +363,5 @@ export const useTestSession = () => {
     updateCurrentSession,
     getAllAnswers,
     checkExistingSession,
-
-    // Debug functions
-    debugListSessions: () => testStorageService.debugListAllSessions(),
-    clearAllSessions: () => testStorageService.clearAllSessions(),
-    testSaveSession: () => testStorageService.testSaveSession(), // Add test method
-    forceDeleteSession: (
-      testMode: 'full' | 'custom',
-      selectedParts?: string[]
-    ) =>
-      testStorageService.deleteTestSession(
-        userId,
-        currentSession?.testId || '',
-        testMode,
-        selectedParts
-      ),
-    debugRawIndexedDB: () => {
-      // Manual IndexedDB inspection
-      const request = indexedDB.open('echo-english-db', 2); // Use correct version
-      request.onsuccess = () => {
-        const db = request.result;
-        console.log('🔧 Manual IndexedDB check:');
-        console.log('Object stores:', Array.from(db.objectStoreNames));
-        const transaction = db.transaction(['test-sessions'], 'readonly');
-        const store = transaction.objectStore('test-sessions');
-        console.log('Store keyPath:', store.keyPath);
-
-        const getAllRequest = store.getAll();
-        getAllRequest.onsuccess = () => {
-          console.log('Raw data:', getAllRequest.result);
-        };
-
-        const getKeysRequest = store.getAllKeys();
-        getKeysRequest.onsuccess = () => {
-          console.log('All keys:', getKeysRequest.result);
-        };
-
-        db.close();
-      };
-    },
-
-    // Utilities
-    getProgress: () => {
-      if (!currentSession || !activeTest) return 0;
-
-      // Handle both TOEICTest and TOEICTestDetail types
-      const testDetail = activeTest as TOEICTestDetail;
-      const parts = testDetail.parts || [];
-      const totalQuestions = parts.reduce((total: number, part: TestPart) => {
-        const questionsCount = part.questions?.length || 0;
-        const groupQuestionsCount =
-          part.questionGroups?.reduce(
-            (groupTotal: number, group) =>
-              groupTotal + (group.questions?.length || 0),
-            0
-          ) || 0;
-        return total + questionsCount + groupQuestionsCount;
-      }, 0);
-
-      const answeredQuestions = Object.keys(currentSession.answers).length;
-      return totalQuestions > 0
-        ? (answeredQuestions / totalQuestions) * 100
-        : 0;
-    },
-
-    getTimeElapsed: () => {
-      if (!currentSession || !currentSession.startTime) return 0;
-      // Convert ISO date string to timestamp for calculation
-      const startTime = new Date(currentSession.startTime).getTime();
-      return Date.now() - startTime;
-    },
   };
 };

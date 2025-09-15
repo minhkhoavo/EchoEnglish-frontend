@@ -51,10 +51,6 @@ class TestStorageService {
         const store = db.createObjectStore(this.storeName, {
           keyPath: ['userId', 'testId', 'testMode', 'partsKey'],
         });
-
-        console.log(
-          'Created test-sessions store with compound key [userId, testId, testMode, partsKey]'
-        );
       };
     });
   }
@@ -89,22 +85,11 @@ class TestStorageService {
         timeRemaining: session.timeRemaining || now,
         selectedParts: session.selectedParts || '',
       };
-      console.log('💾 Full session object to save:', storageSession);
+
       const result = await new Promise<void>((resolve, reject) => {
         const request = store.put(storageSession);
-        request.onsuccess = () => {
-          console.log('✅ Session saved successfully with compound key:', {
-            userId,
-            testId,
-            testMode,
-            partsKey,
-          });
-          resolve();
-        };
-        request.onerror = () => {
-          console.error('❌ IndexedDB put request failed:', request.error);
-          reject(request.error);
-        };
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
       });
       db.close();
       return result;
@@ -128,33 +113,11 @@ class TestStorageService {
 
       const partsKey = this.generatePartsKey(selectedParts);
 
-      console.log('🔍 IndexedDB Query:', {
-        userId,
-        testId,
-        testMode,
-        partsKey,
-        compoundKey: [userId, testId, testMode, partsKey],
-      });
-
       const session = await new Promise<StorageTestSession | null>(
         (resolve, reject) => {
           const request = store.get([userId, testId, testMode, partsKey]);
           request.onsuccess = () => {
             const result = request.result as StorageTestSession | undefined;
-            console.log(
-              '🔍 Retrieved session for compound key:',
-              { userId, testId, testMode, partsKey },
-              result ? '✅ Found' : '❌ Not found'
-            );
-            if (result) {
-              console.log('📄 Session details:', {
-                testMode: result.testMode,
-                userId: result.userId,
-                answers: Object.keys(result.answers).length,
-                selectedParts: result.selectedParts,
-                partsKey: result.partsKey,
-              });
-            }
             resolve(result || null);
           };
           request.onerror = () => reject(request.error);
@@ -176,6 +139,13 @@ class TestStorageService {
     testMode: string,
     selectedParts?: string[]
   ): Promise<void> {
+    console.log('🗑️ deleteTestSession called with:', {
+      userId,
+      testId,
+      testMode,
+      selectedParts,
+    });
+
     try {
       const db = await this.initDB();
       const transaction = db.transaction([this.storeName], 'readwrite');
@@ -184,38 +154,34 @@ class TestStorageService {
       const partsKey = this.generatePartsKey(selectedParts);
       const compoundKey = [userId, testId, testMode, partsKey];
 
-      console.log('🗑️ Attempting to delete session with compound key:', {
-        userId,
-        testId,
-        testMode,
-        partsKey,
-        compoundKey,
-      });
+      console.log('🔑 Compound key for deletion:', compoundKey);
 
       await new Promise<void>((resolve, reject) => {
         const request = store.delete(compoundKey);
         request.onsuccess = () => {
-          console.log('✅ Session deleted successfully with compound key:', {
-            userId,
-            testId,
-            testMode,
-            partsKey,
-          });
+          console.log('✅ IndexedDB delete request successful');
           resolve();
         };
         request.onerror = () => {
-          console.error('❌ Failed to delete session:', request.error);
+          console.error('❌ IndexedDB delete request failed:', request.error);
           reject(request.error);
         };
       });
 
       // Wait for transaction to complete
       await new Promise<void>((resolve, reject) => {
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
+        transaction.oncomplete = () => {
+          console.log('✅ IndexedDB transaction completed');
+          resolve();
+        };
+        transaction.onerror = () => {
+          console.error('❌ IndexedDB transaction failed:', transaction.error);
+          reject(transaction.error);
+        };
       });
 
       db.close();
+      console.log('✅ deleteTestSession completed successfully');
     } catch (error) {
       console.error('❌ Error deleting test session:', error);
       throw error;
@@ -237,9 +203,6 @@ class TestStorageService {
             // Filter by userId since we can't use index on compound key
             const userSessions = allSessions.filter(
               (session) => session.userId === userId
-            );
-            console.log(
-              `📋 Found ${userSessions.length} sessions for user ${userId}`
             );
             resolve(userSessions);
           };
@@ -264,10 +227,7 @@ class TestStorageService {
 
       await new Promise<void>((resolve, reject) => {
         const request = store.clear();
-        request.onsuccess = () => {
-          console.log('🧹 All sessions cleared');
-          resolve();
-        };
+        request.onsuccess = () => resolve();
         request.onerror = () => reject(request.error);
       });
 
@@ -275,102 +235,6 @@ class TestStorageService {
     } catch (error) {
       console.error('❌ Error clearing sessions:', error);
       throw error;
-    }
-  }
-
-  // Debug: Check raw IndexedDB structure
-  async debugRawIndexedDB(): Promise<void> {
-    try {
-      const db = await this.initDB();
-      const transaction = db.transaction([this.storeName], 'readonly');
-      const store = transaction.objectStore(this.storeName);
-
-      console.log('🔧 DEBUG: IndexedDB Structure Info:');
-      console.log('Database name:', this.dbName);
-      console.log('Store name:', this.storeName);
-      console.log('Store keyPath:', store.keyPath);
-      console.log('Store autoIncrement:', store.autoIncrement);
-      console.log('Store indexNames:', Array.from(store.indexNames));
-
-      // Get count
-      const countRequest = store.count();
-      countRequest.onsuccess = () => {
-        console.log('Total records count:', countRequest.result);
-      };
-
-      // Get all keys
-      const keysRequest = store.getAllKeys();
-      keysRequest.onsuccess = () => {
-        console.log('All keys in store:', keysRequest.result);
-        keysRequest.result.forEach((key, index) => {
-          console.log(`Key ${index}:`, key);
-        });
-      };
-
-      db.close();
-    } catch (error) {
-      console.error('❌ Error debugging raw IndexedDB:', error);
-    }
-  }
-
-  // Debug: List all sessions
-  async debugListAllSessions(): Promise<void> {
-    try {
-      const db = await this.initDB();
-      const transaction = db.transaction([this.storeName], 'readonly');
-      const store = transaction.objectStore(this.storeName);
-
-      await new Promise<void>((resolve, reject) => {
-        const request = store.getAll();
-        request.onsuccess = () => {
-          const sessions = request.result as StorageTestSession[];
-          console.log('🐛 DEBUG: All sessions in IndexedDB:', sessions.length);
-          sessions.forEach((session, index) => {
-            console.log(`Session ${index}:`, {
-              userId: session.userId,
-              testId: session.testId,
-              testMode: session.testMode,
-              partsKey: session.partsKey,
-              selectedParts: session.selectedParts,
-              progress: `Answers: ${Object.keys(session.answers).length}`,
-              savedAt: new Date(session.savedAt || 0).toLocaleString(),
-            });
-          });
-          resolve();
-        };
-        request.onerror = () => reject(request.error);
-      });
-
-      db.close();
-    } catch (error) {
-      console.error('❌ Error debugging sessions:', error);
-    }
-  }
-
-  // Test method to manually save a session
-  async testSaveSession(): Promise<void> {
-    try {
-      const testSession: TestSession = {
-        testId: 'test-123',
-        testTitle: 'Test Session',
-        startTime: new Date(Date.now()).toISOString(),
-        timeLimit: new Date(Date.now() + 7200000).toISOString(), // 2 hours from now
-        timeRemaining: new Date(Date.now() + 7200000).toISOString(), // 2 hours from now
-        answers: { 1: 'A', 5: 'B' },
-        testMode: 'custom',
-        selectedParts: 'part1-part5',
-        partsKey: 'part1-part5',
-      };
-
-      await this.saveTestSession(
-        'test-user',
-        'test-123',
-        'custom',
-        testSession
-      );
-      console.log('✅ Test session saved successfully');
-    } catch (error) {
-      console.error('❌ Failed to save test session:', error);
     }
   }
 }

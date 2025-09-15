@@ -215,7 +215,7 @@ export const Part7Question = ({
                 )}
 
                 {/* Translation Section */}
-                {group.groupContext.translation && (
+                {showCorrectAnswers && group.groupContext.translation && (
                   <Collapsible
                     open={expandedTranslations.includes(groupIndex)}
                     onOpenChange={() => toggleTranslation(groupIndex)}
@@ -249,7 +249,8 @@ export const Part7Question = ({
                 )}
 
                 {/* Vietnamese Translation fallback */}
-                {!group.groupContext.translation &&
+                {showCorrectAnswers &&
+                  !group.groupContext.translation &&
                   group.groupContext.transcript && (
                     <Collapsible
                       open={expandedTranslations.includes(groupIndex)}
@@ -391,38 +392,40 @@ export const Part7Question = ({
                       </div>
 
                       {/* Explanation */}
-                      <Collapsible
-                        open={isExplanationExpanded}
-                        onOpenChange={() =>
-                          toggleExplanation(question.questionNumber)
-                        }
-                      >
-                        <CollapsibleTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-between"
-                          >
-                            Show Explanation
-                            {isExplanationExpanded ? (
-                              <ChevronUp className="h-4 w-4" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <Card className="mt-2">
-                            <CardContent className="p-4">
-                              <div
-                                dangerouslySetInnerHTML={{
-                                  __html: question.explanation,
-                                }}
-                                className="prose prose-sm max-w-none dark:prose-invert"
-                              />
-                            </CardContent>
-                          </Card>
-                        </CollapsibleContent>
-                      </Collapsible>
+                      {showCorrectAnswers && (
+                        <Collapsible
+                          open={isExplanationExpanded}
+                          onOpenChange={() =>
+                            toggleExplanation(question.questionNumber)
+                          }
+                        >
+                          <CollapsibleTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-between"
+                            >
+                              Show Explanation
+                              {isExplanationExpanded ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <Card className="mt-2">
+                              <CardContent className="p-4">
+                                <div
+                                  dangerouslySetInnerHTML={{
+                                    __html: question.explanation,
+                                  }}
+                                  className="prose prose-sm max-w-none dark:prose-invert"
+                                />
+                              </CardContent>
+                            </Card>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      )}
                     </div>
                   );
                 })}

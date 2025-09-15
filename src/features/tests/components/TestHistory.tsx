@@ -34,7 +34,7 @@ export const TestHistory = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="w-5 h-5" />
-          Kết quả làm bài của bạn
+          Your Test Results
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -45,20 +45,20 @@ export const TestHistory = () => {
                 <th className="text-left py-3 px-2 font-semibold text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    Ngày làm
+                    Date
                   </div>
                 </th>
                 <th className="text-left py-3 px-2 font-semibold text-muted-foreground">
-                  Kết quả
+                  Result
                 </th>
                 <th className="text-left py-3 px-2 font-semibold text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    Thời gian làm bài
+                    Duration
                   </div>
                 </th>
                 <th className="text-left py-3 px-2 font-semibold text-muted-foreground">
-                  Hành động
+                  Action
                 </th>
               </tr>
             </thead>
@@ -87,7 +87,7 @@ export const TestHistory = () => {
                   <td className="py-4 px-2">
                     <Button variant="outline" size="sm" className="gap-1">
                       <Eye className="w-4 h-4" />
-                      Xem chi tiết
+                      View Details
                     </Button>
                   </td>
                 </tr>
@@ -99,10 +99,8 @@ export const TestHistory = () => {
         {testResults.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             <Target className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>Chưa có kết quả làm bài nào</p>
-            <p className="text-sm">
-              Hãy bắt đầu làm bài test để xem kết quả ở đây
-            </p>
+            <p>No test results yet</p>
+            <p className="text-sm">Start a test to see your results here</p>
           </div>
         )}
       </CardContent>

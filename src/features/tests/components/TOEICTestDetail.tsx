@@ -15,7 +15,6 @@ import { TestHistory } from './TestHistory';
 import { ContinueTestDialog } from './ContinueTestDialog';
 import { useTestSession } from '../hooks/useTestSession';
 import { useGetTOEICTestByIdQuery } from '../services/listeningReadingTestAPI';
-import { testStorageService } from '../services/testStorageService';
 import type { TestSession } from '../types/toeic-test.types';
 
 interface TestPart {
@@ -122,35 +121,19 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
         selectedParts,
       });
 
-      // Debug: Check all sessions in IndexedDB
-      await testStorageService.debugListAllSessions();
-
       const existingSessionData = await checkExistingSession(
         testId,
         testMode,
         partsToCheck
       );
 
-      console.log('🔍 Session check result:', {
-        requested: { testId, testMode },
-        found: existingSessionData
-          ? {
-              testId: existingSessionData.testId,
-              testMode: existingSessionData.testMode,
-              answersCount: Object.keys(existingSessionData.answers).length,
-            }
-          : null,
-      });
-
       if (existingSessionData) {
         // Show dialog asking user what to do
-        console.log('Found existing session, showing dialog');
         setExistingSession(existingSessionData);
         setPendingNavigation(targetUrl);
         setShowContinueDialog(true);
       } else {
         // No existing session, create new session and navigate
-        console.log('No existing session found, creating new one');
         if (testData) {
           const timeLimit =
             (testMode === 'custom' ? parseInt(customTime || '30', 10) : 120) *
@@ -180,10 +163,6 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
 
     if (testData && existingSession) {
       try {
-        console.log(
-          '🔄 User chose to restart - directly calling forceStartFresh...'
-        );
-
         // Get the test mode and selectedParts from the existing session
         const testMode = existingSession.testMode as 'full' | 'custom';
         const sessionParts =
@@ -198,8 +177,6 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
 
         // Force start fresh session directly
         await forceStartFresh(testData, timeLimit, testMode, sessionParts);
-
-        console.log('✅ Successfully restarted session, navigating...');
 
         // Navigate without restart parameter
         if (pendingNavigation) {
@@ -246,7 +223,7 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
         <div className="flex items-center gap-4 text-muted-foreground">
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4" />
-            <span>Thời gian làm bài thi: 2 giờ</span>
+            <span>Test duration: 2 hours</span>
           </div>
         </div>
       </div>
@@ -255,7 +232,7 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
       <Card>
         <CardHeader>
           <CardTitle className="text-xl font-semibold">
-            Cấu trúc đề thi
+            Test Structure
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -288,7 +265,7 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
                       <span className="font-medium">{part.name}</span>
                     </div>
                     <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded">
-                      {part.questions} CÂU
+                      {part.questions} QUESTIONS
                     </span>
                   </div>
                 ))}
@@ -323,7 +300,7 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
                       <span className="font-medium">{part.name}</span>
                     </div>
                     <span className="text-sm bg-secondary text-secondary-foreground px-2 py-1 rounded">
-                      {part.questions} CÂU
+                      {part.questions} QUESTIONS
                     </span>
                   </div>
                 ))}
@@ -343,14 +320,14 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
                 htmlFor="custom-mode"
                 className="font-medium cursor-pointer"
               >
-                Chọn từng part
+                Select parts
               </label>
             </div>
 
             {/* Time Selection for Custom Mode */}
             {isCustomMode && (
               <div className="flex items-center gap-4 mb-4">
-                <span className="text-sm font-medium">Thời gian:</span>
+                <span className="text-sm font-medium">Time:</span>
                 <Select value={customTime} onValueChange={setCustomTime}>
                   <SelectTrigger className="w-40">
                     <SelectValue />
@@ -370,8 +347,8 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
             {isCustomMode && selectedParts.length > 0 && (
               <div className="bg-accent/10 p-4 rounded-lg mb-4">
                 <p className="text-sm font-medium text-accent-foreground">
-                  Đã chọn: {selectedParts.length} part - {totalQuestions} câu
-                  hỏi - {customTime} phút
+                  Selected: {selectedParts.length} part(s) - {totalQuestions}{' '}
+                  questions - {customTime} minutes
                 </p>
               </div>
             )}
@@ -383,7 +360,7 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
               className="w-full md:w-auto px-8 py-3 text-lg font-semibold"
               disabled={isCustomMode && selectedParts.length === 0}
             >
-              BẮT ĐẦU
+              START
             </Button>
           </div>
         </CardContent>
@@ -400,7 +377,7 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
           progress={Math.round(
             (Object.keys(existingSession.answers).length / 200) * 100
           )}
-          timeElapsed={`${Math.floor((Date.now() - Number(existingSession.startTime)) / (1000 * 60))} phút`}
+          timeElapsed={`${Math.floor((Date.now() - Number(existingSession.startTime)) / (1000 * 60))} min`}
           answeredQuestions={Object.keys(existingSession.answers).length}
           totalQuestions={200}
           onContinue={handleContinueSession}

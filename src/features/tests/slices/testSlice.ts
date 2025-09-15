@@ -162,6 +162,7 @@ const testSlice = createSlice({
         Partial<{
           answers: Record<string, string>;
           timeRemaining: number;
+          savedAt: string;
         }>
       >
     ) => {

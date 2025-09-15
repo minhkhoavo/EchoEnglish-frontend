@@ -173,68 +173,72 @@ export const Part4Question = ({
                 {/* Context Information */}
                 <div className="space-y-4">
                   {/* Transcript Section */}
-                  <Collapsible
-                    open={isTranscriptExpanded}
-                    onOpenChange={() => toggleTranscript(groupIndex)}
-                  >
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between"
-                      >
-                        Transcript
-                        {isTranscriptExpanded ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <Card className="mt-2">
-                        <CardContent className="p-4">
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: group.groupContext?.transcript || '',
-                            }}
-                            className="prose prose-sm max-w-none dark:prose-invert"
-                          />
-                        </CardContent>
-                      </Card>
-                    </CollapsibleContent>
-                  </Collapsible>
+                  {showCorrectAnswers && (
+                    <Collapsible
+                      open={isTranscriptExpanded}
+                      onOpenChange={() => toggleTranscript(groupIndex)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-between"
+                        >
+                          Transcript
+                          {isTranscriptExpanded ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <Card className="mt-2">
+                          <CardContent className="p-4">
+                            <div
+                              dangerouslySetInnerHTML={{
+                                __html: group.groupContext?.transcript || '',
+                              }}
+                              className="prose prose-sm max-w-none dark:prose-invert"
+                            />
+                          </CardContent>
+                        </Card>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
 
                   {/* Translation Section */}
-                  <Collapsible
-                    open={isTranslationExpanded}
-                    onOpenChange={() => toggleTranslation(groupIndex)}
-                  >
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between"
-                      >
-                        Translation
-                        {isTranslationExpanded ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <Card className="mt-2">
-                        <CardContent className="p-4">
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: group.groupContext?.translation || '',
-                            }}
-                            className="prose prose-sm max-w-none dark:prose-invert"
-                          />
-                        </CardContent>
-                      </Card>
-                    </CollapsibleContent>
-                  </Collapsible>
+                  {showCorrectAnswers && (
+                    <Collapsible
+                      open={isTranslationExpanded}
+                      onOpenChange={() => toggleTranslation(groupIndex)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-between"
+                        >
+                          Translation
+                          {isTranslationExpanded ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <Card className="mt-2">
+                          <CardContent className="p-4">
+                            <div
+                              dangerouslySetInnerHTML={{
+                                __html: group.groupContext?.translation || '',
+                              }}
+                              className="prose prose-sm max-w-none dark:prose-invert"
+                            />
+                          </CardContent>
+                        </Card>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
                 </div>
 
                 {/* Questions */}
@@ -330,39 +334,41 @@ export const Part4Question = ({
                           </div>
 
                           {/* Explanation */}
-                          <Collapsible
-                            open={isExplanationExpanded}
-                            onOpenChange={() =>
-                              toggleExplanation(question.questionNumber)
-                            }
-                          >
-                            <CollapsibleTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full justify-between"
-                              >
-                                Show explanation
-                                {isExplanationExpanded ? (
-                                  <ChevronUp className="h-4 w-4" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              <Card className="mt-2">
-                                <CardContent className="p-4">
-                                  <div
-                                    dangerouslySetInnerHTML={{
-                                      __html: question.explanation,
-                                    }}
-                                    className="prose prose-sm max-w-none dark:prose-invert"
-                                  />
-                                </CardContent>
-                              </Card>
-                            </CollapsibleContent>
-                          </Collapsible>
+                          {showCorrectAnswers && (
+                            <Collapsible
+                              open={isExplanationExpanded}
+                              onOpenChange={() =>
+                                toggleExplanation(question.questionNumber)
+                              }
+                            >
+                              <CollapsibleTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full justify-between"
+                                >
+                                  Show explanation
+                                  {isExplanationExpanded ? (
+                                    <ChevronUp className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <Card className="mt-2">
+                                  <CardContent className="p-4">
+                                    <div
+                                      dangerouslySetInnerHTML={{
+                                        __html: question.explanation,
+                                      }}
+                                      className="prose prose-sm max-w-none dark:prose-invert"
+                                    />
+                                  </CardContent>
+                                </Card>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          )}
                         </CardContent>
                       </Card>
                     );

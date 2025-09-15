@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuestionNavigation } from '@/features/tests/components/lis-read/QuestionNavigation';
 import { TestTimer } from '@/features/tests/components/lis-read/TestTimer';
@@ -16,6 +17,15 @@ import { useGetTOEICTestByIdQuery } from '@/features/tests/services/listeningRea
 import { useTestSession } from '@/features/tests/hooks/useTestSession';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
 import { endTest as endTestAction } from '@/features/tests/slices/testSlice';
+import type { TestSession } from '@/features/tests/types/toeic-test.types';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const TestExam = () => {
   const { testId } = useParams();
@@ -24,7 +34,12 @@ const TestExam = () => {
   const [searchParams] = useSearchParams();
   const [selectedPart, setSelectedPart] = useState('part1');
   const [currentQuestion, setCurrentQuestion] = useState(1);
-  const [timeRemaining, setTimeRemaining] = useState(0); // in seconds
+  const [showContinueDialog, setShowContinueDialog] = useState(false);
+  const [existingSessionData, setExistingSessionData] = useState<{
+    existingSession?: TestSession;
+    continueSession?: () => void;
+    restartSession?: () => Promise<void>;
+  } | null>(null);
 
   // Get test mode and parameters from URL
   const testMode = searchParams.get('mode') || 'full'; // 'full' or 'custom'
@@ -38,48 +53,41 @@ const TestExam = () => {
   const isDirectStart = searchParams.get('start') === 'true';
 
   // Redux-based test session management (moved before useEffect that uses currentSession)
-  const { startTest, currentSession, isActive, endTest } = useTestSession();
+  const { startTest, currentSession, isActive, endTest, updateCurrentSession } =
+    useTestSession();
 
   // Get user from Redux for userId
   const user = useAppSelector((state) => state.auth.user);
   const userId = user?._id || 'guest';
 
-  // Initialize timer based on test time
-  useEffect(() => {
-    if (!isHistoryView && testTime > 0) {
-      const initialTime = testTime * 60; // Convert minutes to seconds
-      setTimeRemaining(initialTime);
-    }
-  }, [testTime, isHistoryView]);
-
-  // Timer countdown
-  useEffect(() => {
-    if (!isHistoryView && timeRemaining > 0) {
-      const timer = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            // Auto-submit when time expires
-            if (currentSession) {
-              endTest().then(() => {
-                navigate('/tests?completed=true');
-              });
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [timeRemaining, isHistoryView, currentSession, endTest, navigate]);
-
   // Handle test submission
   const handleSubmitTest = async () => {
+    console.log('🚀 handleSubmitTest called', { currentSession });
     if (currentSession) {
+      console.log('📤 Calling endTest to delete IndexedDB record');
       await endTest();
-      navigate('/tests?completed=true');
+      console.log('✅ endTest completed, navigating to home');
+      navigate('/');
+    } else {
+      console.log('❌ No current session to submit');
+    }
+  };
+
+  // Handle continuing existing session
+  const handleContinueSession = () => {
+    if (existingSessionData?.continueSession) {
+      existingSessionData.continueSession();
+      setShowContinueDialog(false);
+      setExistingSessionData(null);
+    }
+  };
+
+  // Handle restarting new session
+  const handleRestartSession = async () => {
+    if (existingSessionData?.restartSession) {
+      await existingSessionData.restartSession();
+      setShowContinueDialog(false);
+      setExistingSessionData(null);
     }
   };
 
@@ -161,13 +169,19 @@ const TestExam = () => {
             result.continueSession?.();
           }
         } else {
-          // Normal test start
-          await startTest(
+          // Check for existing session first
+          const result = await startTest(
             testData,
             timeLimit,
             testMode as 'full' | 'custom',
             selectedParts
           );
+
+          if (result.hasExisting) {
+            // Show dialog to user
+            setExistingSessionData(result);
+            setShowContinueDialog(true);
+          }
         }
       };
 
@@ -189,18 +203,23 @@ const TestExam = () => {
   // Clear session if testMode changes (user switches between full/custom in same test)
   useEffect(() => {
     if (currentSession && currentSession.testMode !== testMode) {
-      console.log('🔄 TestMode changed, clearing incompatible session:', {
-        currentSessionMode: currentSession.testMode,
-        newTestMode: testMode,
-        testId: currentSession.testId,
-      });
       // Don't use endTest here as it will clean up IndexedDB
       // Just clear the Redux state
       dispatch(endTestAction());
     }
   }, [testMode, currentSession, dispatch]);
 
-  const handleBackToTests = () => {
+  const handleBackToTests = async () => {
+    // Update savedAt before exiting if there's an active session
+    if (currentSession) {
+      try {
+        await updateCurrentSession({
+          savedAt: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('Failed to update savedAt on exit:', error);
+      }
+    }
     navigate('/');
   };
 
@@ -249,15 +268,23 @@ const TestExam = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBackToTests}
-              className="flex items-center gap-2"
+            <ConfirmationDialog
+              title="Exit Test"
+              description="Are you sure you want to exit the test? Your progress will be saved."
+              confirmText="Exit"
+              cancelText="Continue Test"
+              variant="default"
+              onConfirm={handleBackToTests}
             >
-              <ArrowLeft className="h-4 w-4" />
-              Exit
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Exit
+              </Button>
+            </ConfirmationDialog>
             <h1 className="text-2xl font-bold text-foreground">
               {testData.testTitle}
             </h1>
@@ -270,11 +297,28 @@ const TestExam = () => {
 
           <div className="flex items-center gap-2">
             {/* Test Timer */}
-            {!isHistoryView && <TestTimer timeRemaining={timeRemaining} />}
+            {!isHistoryView && <TestTimer />}
 
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4" />
-            </Button>
+            {/* Submit Test Button */}
+            {!isHistoryView && (
+              <ConfirmationDialog
+                title="Submit Test"
+                description="Are you sure you want to submit your test? This action cannot be undone."
+                confirmText="Submit"
+                cancelText="Continue"
+                variant="default"
+                onConfirm={handleSubmitTest}
+              >
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Submit
+                </Button>
+              </ConfirmationDialog>
+            )}
           </div>
         </div>
 
@@ -414,6 +458,55 @@ const TestExam = () => {
           </div>
         </div>
       </div>
+
+      {/* Continue Test Dialog */}
+      <Dialog open={showContinueDialog} onOpenChange={setShowContinueDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Test in Progress</DialogTitle>
+            <DialogDescription>
+              You have an unfinished test session. Would you like to continue
+              where you left off or start fresh?
+              {existingSessionData?.existingSession && (
+                <div className="mt-2 text-sm text-muted-foreground">
+                  <p>
+                    Saved:{' '}
+                    {new Date(
+                      existingSessionData.existingSession.savedAt || ''
+                    ).toLocaleString()}
+                  </p>
+                  <p>
+                    Answers:{' '}
+                    {
+                      Object.keys(
+                        existingSessionData.existingSession.answers || {}
+                      ).length
+                    }{' '}
+                    questions completed
+                  </p>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={handleRestartSession}
+              className="flex items-center gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Start Fresh
+            </Button>
+            <Button
+              onClick={handleContinueSession}
+              className="flex items-center gap-2"
+            >
+              <Play className="h-4 w-4" />
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
