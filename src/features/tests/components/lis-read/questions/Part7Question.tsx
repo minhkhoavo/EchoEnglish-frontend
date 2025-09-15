@@ -1,15 +1,10 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { TestPart } from '@/features/tests/types/toeic-test.types';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { useTestSession } from '@/features/tests/hooks/useTestSession';
+import { QuestionHeader } from '../common/QuestionHeader';
+import { AnswerOptions } from '../common/AnswerOptions';
+import { ExplanationSection } from '../common/ExplanationSection';
 
 interface Part7QuestionProps {
   part: TestPart;
@@ -23,7 +18,6 @@ export const Part7Question = ({
   const [expandedExplanations, setExpandedExplanations] = useState<number[]>(
     []
   );
-  const [expandedTranscripts, setExpandedTranscripts] = useState<number[]>([]);
   const [expandedTranslations, setExpandedTranslations] = useState<number[]>(
     []
   );
@@ -31,99 +25,39 @@ export const Part7Question = ({
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
 
-  // Function to get user answer (mock for history view, Redux for current test)
+  // Function to get user answer
   const getUserAnswer = (questionNumber: number) => {
     if (showCorrectAnswers) {
       // Return mock answer for history view
-      const mockAnswers: { [key: number]: string } = {
-        147: 'C',
-        148: 'B',
-        149: 'B',
-        150: 'C',
-        151: 'B',
-        152: 'D',
-        153: 'A',
-        154: 'B',
-        155: 'C',
-        156: 'D',
-        157: 'A',
-        158: 'B',
-        159: 'C',
-        160: 'D',
-        161: 'A',
-        162: 'B',
-        163: 'C',
-        164: 'D',
-        165: 'A',
-        166: 'B',
-        167: 'C',
-        168: 'D',
-        169: 'A',
-        170: 'B',
-        171: 'C',
-        172: 'D',
-        173: 'A',
-        174: 'B',
-        175: 'C',
-        176: 'D',
-        177: 'A',
-        178: 'B',
-        179: 'C',
-        180: 'D',
-        181: 'A',
-        182: 'B',
-        183: 'C',
-        184: 'D',
-        185: 'A',
-        186: 'B',
-        187: 'C',
-        188: 'D',
-        189: 'A',
-        190: 'B',
-        191: 'C',
-        192: 'D',
-        193: 'A',
-        194: 'B',
-        195: 'C',
-        196: 'D',
-        197: 'A',
-        198: 'B',
-        199: 'C',
-        200: 'D',
-      };
-      return mockAnswers[questionNumber] || '';
+      return ['A', 'B', 'C', 'D'][Math.floor(Math.random() * 4)];
     }
-    // Use Redux to get current test answer
-    return getAnswer(questionNumber) || '';
+    return getAnswer(questionNumber);
   };
 
   // Handle answer selection
-  const handleAnswerSelect = (questionNumber: number, answer: string) => {
+  const handleAnswerSelect = (
+    questionNumber: number,
+    selectedAnswer: string
+  ) => {
     if (!showCorrectAnswers) {
-      saveAnswer(questionNumber, answer);
+      saveAnswer(questionNumber, selectedAnswer);
     }
   };
 
+  // Toggle explanation
   const toggleExplanation = (questionNumber: number) => {
     setExpandedExplanations((prev) =>
       prev.includes(questionNumber)
-        ? prev.filter((num) => num !== questionNumber)
+        ? prev.filter((id) => id !== questionNumber)
         : [...prev, questionNumber]
     );
   };
 
-  const toggleTranscript = (groupIndex: number) => {
-    setExpandedTranscripts((prev) =>
-      prev.includes(groupIndex)
-        ? prev.filter((num) => num !== groupIndex)
-        : [...prev, groupIndex]
-    );
-  };
-
+  // Toggle translation
   const toggleTranslation = (groupIndex: number) => {
     setExpandedTranslations((prev) =>
       prev.includes(groupIndex)
-        ? prev.filter((num) => num !== groupIndex)
+        ? prev.filter((id) => id !== groupIndex)
         : [...prev, groupIndex]
     );
   };
@@ -131,20 +65,22 @@ export const Part7Question = ({
   return (
     <div className="space-y-6">
       {/* Part Header */}
-      <div className="flex items-center gap-4">
-        <Badge variant="outline" className="text-lg px-4 py-2">
-          {part.partName}
-        </Badge>
-        <span className="text-muted-foreground">
-          Questions {part.questionGroups?.[0]?.questions?.[0]?.questionNumber} -{' '}
-          {
-            part.questionGroups?.[part.questionGroups.length - 1]?.questions?.[
-              part.questionGroups[part.questionGroups.length - 1]?.questions
-                ?.length - 1
-            ]?.questionNumber
-          }
-        </span>
-      </div>
+      <QuestionHeader
+        partName={part.partName}
+        range={[
+          part.questionGroups?.[0]?.questions?.[0]?.questionNumber ?? 1,
+          part.questionGroups?.[
+            part.questionGroups?.length ? part.questionGroups.length - 1 : 0
+          ]?.questions?.[
+            part.questionGroups[
+              part.questionGroups?.length ? part.questionGroups.length - 1 : 0
+            ]?.questions?.length
+              ? part.questionGroups[part.questionGroups.length - 1].questions
+                  .length - 1
+              : 0
+          ]?.questionNumber ?? 1,
+        ]}
+      />
 
       {/* Part Instructions */}
       <Card className="bg-blue-50 dark:bg-blue-950">
@@ -162,42 +98,38 @@ export const Part7Question = ({
 
       {/* Question Groups */}
       <div className="space-y-8">
-        {part.questionGroups?.map((group, groupIndex) => (
+        {(part.questionGroups ?? []).map((group, groupIndex) => (
           <div key={groupIndex} className="border rounded-lg p-6 bg-background">
             {/* Group Header */}
-            <div className="flex items-center gap-4 mb-6">
-              <Badge variant="secondary" className="text-lg px-3 py-1">
-                Questions {group.questions[0]?.questionNumber} -{' '}
-                {group.questions[group.questions.length - 1]?.questionNumber}
-              </Badge>
-
-              <span className="text-sm text-muted-foreground">
-                {group.questions.length === 1
-                  ? 'Single passage'
-                  : group.questions.length <= 4
-                    ? 'Single passage (multiple questions)'
-                    : 'Multiple passages'}
-              </span>
-            </div>
+            <QuestionHeader
+              range={[
+                group.questions?.[0]?.questionNumber ?? 1,
+                group.questions?.[
+                  group.questions?.length ? group.questions.length - 1 : 0
+                ]?.questionNumber ?? 1,
+              ]}
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Passage and Context */}
               <div className="space-y-4">
                 {/* Images if available */}
-                {group.groupContext.imageUrls &&
+                {group.groupContext?.imageUrls &&
                   group.groupContext.imageUrls.length > 0 &&
-                  group.groupContext.imageUrls.map((imageUrl, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={imageUrl}
-                        alt={`Question group ${groupIndex + 1} image ${index + 1}`}
-                        className="w-full rounded-lg shadow-sm border"
-                      />
-                    </div>
-                  ))}
+                  group.groupContext.imageUrls.map(
+                    (imageUrl: string, index: number) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={imageUrl}
+                          alt={`Question group ${groupIndex + 1} image ${index + 1}`}
+                          className="w-full rounded-lg shadow-sm border"
+                        />
+                      </div>
+                    )
+                  )}
 
                 {/* Reading Passage - only show if no images */}
-                {(!group.groupContext.imageUrls ||
+                {(!group.groupContext?.imageUrls ||
                   group.groupContext.imageUrls.length === 0) && (
                   <Card>
                     <CardContent className="p-6">
@@ -215,73 +147,18 @@ export const Part7Question = ({
                 )}
 
                 {/* Translation Section */}
-                {showCorrectAnswers && group.groupContext.translation && (
-                  <Collapsible
-                    open={expandedTranslations.includes(groupIndex)}
-                    onOpenChange={() => toggleTranslation(groupIndex)}
-                  >
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between"
-                      >
-                        Show Translation
-                        {expandedTranslations.includes(groupIndex) ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <Card className="mt-2">
-                        <CardContent className="p-4">
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: group.groupContext.translation,
-                            }}
-                            className="prose prose-sm max-w-none dark:prose-invert"
-                          />
-                        </CardContent>
-                      </Card>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
-
-                {/* Vietnamese Translation fallback */}
                 {showCorrectAnswers &&
-                  !group.groupContext.translation &&
-                  group.groupContext.transcript && (
-                    <Collapsible
-                      open={expandedTranslations.includes(groupIndex)}
-                      onOpenChange={() => toggleTranslation(groupIndex)}
-                    >
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-between"
-                        >
-                          Show Translation
-                          {expandedTranslations.includes(groupIndex) ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <Card className="mt-2">
-                          <CardContent className="p-4">
-                            <div
-                              dangerouslySetInnerHTML={{
-                                __html: group.groupContext.transcript,
-                              }}
-                              className="prose prose-sm max-w-none dark:prose-invert"
-                            />
-                          </CardContent>
-                        </Card>
-                      </CollapsibleContent>
-                    </Collapsible>
+                  (group.groupContext?.translation ||
+                    group.groupContext?.transcript) && (
+                    <ExplanationSection
+                      expanded={expandedTranslations.includes(groupIndex)}
+                      onToggle={() => toggleTranslation(groupIndex)}
+                      explanation={
+                        group.groupContext.translation ||
+                        group.groupContext.transcript ||
+                        ''
+                      }
+                    />
                   )}
               </div>
 
@@ -293,9 +170,8 @@ export const Part7Question = ({
                   scrollbarColor: '#d1d5db #f3f4f6',
                 }}
               >
-                {group.questions.map((question) => {
+                {(group.questions ?? []).map((question) => {
                   const userAnswer = getUserAnswer(question.questionNumber);
-                  const isCorrect = userAnswer === question.correctAnswer;
                   const isExplanationExpanded = expandedExplanations.includes(
                     question.questionNumber
                   );
@@ -306,125 +182,35 @@ export const Part7Question = ({
                       id={`question-${question.questionNumber}`}
                       className="border rounded-lg p-4 bg-card"
                     >
-                      {/* Question Header */}
-                      <div className="flex items-center gap-4 mb-4">
-                        <h3 className="text-lg font-semibold mb-2">
-                          Question {question.questionNumber}
-                        </h3>
-                      </div>
+                      <QuestionHeader
+                        questionNumber={question.questionNumber}
+                      />
 
-                      {/* Question Text */}
                       <div className="mb-4">
                         <p className="text-base font-medium">
                           {question.questionText}
                         </p>
                       </div>
 
-                      {/* Options */}
-                      <div className="space-y-2 mb-4">
-                        {question.options.map((option) => {
-                          const userAnswer = getUserAnswer(
-                            question.questionNumber
-                          );
-                          const isSelected = userAnswer === option.label;
-                          const isCorrect =
-                            option.label === question.correctAnswer;
-
-                          return (
-                            <div
-                              key={option.label}
-                              onClick={() =>
-                                handleAnswerSelect(
-                                  question.questionNumber,
-                                  option.label
-                                )
-                              }
-                              className={`p-3 rounded-lg border-2 transition-colors cursor-pointer ${
-                                showCorrectAnswers && isCorrect
-                                  ? 'border-green-500 bg-green-50 dark:bg-green-950'
-                                  : showCorrectAnswers &&
-                                      isSelected &&
-                                      !isCorrect
-                                    ? 'border-red-500 bg-red-50 dark:bg-red-950'
-                                    : isSelected
-                                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
-                                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-                                    showCorrectAnswers && isCorrect
-                                      ? 'border-green-500 bg-green-500 text-white'
-                                      : showCorrectAnswers &&
-                                          isSelected &&
-                                          !isCorrect
-                                        ? 'border-red-500 bg-red-500 text-white'
-                                        : isSelected
-                                          ? 'border-blue-500 bg-blue-500 text-white'
-                                          : 'border-gray-400 text-gray-600 hover:border-blue-500'
-                                  }`}
-                                >
-                                  {option.label}
-                                </div>
-                                <span className="text-sm flex-1">
-                                  {option.text}
-                                </span>
-                                {showCorrectAnswers && isCorrect && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="bg-green-500 text-white"
-                                  >
-                                    Correct
-                                  </Badge>
-                                )}
-                                {showCorrectAnswers &&
-                                  isSelected &&
-                                  !isCorrect && (
-                                    <Badge variant="destructive">
-                                      Your choice
-                                    </Badge>
-                                  )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      <AnswerOptions
+                        options={question.options}
+                        userAnswer={userAnswer ?? undefined}
+                        correctAnswer={question.correctAnswer}
+                        showCorrectAnswers={showCorrectAnswers}
+                        onSelect={(label) =>
+                          handleAnswerSelect(question.questionNumber, label)
+                        }
+                      />
 
                       {/* Explanation */}
                       {showCorrectAnswers && (
-                        <Collapsible
-                          open={isExplanationExpanded}
-                          onOpenChange={() =>
+                        <ExplanationSection
+                          expanded={isExplanationExpanded}
+                          onToggle={() =>
                             toggleExplanation(question.questionNumber)
                           }
-                        >
-                          <CollapsibleTrigger asChild>
-                            <Button
-                              variant="outline"
-                              className="w-full justify-between"
-                            >
-                              Show Explanation
-                              {isExplanationExpanded ? (
-                                <ChevronUp className="h-4 w-4" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent>
-                            <Card className="mt-2">
-                              <CardContent className="p-4">
-                                <div
-                                  dangerouslySetInnerHTML={{
-                                    __html: question.explanation,
-                                  }}
-                                  className="prose prose-sm max-w-none dark:prose-invert"
-                                />
-                              </CardContent>
-                            </Card>
-                          </CollapsibleContent>
-                        </Collapsible>
+                          explanation={question.explanation}
+                        />
                       )}
                     </div>
                   );

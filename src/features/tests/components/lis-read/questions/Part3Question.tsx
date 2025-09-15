@@ -1,16 +1,11 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import type { TestPart } from '@/features/tests/types/toeic-test.types';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { useTestSession } from '@/features/tests/hooks/useTestSession';
+import { QuestionHeader } from '../common/QuestionHeader';
+import { AnswerOptions } from '../common/AnswerOptions';
+import { ExplanationSection } from '../common/ExplanationSection';
 
 interface Part3QuestionProps {
   part: TestPart;
@@ -98,15 +93,13 @@ export const Part3Question = ({
   return (
     <div className="space-y-6">
       {/* Part Header */}
-      <div className="flex items-center gap-4">
-        <Badge variant="outline" className="text-lg px-4 py-2">
-          {part.partName}
-        </Badge>
-        <span className="text-muted-foreground">
-          Questions {allQuestions[0]?.questionNumber} -{' '}
-          {allQuestions[allQuestions.length - 1]?.questionNumber}
-        </span>
-      </div>
+      <QuestionHeader
+        partName={part.partName}
+        range={[
+          allQuestions[0]?.questionNumber || 1,
+          allQuestions[allQuestions.length - 1]?.questionNumber || 1,
+        ]}
+      />
 
       {/* Part Instructions */}
       <Card className="bg-blue-50 dark:bg-blue-950">
@@ -136,12 +129,12 @@ export const Part3Question = ({
               className="border-2 rounded-lg p-6 bg-background"
             >
               {/* Group Header */}
-              <div className="flex items-center gap-4 mb-6">
-                <Badge variant="secondary" className="text-lg px-3 py-1">
-                  Questions {group.questions[0].questionNumber} -{' '}
-                  {group.questions[group.questions.length - 1].questionNumber}
-                </Badge>
-              </div>
+              <QuestionHeader
+                range={[
+                  group.questions[0].questionNumber,
+                  group.questions[group.questions.length - 1].questionNumber,
+                ]}
+              />
 
               {/* Audio Player */}
               <div className="mb-6">
@@ -153,70 +146,20 @@ export const Part3Question = ({
                 <div className="space-y-4">
                   {/* Transcript Section */}
                   {showCorrectAnswers && (
-                    <Collapsible
-                      open={isTranscriptExpanded}
-                      onOpenChange={() => toggleTranscript(groupIndex)}
-                    >
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-between"
-                        >
-                          Transcript
-                          {isTranscriptExpanded ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <Card className="mt-2">
-                          <CardContent className="p-4">
-                            <div
-                              dangerouslySetInnerHTML={{
-                                __html: group.groupContext?.transcript || '',
-                              }}
-                              className="prose prose-sm max-w-none dark:prose-invert"
-                            />
-                          </CardContent>
-                        </Card>
-                      </CollapsibleContent>
-                    </Collapsible>
+                    <ExplanationSection
+                      expanded={isTranscriptExpanded}
+                      onToggle={() => toggleTranscript(groupIndex)}
+                      explanation={group.groupContext?.transcript || ''}
+                    />
                   )}
 
                   {/* Translation Section */}
                   {showCorrectAnswers && (
-                    <Collapsible
-                      open={isTranslationExpanded}
-                      onOpenChange={() => toggleTranslation(groupIndex)}
-                    >
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-between"
-                        >
-                          Translation
-                          {isTranslationExpanded ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <Card className="mt-2">
-                          <CardContent className="p-4">
-                            <div
-                              dangerouslySetInnerHTML={{
-                                __html: group.groupContext?.translation || '',
-                              }}
-                              className="prose prose-sm max-w-none dark:prose-invert"
-                            />
-                          </CardContent>
-                        </Card>
-                      </CollapsibleContent>
-                    </Collapsible>
+                    <ExplanationSection
+                      expanded={isTranslationExpanded}
+                      onToggle={() => toggleTranslation(groupIndex)}
+                      explanation={group.groupContext?.translation || ''}
+                    />
                   )}
                 </div>
 
@@ -224,124 +167,39 @@ export const Part3Question = ({
                 <div className="lg:col-span-2 space-y-4">
                   {group.questions?.map((question) => {
                     const userAnswer = getUserAnswer(question.questionNumber);
-                    const isCorrect = userAnswer === question.correctAnswer;
                     const isExplanationExpanded = expandedExplanations.includes(
                       question.questionNumber
                     );
-
                     return (
                       <Card
                         key={question.questionNumber}
                         id={`question-${question.questionNumber}`}
                       >
                         <CardContent className="p-6">
-                          <h3 className="text-lg font-semibold mb-2">
-                            Question {question.questionNumber}
-                          </h3>
+                          <QuestionHeader
+                            questionNumber={question.questionNumber}
+                          />
                           <p className="mb-4 font-medium">
                             {question.questionText}
                           </p>
-
-                          <div className="space-y-3 mb-4">
-                            {question.options.map((option) => (
-                              <div
-                                key={option.label}
-                                className={`p-3 rounded-lg border-2 transition-colors ${
-                                  showCorrectAnswers &&
-                                  option.label === question.correctAnswer
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-950'
-                                    : showCorrectAnswers &&
-                                        option.label === userAnswer &&
-                                        userAnswer !== question.correctAnswer
-                                      ? 'border-red-500 bg-red-50 dark:bg-red-950'
-                                      : !showCorrectAnswers &&
-                                          option.label === userAnswer
-                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 cursor-pointer'
-                                }`}
-                                onClick={() =>
-                                  handleAnswerSelect(
-                                    question.questionNumber,
-                                    option.label
-                                  )
-                                }
-                              >
-                                <div className="flex items-start gap-3">
-                                  <div
-                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-                                      showCorrectAnswers &&
-                                      option.label === question.correctAnswer
-                                        ? 'border-green-500 bg-green-500 text-white'
-                                        : showCorrectAnswers &&
-                                            option.label === userAnswer &&
-                                            userAnswer !==
-                                              question.correctAnswer
-                                          ? 'border-red-500 bg-red-500 text-white'
-                                          : !showCorrectAnswers &&
-                                              option.label === userAnswer
-                                            ? 'border-blue-500 bg-blue-500 text-white'
-                                            : 'border-gray-400 hover:border-blue-500'
-                                    }`}
-                                  >
-                                    {option.label}
-                                  </div>
-                                  <span className="flex-1">{option.text}</span>
-                                  {showCorrectAnswers &&
-                                    option.label === question.correctAnswer && (
-                                      <Badge
-                                        variant="secondary"
-                                        className="bg-green-500 text-white"
-                                      >
-                                        Correct answer
-                                      </Badge>
-                                    )}
-                                  {showCorrectAnswers &&
-                                    option.label === userAnswer &&
-                                    userAnswer !== question.correctAnswer && (
-                                      <Badge variant="destructive">
-                                        Your choice
-                                      </Badge>
-                                    )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
+                          <AnswerOptions
+                            options={question.options}
+                            userAnswer={userAnswer ?? undefined}
+                            correctAnswer={question.correctAnswer}
+                            showCorrectAnswers={showCorrectAnswers}
+                            onSelect={(label) =>
+                              handleAnswerSelect(question.questionNumber, label)
+                            }
+                          />
                           {/* Explanation */}
                           {showCorrectAnswers && (
-                            <Collapsible
-                              open={isExplanationExpanded}
-                              onOpenChange={() =>
+                            <ExplanationSection
+                              expanded={isExplanationExpanded}
+                              onToggle={() =>
                                 toggleExplanation(question.questionNumber)
                               }
-                            >
-                              <CollapsibleTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="w-full justify-between"
-                                >
-                                  Show explanation
-                                  {isExplanationExpanded ? (
-                                    <ChevronUp className="h-4 w-4" />
-                                  ) : (
-                                    <ChevronDown className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </CollapsibleTrigger>
-                              <CollapsibleContent>
-                                <Card className="mt-2">
-                                  <CardContent className="p-4">
-                                    <div
-                                      dangerouslySetInnerHTML={{
-                                        __html: question.explanation,
-                                      }}
-                                      className="prose prose-sm max-w-none dark:prose-invert"
-                                    />
-                                  </CardContent>
-                                </Card>
-                              </CollapsibleContent>
-                            </Collapsible>
+                              explanation={question.explanation}
+                            />
                           )}
                         </CardContent>
                       </Card>
