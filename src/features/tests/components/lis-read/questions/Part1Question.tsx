@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AudioPlayer } from '@/components/AudioPlayer';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import type { TestPart } from '@/features/tests/types/toeic-test.types';
+import { useTestSession } from '@/features/tests/hooks/useTestSession';
+import { QuestionHeader } from '../common/QuestionHeader';
+import { AnswerOptions } from '../common/AnswerOptions';
+import { ExplanationSection } from '../common/ExplanationSection';
 
 interface Part1QuestionProps {
   part: TestPart;
+  showCorrectAnswers?: boolean;
 }
 
-export const Part1Question = ({ part }: Part1QuestionProps) => {
+export const Part1Question = ({
+  part,
+  showCorrectAnswers = false,
+}: Part1QuestionProps) => {
   const [expandedExplanations, setExpandedExplanations] = useState<number[]>(
     []
   );
@@ -24,17 +24,32 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
     []
   );
 
-  // Mock user answers for demonstration
-  const getMockUserAnswer = (questionNumber: number) => {
-    const mockAnswers: { [key: number]: string } = {
-      1: 'A',
-      2: 'C',
-      3: 'B',
-      4: 'D',
-      5: 'C',
-      6: 'C',
-    };
-    return mockAnswers[questionNumber] || 'A';
+  // Use Redux-based test session management
+  const { saveAnswer, getAnswer } = useTestSession();
+
+  // Function to get user answer (mock for history view, Redux for current test)
+  const getUserAnswer = (questionNumber: number) => {
+    if (showCorrectAnswers) {
+      // Return mock answer for history view
+      const mockAnswers: { [key: number]: string } = {
+        1: 'A',
+        2: 'C',
+        3: 'B',
+        4: 'D',
+        5: 'C',
+        6: 'C',
+      };
+      return mockAnswers[questionNumber] || null;
+    }
+    // Return actual user answer from Redux for current test
+    return getAnswer(questionNumber);
+  };
+
+  // Handle answer selection
+  const handleAnswerSelect = (questionNumber: number, answer: string) => {
+    if (!showCorrectAnswers) {
+      saveAnswer(questionNumber, answer);
+    }
   };
 
   const toggleExplanation = (questionNumber: number) => {
@@ -71,15 +86,13 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
   return (
     <div className="space-y-6">
       {/* Part Header */}
-      <div className="flex items-center gap-4">
-        <Badge variant="outline" className="text-lg px-4 py-2">
-          {part.partName}
-        </Badge>
-        <span className="text-muted-foreground">
-          Questions {part.questions?.[0]?.questionNumber} -{' '}
-          {part.questions?.[part.questions.length - 1]?.questionNumber}
-        </span>
-      </div>
+      <QuestionHeader
+        partName={part.partName}
+        range={[
+          part.questions?.[0]?.questionNumber || 1,
+          part.questions?.[part.questions.length - 1]?.questionNumber || 1,
+        ]}
+      />
 
       {/* Part Instructions */}
       <Card className="bg-blue-50 dark:bg-blue-950">
@@ -99,8 +112,9 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
       {/* All Questions */}
       <div className="space-y-8">
         {part.questions?.map((question) => {
-          const mockUserAnswer = getMockUserAnswer(question.questionNumber);
-          const isCorrect = mockUserAnswer === question.correctAnswer;
+          const userAnswer = getUserAnswer(question.questionNumber);
+          const isCorrect =
+            showCorrectAnswers && userAnswer === question.correctAnswer;
           const isExplanationExpanded = expandedExplanations.includes(
             question.questionNumber
           );
@@ -118,11 +132,7 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
               className="border rounded-lg p-6 bg-background"
             >
               {/* Question Header */}
-              <div className="flex items-center gap-4 mb-6">
-                <Badge variant="secondary" className="text-lg px-3 py-1">
-                  Question {question.questionNumber}
-                </Badge>
-              </div>
+              <QuestionHeader questionNumber={question.questionNumber} />
 
               {/* Audio Player */}
               <div className="mb-6">
@@ -145,167 +155,51 @@ export const Part1Question = ({ part }: Part1QuestionProps) => {
                   )}
 
                   {/* Transcript Section */}
-                  <Collapsible
-                    open={isTranscriptExpanded}
-                    onOpenChange={() =>
-                      toggleTranscript(question.questionNumber)
-                    }
-                  >
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between"
-                      >
-                        Transcript
-                        {isTranscriptExpanded ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <Card className="mt-2 ">
-                        <CardContent className="p-4">
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: question.media?.transcript || '',
-                            }}
-                            className="prose prose-sm max-w-none dark:prose-invert"
-                          />
-                        </CardContent>
-                      </Card>
-                    </CollapsibleContent>
-                  </Collapsible>
+                  {/* TODO: tách TranscriptSection thành component riêng nếu muốn dùng chung cho các part */}
+                  {showCorrectAnswers && (
+                    <ExplanationSection
+                      expanded={isTranscriptExpanded}
+                      onToggle={() => toggleTranscript(question.questionNumber)}
+                      explanation={question.media?.transcript || ''}
+                    />
+                  )}
 
                   {/* Translation Section (if available) */}
-                  {question.media.translation && (
-                    <Collapsible
-                      open={isTranslationExpanded}
-                      onOpenChange={() =>
+                  {/* TODO: tách TranslationSection thành component riêng nếu muốn dùng chung cho các part */}
+                  {showCorrectAnswers && question.media.translation && (
+                    <ExplanationSection
+                      expanded={isTranslationExpanded}
+                      onToggle={() =>
                         toggleTranslation(question.questionNumber)
                       }
-                    >
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-between"
-                        >
-                          Translation
-                          {isTranslationExpanded ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <Card className="mt-2">
-                          <CardContent className="p-4">
-                            <div
-                              dangerouslySetInnerHTML={{
-                                __html: question.media.translation,
-                              }}
-                              className="prose prose-sm max-w-none dark:prose-invert"
-                            />
-                          </CardContent>
-                        </Card>
-                      </CollapsibleContent>
-                    </Collapsible>
+                      explanation={question.media.translation}
+                    />
                   )}
 
                   {/* Explanation Section */}
-                  <Collapsible
-                    open={isExplanationExpanded}
-                    onOpenChange={() =>
-                      toggleExplanation(question.questionNumber)
-                    }
-                  >
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-between"
-                      >
-                        Show explanation
-                        {isExplanationExpanded ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <Card className="mt-2">
-                        <CardContent className="p-4">
-                          <div
-                            dangerouslySetInnerHTML={{
-                              __html: question.explanation,
-                            }}
-                            className="prose prose-sm max-w-none dark:prose-invert"
-                          />
-                        </CardContent>
-                      </Card>
-                    </CollapsibleContent>
-                  </Collapsible>
+                  {showCorrectAnswers && (
+                    <ExplanationSection
+                      expanded={isExplanationExpanded}
+                      onToggle={() =>
+                        toggleExplanation(question.questionNumber)
+                      }
+                      explanation={question.explanation}
+                    />
+                  )}
                 </div>
 
                 {/* Question and Options */}
                 <div className="space-y-4">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="space-y-3">
-                        {question.options.map((option) => (
-                          <div
-                            key={option.label}
-                            className={`p-3 rounded-lg border-2 transition-colors ${
-                              option.label === question.correctAnswer
-                                ? 'border-green-500 bg-green-50 dark:bg-green-950'
-                                : option.label === mockUserAnswer &&
-                                    mockUserAnswer !== question.correctAnswer
-                                  ? 'border-red-500 bg-red-50 dark:bg-red-950'
-                                  : 'border-gray-200 dark:border-gray-700'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-                                  option.label === question.correctAnswer
-                                    ? 'border-green-500 bg-green-500 text-white'
-                                    : option.label === mockUserAnswer &&
-                                        mockUserAnswer !==
-                                          question.correctAnswer
-                                      ? 'border-red-500 bg-red-500 text-white'
-                                      : 'border-gray-400'
-                                }`}
-                              >
-                                {option.label}
-                              </div>
-                              <span className="text-sm text-muted-foreground">
-                                (Listening options - no text displayed)
-                              </span>
-                              {option.label === question.correctAnswer && (
-                                <Badge
-                                  variant="secondary"
-                                  className="ml-auto bg-green-500 text-white"
-                                >
-                                  Correct answer
-                                </Badge>
-                              )}
-                              {option.label === mockUserAnswer &&
-                                mockUserAnswer !== question.correctAnswer && (
-                                  <Badge
-                                    variant="destructive"
-                                    className="ml-auto"
-                                  >
-                                    Your choice
-                                  </Badge>
-                                )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <AnswerOptions
+                    options={question.options}
+                    userAnswer={userAnswer ?? undefined}
+                    correctAnswer={question.correctAnswer}
+                    showCorrectAnswers={showCorrectAnswers}
+                    onSelect={(label) =>
+                      handleAnswerSelect(question.questionNumber, label)
+                    }
+                    listening={true}
+                  />
                 </div>
               </div>
             </div>

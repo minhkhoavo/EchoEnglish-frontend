@@ -50,7 +50,11 @@ export interface TestMedia {
   transcript: string | null;
   translation: string | null;
 }
-
+interface StorageTestSession extends TestSession {
+  userId: string; // User identifier
+  testType: 'listening-reading';
+  savedAt?: string; // ISODate string
+}
 export interface TestQuestion {
   questionNumber: number;
   questionText: string | null;
@@ -88,4 +92,19 @@ export interface TOEICTestPartDetail {
   testTitle: string;
   type: 'listening-reading';
   parts: [TestPart]; // Only one part in the array
+}
+
+// Test session state for Redux and persistence
+export interface TestSession {
+  testId: string;
+  testTitle: string;
+  startTime: string;
+  endTime?: string;
+  timeLimit: string;
+  timeRemaining: string;
+  answers: { [questionNumber: number]: string };
+  testMode?: 'full' | 'custom';
+  selectedParts?: string;
+  partsKey?: string; // Combined key of selected parts for IndexedDB key
+  savedAt?: string; // ISO string timestamp for when session was last saved
 }

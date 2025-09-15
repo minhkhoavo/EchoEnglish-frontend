@@ -12,9 +12,13 @@ import { useGetWritingTestsQuery } from '@/features/tests/services/writingTestAp
 
 interface AllTestsPageProps {
   testsPerPage?: number;
+  onTestSelect?: (testId: string) => void;
 }
 
-const AllTestsPage = ({ testsPerPage = 6 }: AllTestsPageProps) => {
+const AllTestsPage = ({
+  testsPerPage = 6,
+  onTestSelect,
+}: AllTestsPageProps) => {
   const [selectedTestType, setSelectedTestType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -192,6 +196,7 @@ const AllTestsPage = ({ testsPerPage = 6 }: AllTestsPageProps) => {
                   <UnifiedTestCard
                     key={`${test.type}-${test.testId}`}
                     test={test}
+                    onTestSelect={onTestSelect}
                   />
                 ))}
               </div>

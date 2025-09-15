@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Settings } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, CheckCircle, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuestionNavigation } from '@/features/tests/components/lis-read/QuestionNavigation';
+import { TestTimer } from '@/features/tests/components/lis-read/TestTimer';
 import { Part1Question } from '@/features/tests/components/lis-read/questions/Part1Question';
 import { Part2Question } from '@/features/tests/components/lis-read/questions/Part2Question';
 import { Part3Question } from '@/features/tests/components/lis-read/questions/Part3Question';
@@ -12,12 +14,119 @@ import { Part5Question } from '@/features/tests/components/lis-read/questions/Pa
 import { Part6Question } from '@/features/tests/components/lis-read/questions/Part6Question';
 import { Part7Question } from '@/features/tests/components/lis-read/questions/Part7Question';
 import { useGetTOEICTestByIdQuery } from '@/features/tests/services/listeningReadingTestAPI';
+import { useTestSession } from '@/features/tests/hooks/useTestSession';
+import { useAppDispatch, useAppSelector } from '@/core/store/store';
+import { endTest as endTestAction } from '@/features/tests/slices/testSlice';
+import type { TestSession } from '@/features/tests/types/toeic-test.types';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const TestExam = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [searchParams] = useSearchParams();
   const [selectedPart, setSelectedPart] = useState('part1');
   const [currentQuestion, setCurrentQuestion] = useState(1);
+  const [showContinueDialog, setShowContinueDialog] = useState(false);
+  const [existingSessionData, setExistingSessionData] = useState<{
+    existingSession?: TestSession;
+    continueSession?: () => void;
+    restartSession?: () => Promise<void>;
+  } | null>(null);
+
+  // Get test mode and parameters from URL
+  const testMode = searchParams.get('mode') || 'full'; // 'full' or 'custom'
+  const selectedParts = useMemo(
+    () => searchParams.get('parts')?.split(',') || [],
+    [searchParams]
+  );
+  const testTime = parseInt(searchParams.get('time') || '120', 10);
+  const isHistoryView = searchParams.get('history') === 'true';
+  const shouldContinue = searchParams.get('continue') === 'true';
+  const isDirectStart = searchParams.get('start') === 'true';
+
+  // Redux-based test session management (moved before useEffect that uses currentSession)
+  const { startTest, currentSession, isActive, endTest, updateCurrentSession } =
+    useTestSession();
+
+  // Get user from Redux for userId
+  const user = useAppSelector((state) => state.auth.user);
+  const userId = user?._id || 'guest';
+
+  // Handle test submission
+  const handleSubmitTest = async () => {
+    console.log('🚀 handleSubmitTest called', { currentSession });
+    if (currentSession) {
+      console.log('📤 Calling endTest to delete IndexedDB record');
+      await endTest();
+      console.log('✅ endTest completed, navigating to home');
+      navigate('/');
+    } else {
+      console.log('❌ No current session to submit');
+    }
+  };
+
+  // Handle continuing existing session
+  const handleContinueSession = () => {
+    if (existingSessionData?.continueSession) {
+      existingSessionData.continueSession();
+      setShowContinueDialog(false);
+      setExistingSessionData(null);
+    }
+  };
+
+  // Handle restarting new session
+  const handleRestartSession = async () => {
+    if (existingSessionData?.restartSession) {
+      await existingSessionData.restartSession();
+      setShowContinueDialog(false);
+      setExistingSessionData(null);
+    }
+  };
+
+  // Get CSS class for grid columns based on parts count
+  const getGridColsClass = (count: number) => {
+    switch (count) {
+      case 1:
+        return 'grid-cols-1';
+      case 2:
+        return 'grid-cols-2';
+      case 3:
+        return 'grid-cols-3';
+      case 4:
+        return 'grid-cols-4';
+      case 5:
+        return 'grid-cols-5';
+      case 6:
+        return 'grid-cols-6';
+      case 7:
+        return 'grid-cols-7';
+      default:
+        return 'grid-cols-7';
+    }
+  };
+
+  // Determine which parts to show based on mode
+  const partsToShow = useMemo(() => {
+    const showAllParts = testMode === 'full' || selectedParts.length === 0;
+    return showAllParts
+      ? ['part1', 'part2', 'part3', 'part4', 'part5', 'part6', 'part7']
+      : selectedParts;
+  }, [testMode, selectedParts]);
+
+  // Set initial part based on available parts
+  useEffect(() => {
+    if (partsToShow.length > 0 && !partsToShow.includes(selectedPart)) {
+      setSelectedPart(partsToShow[0]);
+    }
+  }, [partsToShow, selectedPart]);
 
   // Use RTK Query hook instead of manual fetch
   const {
@@ -28,7 +137,89 @@ const TestExam = () => {
     skip: !testId,
   });
 
-  const handleBackToTests = () => {
+  // Initialize test session when test data is loaded and not in history view
+  useEffect(() => {
+    if (
+      testData &&
+      !isHistoryView &&
+      !isActive &&
+      (!isDirectStart || shouldContinue)
+    ) {
+      const timeLimit = testTime * 60 * 1000; // Convert minutes to milliseconds
+
+      const initializeTest = async () => {
+        console.log('TestExam initialization:', {
+          testMode,
+          selectedParts,
+          shouldContinue,
+          isDirectStart,
+          testTime,
+        });
+
+        if (shouldContinue) {
+          // Continue existing session - session should already exist from previous navigation
+          const result = await startTest(
+            testData,
+            timeLimit,
+            testMode as 'full' | 'custom',
+            selectedParts
+          );
+
+          if (result.hasExisting) {
+            result.continueSession?.();
+          }
+        } else {
+          // Check for existing session first
+          const result = await startTest(
+            testData,
+            timeLimit,
+            testMode as 'full' | 'custom',
+            selectedParts
+          );
+
+          if (result.hasExisting) {
+            // Show dialog to user
+            setExistingSessionData(result);
+            setShowContinueDialog(true);
+          }
+        }
+      };
+
+      initializeTest();
+    }
+  }, [
+    testData,
+    isHistoryView,
+    isActive,
+    testTime,
+    testMode,
+    selectedParts,
+    shouldContinue,
+    isDirectStart,
+    startTest,
+    userId,
+  ]);
+
+  // Clear session if testMode changes (user switches between full/custom in same test)
+  useEffect(() => {
+    if (currentSession && currentSession.testMode !== testMode) {
+      // Don't use endTest here as it will clean up IndexedDB
+      // Just clear the Redux state
+      dispatch(endTestAction());
+    }
+  }, [testMode, currentSession, dispatch]);
+
+  const handleBackToTests = async () => {
+    // Update savedAt before exiting if there's an active session
+    if (currentSession) {
+      try {
+        await updateCurrentSession({
+          savedAt: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('Failed to update savedAt on exit:', error);
+      }
+    }
     navigate('/');
   };
 
@@ -77,24 +268,57 @@ const TestExam = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBackToTests}
-              className="flex items-center gap-2"
+            <ConfirmationDialog
+              title="Exit Test"
+              description="Are you sure you want to exit the test? Your progress will be saved."
+              confirmText="Exit"
+              cancelText="Continue Test"
+              variant="default"
+              onConfirm={handleBackToTests}
             >
-              <ArrowLeft className="h-4 w-4" />
-              Exit
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Exit
+              </Button>
+            </ConfirmationDialog>
             <h1 className="text-2xl font-bold text-foreground">
               {testData.testTitle}
             </h1>
+            {testMode === 'custom' && (
+              <span className="text-sm text-muted-foreground">
+                ({partsToShow.length} parts - {testTime} minutes)
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4" />
-            </Button>
+            {/* Test Timer */}
+            {!isHistoryView && <TestTimer />}
+
+            {/* Submit Test Button */}
+            {!isHistoryView && (
+              <ConfirmationDialog
+                title="Submit Test"
+                description="Are you sure you want to submit your test? This action cannot be undone."
+                confirmText="Submit"
+                cancelText="Continue"
+                variant="default"
+                onConfirm={handleSubmitTest}
+              >
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Submit
+                </Button>
+              </ConfirmationDialog>
+            )}
           </div>
         </div>
 
@@ -107,59 +331,110 @@ const TestExam = () => {
             >
               <Tabs value={selectedPart} onValueChange={setSelectedPart}>
                 <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm z-10 p-4 border-b border-border/50">
-                  <TabsList className="grid w-full grid-cols-7">
-                    <TabsTrigger value="part1">Part 1</TabsTrigger>
-                    <TabsTrigger value="part2">Part 2</TabsTrigger>
-                    <TabsTrigger value="part3">Part 3</TabsTrigger>
-                    <TabsTrigger value="part4">Part 4</TabsTrigger>
-                    <TabsTrigger value="part5">Part 5</TabsTrigger>
-                    <TabsTrigger value="part6">Part 6</TabsTrigger>
-                    <TabsTrigger value="part7">Part 7</TabsTrigger>
+                  <TabsList
+                    className={`grid w-full ${getGridColsClass(partsToShow.length)}`}
+                  >
+                    {partsToShow.includes('part1') && (
+                      <TabsTrigger value="part1">Part 1</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part2') && (
+                      <TabsTrigger value="part2">Part 2</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part3') && (
+                      <TabsTrigger value="part3">Part 3</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part4') && (
+                      <TabsTrigger value="part4">Part 4</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part5') && (
+                      <TabsTrigger value="part5">Part 5</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part6') && (
+                      <TabsTrigger value="part6">Part 6</TabsTrigger>
+                    )}
+                    {partsToShow.includes('part7') && (
+                      <TabsTrigger value="part7">Part 7</TabsTrigger>
+                    )}
                   </TabsList>
                 </div>
 
                 <div className="p-6">
-                  <TabsContent value="part1" className="mt-0">
-                    {testData?.parts[0] && (
-                      <Part1Question part={testData.parts[0]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part1') && (
+                    <TabsContent value="part1" className="mt-0">
+                      {testData?.parts[0] && (
+                        <Part1Question
+                          part={testData.parts[0]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part2" className="mt-0">
-                    {testData?.parts[1] && (
-                      <Part2Question part={testData.parts[1]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part2') && (
+                    <TabsContent value="part2" className="mt-0">
+                      {testData?.parts[1] && (
+                        <Part2Question
+                          part={testData.parts[1]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part3" className="mt-0">
-                    {testData?.parts[2] && (
-                      <Part3Question part={testData.parts[2]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part3') && (
+                    <TabsContent value="part3" className="mt-0">
+                      {testData?.parts[2] && (
+                        <Part3Question
+                          part={testData.parts[2]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part4" className="mt-0">
-                    {testData?.parts[3] && (
-                      <Part4Question part={testData.parts[3]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part4') && (
+                    <TabsContent value="part4" className="mt-0">
+                      {testData?.parts[3] && (
+                        <Part4Question
+                          part={testData.parts[3]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part5" className="mt-0">
-                    {testData?.parts[4] && (
-                      <Part5Question part={testData.parts[4]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part5') && (
+                    <TabsContent value="part5" className="mt-0">
+                      {testData?.parts[4] && (
+                        <Part5Question
+                          part={testData.parts[4]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part6" className="mt-0">
-                    {testData?.parts[5] && (
-                      <Part6Question part={testData.parts[5]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part6') && (
+                    <TabsContent value="part6" className="mt-0">
+                      {testData?.parts[5] && (
+                        <Part6Question
+                          part={testData.parts[5]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="part7" className="mt-0">
-                    {testData?.parts[6] && (
-                      <Part7Question part={testData.parts[6]} />
-                    )}
-                  </TabsContent>
+                  {partsToShow.includes('part7') && (
+                    <TabsContent value="part7" className="mt-0">
+                      {testData?.parts[6] && (
+                        <Part7Question
+                          part={testData.parts[6]}
+                          showCorrectAnswers={isHistoryView}
+                        />
+                      )}
+                    </TabsContent>
+                  )}
                 </div>
 
                 {/* Bottom padding for smooth scrolling */}
@@ -175,11 +450,63 @@ const TestExam = () => {
                 currentQuestion={currentQuestion}
                 onQuestionSelect={jumpToQuestion}
                 testData={testData}
+                showParts={partsToShow}
+                isHistoryView={isHistoryView}
+                userAnswers={currentSession?.answers || {}}
               />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Continue Test Dialog */}
+      <Dialog open={showContinueDialog} onOpenChange={setShowContinueDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Test in Progress</DialogTitle>
+            <DialogDescription>
+              You have an unfinished test session. Would you like to continue
+              where you left off or start fresh?
+              {existingSessionData?.existingSession && (
+                <div className="mt-2 text-sm text-muted-foreground">
+                  <p>
+                    Saved:{' '}
+                    {new Date(
+                      existingSessionData.existingSession.savedAt || ''
+                    ).toLocaleString()}
+                  </p>
+                  <p>
+                    Answers:{' '}
+                    {
+                      Object.keys(
+                        existingSessionData.existingSession.answers || {}
+                      ).length
+                    }{' '}
+                    questions completed
+                  </p>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={handleRestartSession}
+              className="flex items-center gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Start Fresh
+            </Button>
+            <Button
+              onClick={handleContinueSession}
+              className="flex items-center gap-2"
+            >
+              <Play className="h-4 w-4" />
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

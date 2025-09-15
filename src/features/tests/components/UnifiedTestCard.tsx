@@ -16,9 +16,13 @@ interface UnifiedTest {
 
 interface UnifiedTestCardProps {
   test: UnifiedTest;
+  onTestSelect?: (testId: string) => void;
 }
 
-export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({ test }) => {
+export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
+  test,
+  onTestSelect,
+}) => {
   const navigate = useNavigate();
 
   // Map test type to config
@@ -60,7 +64,13 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({ test }) => {
   const parts = config.numberOfParts;
 
   const handleStartTest = () => {
-    navigate(config.route);
+    if (test.type === 'listening-reading' && onTestSelect) {
+      // For listening-reading tests, use onTestSelect to show detail in ContentPage
+      onTestSelect(test.testId.toString());
+    } else {
+      // For other test types, navigate directly
+      navigate(config.route);
+    }
   };
 
   const formatDuration = (minutes: number) => {
