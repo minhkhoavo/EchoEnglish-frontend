@@ -9,12 +9,14 @@ import {
 } from '@/components/ui/collapsible';
 
 interface ExplanationSectionProps {
+  title: string;
   expanded: boolean;
   onToggle: () => void;
   explanation: string;
 }
 
 export const ExplanationSection: React.FC<ExplanationSectionProps> = ({
+  title,
   expanded,
   onToggle,
   explanation,
@@ -22,7 +24,7 @@ export const ExplanationSection: React.FC<ExplanationSectionProps> = ({
   <Collapsible open={expanded} onOpenChange={onToggle}>
     <CollapsibleTrigger asChild>
       <Button variant="outline" className="w-full justify-between">
-        Show explanation
+        {title}
         {expanded ? (
           <ChevronUp className="h-4 w-4" />
         ) : (

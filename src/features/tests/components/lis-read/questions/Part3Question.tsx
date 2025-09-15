@@ -6,6 +6,12 @@ import { useTestSession } from '@/features/tests/hooks/useTestSession';
 import { QuestionHeader } from '../common/QuestionHeader';
 import { AnswerOptions } from '../common/AnswerOptions';
 import { ExplanationSection } from '../common/ExplanationSection';
+import { Instructions } from '../common/Instructions';
+import { useExpanded } from '@/features/tests/hooks/useExpanded';
+import {
+  getUserAnswer,
+  handleAnswerSelect,
+} from '@/features/tests/utils/answerUtils';
 
 interface Part3QuestionProps {
   part: TestPart;
@@ -16,67 +22,35 @@ export const Part3Question = ({
   part,
   showCorrectAnswers = false,
 }: Part3QuestionProps) => {
-  const [expandedTranscripts, setExpandedTranscripts] = useState<number[]>([]);
-  const [expandedTranslations, setExpandedTranslations] = useState<number[]>(
-    []
-  );
-  const [expandedExplanations, setExpandedExplanations] = useState<number[]>(
-    []
-  );
+  // Using common useExpanded hook
+  const { toggle: toggleExpanded, isExpanded } = useExpanded();
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
 
-  // Function to get user answer (mock for history view, Redux for current test)
-  const getUserAnswer = (questionNumber: number) => {
-    if (showCorrectAnswers) {
-      // Return mock answer for history view
-      const mockAnswers: { [key: number]: string } = {
-        32: 'D',
-        33: 'B',
-        34: 'B',
-        35: 'A',
-        36: 'C',
-        37: 'B',
-        38: 'D',
-        39: 'A',
-        40: 'C',
-      };
-      return mockAnswers[questionNumber] || null;
-    }
-    // Return actual user answer from Redux for current test
-    return getAnswer(questionNumber);
-  };
-
-  // Handle answer selection
-  const handleAnswerSelect = (questionNumber: number, answer: string) => {
-    if (!showCorrectAnswers) {
-      saveAnswer(questionNumber, answer);
-    }
+  // Mock data for history view
+  const mockAnswers: Record<number, string> = {
+    32: 'D',
+    33: 'B',
+    34: 'B',
+    35: 'A',
+    36: 'C',
+    37: 'B',
+    38: 'D',
+    39: 'A',
+    40: 'C',
   };
 
   const toggleTranscript = (groupIndex: number) => {
-    setExpandedTranscripts((prev) =>
-      prev.includes(groupIndex)
-        ? prev.filter((num) => num !== groupIndex)
-        : [...prev, groupIndex]
-    );
+    toggleExpanded(groupIndex + 3000); // Group level transcript
   };
 
   const toggleTranslation = (groupIndex: number) => {
-    setExpandedTranslations((prev) =>
-      prev.includes(groupIndex)
-        ? prev.filter((num) => num !== groupIndex)
-        : [...prev, groupIndex]
-    );
+    toggleExpanded(groupIndex + 4000); // Group level translation
   };
 
   const toggleExplanation = (questionNumber: number) => {
-    setExpandedExplanations((prev) =>
-      prev.includes(questionNumber)
-        ? prev.filter((num) => num !== questionNumber)
-        : [...prev, questionNumber]
-    );
+    toggleExpanded(questionNumber); // Question level explanation
   };
 
   const scrollToGroup = (groupIndex: number) => {
@@ -102,25 +76,20 @@ export const Part3Question = ({
       />
 
       {/* Part Instructions */}
-      <Card className="bg-blue-50 dark:bg-blue-950">
-        <CardContent className="p-4">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>Instructions:</strong> You will hear some conversations
-            between two or more people. You will be asked to answer three
-            questions about what the speakers say in each conversation. Select
-            the best response to each question and mark the letter (A), (B),
-            (C), or (D) on your answer sheet. The conversations will not be
-            printed in your test book and will be spoken only one time.
-          </p>
-        </CardContent>
-      </Card>
+      <Instructions>
+        <strong>Instructions:</strong> You will hear some conversations between
+        two or more people. You will be asked to answer three questions about
+        what the speakers say in each conversation. Select the best response to
+        each question and mark the letter (A), (B), (C), or (D) on your answer
+        sheet. The conversations will not be printed in your test book and will
+        be spoken only one time.
+      </Instructions>
 
       {/* All Question Groups */}
       <div className="space-y-12">
         {part.questionGroups?.map((group, groupIndex) => {
-          const isTranscriptExpanded = expandedTranscripts.includes(groupIndex);
-          const isTranslationExpanded =
-            expandedTranslations.includes(groupIndex);
+          const isTranscriptExpanded = isExpanded(groupIndex + 3000);
+          const isTranslationExpanded = isExpanded(groupIndex + 4000);
 
           return (
             <div
@@ -147,6 +116,7 @@ export const Part3Question = ({
                   {/* Transcript Section */}
                   {showCorrectAnswers && (
                     <ExplanationSection
+                      title="Show Transcript"
                       expanded={isTranscriptExpanded}
                       onToggle={() => toggleTranscript(groupIndex)}
                       explanation={group.groupContext?.transcript || ''}
@@ -156,6 +126,7 @@ export const Part3Question = ({
                   {/* Translation Section */}
                   {showCorrectAnswers && (
                     <ExplanationSection
+                      title="Show Translation"
                       expanded={isTranslationExpanded}
                       onToggle={() => toggleTranslation(groupIndex)}
                       explanation={group.groupContext?.translation || ''}
@@ -166,8 +137,13 @@ export const Part3Question = ({
                 {/* Questions */}
                 <div className="lg:col-span-2 space-y-4">
                   {group.questions?.map((question) => {
-                    const userAnswer = getUserAnswer(question.questionNumber);
-                    const isExplanationExpanded = expandedExplanations.includes(
+                    const userAnswer = getUserAnswer(
+                      showCorrectAnswers,
+                      getAnswer,
+                      question.questionNumber,
+                      mockAnswers
+                    );
+                    const isExplanationExpanded = isExpanded(
                       question.questionNumber
                     );
                     return (
@@ -188,12 +164,18 @@ export const Part3Question = ({
                             correctAnswer={question.correctAnswer}
                             showCorrectAnswers={showCorrectAnswers}
                             onSelect={(label) =>
-                              handleAnswerSelect(question.questionNumber, label)
+                              handleAnswerSelect(
+                                showCorrectAnswers,
+                                saveAnswer,
+                                question.questionNumber,
+                                label
+                              )
                             }
                           />
                           {/* Explanation */}
                           {showCorrectAnswers && (
                             <ExplanationSection
+                              title="Show Explanation"
                               expanded={isExplanationExpanded}
                               onToggle={() =>
                                 toggleExplanation(question.questionNumber)

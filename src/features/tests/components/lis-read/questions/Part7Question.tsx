@@ -5,6 +5,12 @@ import { useTestSession } from '@/features/tests/hooks/useTestSession';
 import { QuestionHeader } from '../common/QuestionHeader';
 import { AnswerOptions } from '../common/AnswerOptions';
 import { ExplanationSection } from '../common/ExplanationSection';
+import { Instructions } from '../common/Instructions';
+import { useExpanded } from '@/features/tests/hooks/useExpanded';
+import {
+  getUserAnswer,
+  handleAnswerSelect,
+} from '@/features/tests/utils/answerUtils';
 
 interface Part7QuestionProps {
   part: TestPart;
@@ -15,51 +21,23 @@ export const Part7Question = ({
   part,
   showCorrectAnswers = false,
 }: Part7QuestionProps) => {
-  const [expandedExplanations, setExpandedExplanations] = useState<number[]>(
-    []
-  );
-  const [expandedTranslations, setExpandedTranslations] = useState<number[]>(
-    []
-  );
+  // Using common useExpanded hook
+  const { toggle: toggleExpanded, isExpanded } = useExpanded();
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
 
-  // Function to get user answer
-  const getUserAnswer = (questionNumber: number) => {
-    if (showCorrectAnswers) {
-      // Return mock answer for history view
-      return ['A', 'B', 'C', 'D'][Math.floor(Math.random() * 4)];
-    }
-    return getAnswer(questionNumber);
-  };
-
-  // Handle answer selection
-  const handleAnswerSelect = (
-    questionNumber: number,
-    selectedAnswer: string
-  ) => {
-    if (!showCorrectAnswers) {
-      saveAnswer(questionNumber, selectedAnswer);
-    }
-  };
+  // Mock data for history view
+  const mockAnswers: Record<number, string> = {};
 
   // Toggle explanation
   const toggleExplanation = (questionNumber: number) => {
-    setExpandedExplanations((prev) =>
-      prev.includes(questionNumber)
-        ? prev.filter((id) => id !== questionNumber)
-        : [...prev, questionNumber]
-    );
+    toggleExpanded(questionNumber);
   };
 
   // Toggle translation
   const toggleTranslation = (groupIndex: number) => {
-    setExpandedTranslations((prev) =>
-      prev.includes(groupIndex)
-        ? prev.filter((id) => id !== groupIndex)
-        : [...prev, groupIndex]
-    );
+    toggleExpanded(groupIndex + 2000);
   };
 
   return (
@@ -83,18 +61,13 @@ export const Part7Question = ({
       />
 
       {/* Part Instructions */}
-      <Card className="bg-blue-50 dark:bg-blue-950">
-        <CardContent className="p-4">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>Instructions:</strong> In this part you will read a
-            selection of texts, such as magazine and newspaper articles,
-            e-mails, memos, instant messages, advertisements, and notices. Each
-            text or set of texts is followed by several questions. Select the
-            best answer for each question and mark the letter (A), (B), (C), or
-            (D) on your answer sheet.
-          </p>
-        </CardContent>
-      </Card>
+      <Instructions>
+        <strong>Instructions:</strong> In this part you will read a selection of
+        texts, such as magazine and newspaper articles, e-mails, memos, instant
+        messages, advertisements, and notices. Each text or set of texts is
+        followed by several questions. Select the best answer for each question
+        and mark the letter (A), (B), (C), or (D) on your answer sheet.
+      </Instructions>
 
       {/* Question Groups */}
       <div className="space-y-8">
@@ -151,7 +124,8 @@ export const Part7Question = ({
                   (group.groupContext?.translation ||
                     group.groupContext?.transcript) && (
                     <ExplanationSection
-                      expanded={expandedTranslations.includes(groupIndex)}
+                      title="Show Translation"
+                      expanded={isExpanded(groupIndex + 2000)}
                       onToggle={() => toggleTranslation(groupIndex)}
                       explanation={
                         group.groupContext.translation ||
@@ -171,8 +145,13 @@ export const Part7Question = ({
                 }}
               >
                 {(group.questions ?? []).map((question) => {
-                  const userAnswer = getUserAnswer(question.questionNumber);
-                  const isExplanationExpanded = expandedExplanations.includes(
+                  const userAnswer = getUserAnswer(
+                    showCorrectAnswers,
+                    getAnswer,
+                    question.questionNumber,
+                    mockAnswers
+                  );
+                  const isExplanationExpanded = isExpanded(
                     question.questionNumber
                   );
 
@@ -198,13 +177,19 @@ export const Part7Question = ({
                         correctAnswer={question.correctAnswer}
                         showCorrectAnswers={showCorrectAnswers}
                         onSelect={(label) =>
-                          handleAnswerSelect(question.questionNumber, label)
+                          handleAnswerSelect(
+                            showCorrectAnswers,
+                            saveAnswer,
+                            question.questionNumber,
+                            label
+                          )
                         }
                       />
 
                       {/* Explanation */}
                       {showCorrectAnswers && (
                         <ExplanationSection
+                          title="Show Explanation"
                           expanded={isExplanationExpanded}
                           onToggle={() =>
                             toggleExplanation(question.questionNumber)
