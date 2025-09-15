@@ -10,6 +10,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { useTestSession } from '@/features/tests/hooks/useTestSession';
 
 interface Part4QuestionProps {
   part: TestPart;
@@ -28,22 +29,56 @@ export const Part4Question = ({
     []
   );
 
-  // Mock user answers for demonstration - only show when viewing history
-  const getMockUserAnswer = (questionNumber: number) => {
-    if (!showCorrectAnswers) return null;
+  // Use Redux-based test session management
+  const { saveAnswer, getAnswer } = useTestSession();
 
-    const mockAnswers: { [key: number]: string } = {
-      71: 'B',
-      72: 'A',
-      73: 'C',
-      74: 'A',
-      75: 'B',
-      76: 'C',
-      77: 'D',
-      78: 'A',
-      79: 'B',
-    };
-    return mockAnswers[questionNumber] || 'A';
+  // Function to get user answer (mock for history view, Redux for current test)
+  const getUserAnswer = (questionNumber: number) => {
+    if (showCorrectAnswers) {
+      // Return mock answer for history view
+      const mockAnswers: { [key: number]: string } = {
+        71: 'B',
+        72: 'A',
+        73: 'C',
+        74: 'B',
+        75: 'A',
+        76: 'D',
+        77: 'C',
+        78: 'B',
+        79: 'A',
+        80: 'D',
+        81: 'B',
+        82: 'A',
+        83: 'C',
+        84: 'D',
+        85: 'B',
+        86: 'A',
+        87: 'C',
+        88: 'B',
+        89: 'D',
+        90: 'A',
+        91: 'B',
+        92: 'C',
+        93: 'A',
+        94: 'D',
+        95: 'B',
+        96: 'A',
+        97: 'C',
+        98: 'B',
+        99: 'D',
+        100: 'A',
+      };
+      return mockAnswers[questionNumber] || '';
+    }
+    // Use Redux to get current test answer
+    return getAnswer(questionNumber) || '';
+  };
+
+  // Handle answer selection
+  const handleAnswerSelect = (questionNumber: number, answer: string) => {
+    if (!showCorrectAnswers) {
+      saveAnswer(questionNumber, answer);
+    }
   };
 
   const toggleTranscript = (groupIndex: number) => {
@@ -205,10 +240,8 @@ export const Part4Question = ({
                 {/* Questions */}
                 <div className="lg:col-span-2 space-y-4">
                   {group.questions?.map((question) => {
-                    const mockUserAnswer = getMockUserAnswer(
-                      question.questionNumber
-                    );
-                    const isCorrect = mockUserAnswer === question.correctAnswer;
+                    const userAnswer = getUserAnswer(question.questionNumber);
+                    const isCorrect = userAnswer === question.correctAnswer;
                     const isExplanationExpanded = expandedExplanations.includes(
                       question.questionNumber
                     );
@@ -227,40 +260,55 @@ export const Part4Question = ({
                           </p>
 
                           <div className="space-y-3 mb-4">
-                            {question.options.map((option) => (
-                              <div
-                                key={option.label}
-                                className={`p-3 rounded-lg border-2 transition-colors ${
-                                  showCorrectAnswers &&
-                                  option.label === question.correctAnswer
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-950'
-                                    : showCorrectAnswers &&
-                                        option.label === mockUserAnswer &&
-                                        mockUserAnswer !==
-                                          question.correctAnswer
-                                      ? 'border-red-500 bg-red-50 dark:bg-red-950'
-                                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 cursor-pointer'
-                                }`}
-                              >
-                                <div className="flex items-start gap-3">
-                                  <div
-                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-                                      showCorrectAnswers &&
-                                      option.label === question.correctAnswer
-                                        ? 'border-green-500 bg-green-500 text-white'
-                                        : showCorrectAnswers &&
-                                            option.label === mockUserAnswer &&
-                                            mockUserAnswer !==
-                                              question.correctAnswer
-                                          ? 'border-red-500 bg-red-500 text-white'
-                                          : 'border-gray-400 hover:border-blue-500'
-                                    }`}
-                                  >
-                                    {option.label}
-                                  </div>
-                                  <span className="flex-1">{option.text}</span>
-                                  {showCorrectAnswers &&
-                                    option.label === question.correctAnswer && (
+                            {question.options.map((option) => {
+                              const userAnswer = getUserAnswer(
+                                question.questionNumber
+                              );
+                              const isSelected = userAnswer === option.label;
+                              const isCorrect =
+                                option.label === question.correctAnswer;
+
+                              return (
+                                <div
+                                  key={option.label}
+                                  onClick={() =>
+                                    handleAnswerSelect(
+                                      question.questionNumber,
+                                      option.label
+                                    )
+                                  }
+                                  className={`p-3 rounded-lg border-2 transition-colors ${
+                                    showCorrectAnswers && isCorrect
+                                      ? 'border-green-500 bg-green-50 dark:bg-green-950'
+                                      : showCorrectAnswers &&
+                                          isSelected &&
+                                          !isCorrect
+                                        ? 'border-red-500 bg-red-50 dark:bg-red-950'
+                                        : isSelected
+                                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+                                          : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 cursor-pointer'
+                                  }`}
+                                >
+                                  <div className="flex items-start gap-3">
+                                    <div
+                                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
+                                        showCorrectAnswers && isCorrect
+                                          ? 'border-green-500 bg-green-500 text-white'
+                                          : showCorrectAnswers &&
+                                              isSelected &&
+                                              !isCorrect
+                                            ? 'border-red-500 bg-red-500 text-white'
+                                            : isSelected
+                                              ? 'border-blue-500 bg-blue-500 text-white'
+                                              : 'border-gray-400 hover:border-blue-500'
+                                      }`}
+                                    >
+                                      {option.label}
+                                    </div>
+                                    <span className="flex-1">
+                                      {option.text}
+                                    </span>
+                                    {showCorrectAnswers && isCorrect && (
                                       <Badge
                                         variant="secondary"
                                         className="bg-green-500 text-white"
@@ -268,17 +316,17 @@ export const Part4Question = ({
                                         Correct answer
                                       </Badge>
                                     )}
-                                  {showCorrectAnswers &&
-                                    option.label === mockUserAnswer &&
-                                    mockUserAnswer !==
-                                      question.correctAnswer && (
-                                      <Badge variant="destructive">
-                                        Your choice
-                                      </Badge>
-                                    )}
+                                    {showCorrectAnswers &&
+                                      isSelected &&
+                                      !isCorrect && (
+                                        <Badge variant="destructive">
+                                          Your choice
+                                        </Badge>
+                                      )}
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
 
                           {/* Explanation */}

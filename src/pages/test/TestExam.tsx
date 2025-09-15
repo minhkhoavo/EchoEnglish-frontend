@@ -4,6 +4,7 @@ import { ArrowLeft, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuestionNavigation } from '@/features/tests/components/lis-read/QuestionNavigation';
+import { TestTimer } from '@/features/tests/components/lis-read/TestTimer';
 import { Part1Question } from '@/features/tests/components/lis-read/questions/Part1Question';
 import { Part2Question } from '@/features/tests/components/lis-read/questions/Part2Question';
 import { Part3Question } from '@/features/tests/components/lis-read/questions/Part3Question';
@@ -12,13 +13,18 @@ import { Part5Question } from '@/features/tests/components/lis-read/questions/Pa
 import { Part6Question } from '@/features/tests/components/lis-read/questions/Part6Question';
 import { Part7Question } from '@/features/tests/components/lis-read/questions/Part7Question';
 import { useGetTOEICTestByIdQuery } from '@/features/tests/services/listeningReadingTestAPI';
+import { useTestSession } from '@/features/tests/hooks/useTestSession';
+import { useAppDispatch, useAppSelector } from '@/core/store/store';
+import { endTest as endTestAction } from '@/features/tests/slices/testSlice';
 
 const TestExam = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
   const [selectedPart, setSelectedPart] = useState('part1');
   const [currentQuestion, setCurrentQuestion] = useState(1);
+  const [timeRemaining, setTimeRemaining] = useState(0); // in seconds
 
   // Get test mode and parameters from URL
   const testMode = searchParams.get('mode') || 'full'; // 'full' or 'custom'
@@ -28,6 +34,76 @@ const TestExam = () => {
   );
   const testTime = parseInt(searchParams.get('time') || '120', 10);
   const isHistoryView = searchParams.get('history') === 'true';
+  const shouldContinue = searchParams.get('continue') === 'true';
+  const isDirectStart = searchParams.get('start') === 'true';
+
+  // Redux-based test session management (moved before useEffect that uses currentSession)
+  const { startTest, currentSession, isActive, endTest } = useTestSession();
+
+  // Get user from Redux for userId
+  const user = useAppSelector((state) => state.auth.user);
+  const userId = user?._id || 'guest';
+
+  // Initialize timer based on test time
+  useEffect(() => {
+    if (!isHistoryView && testTime > 0) {
+      const initialTime = testTime * 60; // Convert minutes to seconds
+      setTimeRemaining(initialTime);
+    }
+  }, [testTime, isHistoryView]);
+
+  // Timer countdown
+  useEffect(() => {
+    if (!isHistoryView && timeRemaining > 0) {
+      const timer = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            // Auto-submit when time expires
+            if (currentSession) {
+              endTest().then(() => {
+                navigate('/tests?completed=true');
+              });
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [timeRemaining, isHistoryView, currentSession, endTest, navigate]);
+
+  // Handle test submission
+  const handleSubmitTest = async () => {
+    if (currentSession) {
+      await endTest();
+      navigate('/tests?completed=true');
+    }
+  };
+
+  // Get CSS class for grid columns based on parts count
+  const getGridColsClass = (count: number) => {
+    switch (count) {
+      case 1:
+        return 'grid-cols-1';
+      case 2:
+        return 'grid-cols-2';
+      case 3:
+        return 'grid-cols-3';
+      case 4:
+        return 'grid-cols-4';
+      case 5:
+        return 'grid-cols-5';
+      case 6:
+        return 'grid-cols-6';
+      case 7:
+        return 'grid-cols-7';
+      default:
+        return 'grid-cols-7';
+    }
+  };
 
   // Determine which parts to show based on mode
   const partsToShow = useMemo(() => {
@@ -52,6 +128,77 @@ const TestExam = () => {
   } = useGetTOEICTestByIdQuery(testId || '', {
     skip: !testId,
   });
+
+  // Initialize test session when test data is loaded and not in history view
+  useEffect(() => {
+    if (
+      testData &&
+      !isHistoryView &&
+      !isActive &&
+      (!isDirectStart || shouldContinue)
+    ) {
+      const timeLimit = testTime * 60 * 1000; // Convert minutes to milliseconds
+
+      const initializeTest = async () => {
+        console.log('TestExam initialization:', {
+          testMode,
+          selectedParts,
+          shouldContinue,
+          isDirectStart,
+          testTime,
+        });
+
+        if (shouldContinue) {
+          // Continue existing session - session should already exist from previous navigation
+          const result = await startTest(
+            testData,
+            timeLimit,
+            testMode as 'full' | 'custom',
+            selectedParts
+          );
+
+          if (result.hasExisting) {
+            result.continueSession?.();
+          }
+        } else {
+          // Normal test start
+          await startTest(
+            testData,
+            timeLimit,
+            testMode as 'full' | 'custom',
+            selectedParts
+          );
+        }
+      };
+
+      initializeTest();
+    }
+  }, [
+    testData,
+    isHistoryView,
+    isActive,
+    testTime,
+    testMode,
+    selectedParts,
+    shouldContinue,
+    isDirectStart,
+    startTest,
+    userId,
+  ]);
+
+  // Clear session if testMode changes (user switches between full/custom in same test)
+  useEffect(() => {
+    if (currentSession && currentSession.testMode !== testMode) {
+      console.log('🔄 TestMode changed, clearing incompatible session:', {
+        currentSessionMode: currentSession.testMode,
+        newTestMode: testMode,
+        testId: currentSession.testId,
+      });
+      // Don't use endTest here as it will clean up IndexedDB
+      // Just clear the Redux state
+      dispatch(endTestAction());
+    }
+  }, [testMode, currentSession, dispatch]);
 
   const handleBackToTests = () => {
     navigate('/');
@@ -122,6 +269,9 @@ const TestExam = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Test Timer */}
+            {!isHistoryView && <TestTimer timeRemaining={timeRemaining} />}
+
             <Button variant="outline" size="sm">
               <Settings className="h-4 w-4" />
             </Button>
@@ -138,7 +288,7 @@ const TestExam = () => {
               <Tabs value={selectedPart} onValueChange={setSelectedPart}>
                 <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm z-10 p-4 border-b border-border/50">
                   <TabsList
-                    className={`grid w-full grid-cols-${partsToShow.length}`}
+                    className={`grid w-full ${getGridColsClass(partsToShow.length)}`}
                   >
                     {partsToShow.includes('part1') && (
                       <TabsTrigger value="part1">Part 1</TabsTrigger>
@@ -258,6 +408,7 @@ const TestExam = () => {
                 testData={testData}
                 showParts={partsToShow}
                 isHistoryView={isHistoryView}
+                userAnswers={currentSession?.answers || {}}
               />
             </div>
           </div>

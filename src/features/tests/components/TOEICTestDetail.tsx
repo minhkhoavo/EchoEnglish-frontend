@@ -12,6 +12,11 @@ import {
 } from '@/components/ui/select';
 import { Clock, BookOpen, Headphones, ArrowLeft } from 'lucide-react';
 import { TestHistory } from './TestHistory';
+import { ContinueTestDialog } from './ContinueTestDialog';
+import { useTestSession } from '../hooks/useTestSession';
+import { useGetTOEICTestByIdQuery } from '../services/listeningReadingTestAPI';
+import { testStorageService } from '../services/testStorageService';
+import type { TestSession } from '../types/toeic-test.types';
 
 interface TestPart {
   id: string;
@@ -52,6 +57,22 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const [customTime, setCustomTime] = useState('30');
 
+  // Dialog state for session continuation
+  const [showContinueDialog, setShowContinueDialog] = useState(false);
+  const [existingSession, setExistingSession] = useState<TestSession | null>(
+    null
+  );
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+    null
+  );
+
+  const { checkExistingSession, startTest, forceStartFresh } = useTestSession();
+
+  // Get test data for session creation
+  const { data: testData } = useGetTOEICTestByIdQuery(testId || '', {
+    skip: !testId,
+  });
+
   const handlePartToggle = (partId: string) => {
     setSelectedParts((prev) =>
       prev.includes(partId)
@@ -71,19 +92,133 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
     0
   );
 
-  const handleStartTest = () => {
+  const handleStartTest = async () => {
     if (!testId) return;
 
+    let targetUrl: string;
+    let testMode: 'full' | 'custom';
+    let partsToCheck: string[] | undefined;
+
     if (isCustomMode && selectedParts.length > 0) {
-      // Start test with selected parts and custom time
+      // Custom mode with selected parts
+      testMode = 'custom';
+      partsToCheck = selectedParts;
       const partsParam = selectedParts.join(',');
-      navigate(
-        `/test-exam/${testId}?parts=${partsParam}&time=${customTime}&mode=custom`
-      );
+      targetUrl = `/test-exam/${testId}?parts=${partsParam}&time=${customTime}&mode=custom`;
     } else {
-      // Start full test (120 minutes by default)
-      navigate(`/test-exam/${testId}?mode=full&time=120`);
+      // Full test mode
+      testMode = 'full';
+      partsToCheck = undefined;
+      targetUrl = `/test-exam/${testId}?mode=full&time=120`;
     }
+
+    // Check for existing session with the specific test configuration
+    try {
+      console.log('TOEICTestDetail checking session:', {
+        testId,
+        testMode,
+        partsToCheck,
+        isCustomMode,
+        selectedParts,
+      });
+
+      // Debug: Check all sessions in IndexedDB
+      await testStorageService.debugListAllSessions();
+
+      const existingSessionData = await checkExistingSession(
+        testId,
+        testMode,
+        partsToCheck
+      );
+
+      console.log('🔍 Session check result:', {
+        requested: { testId, testMode },
+        found: existingSessionData
+          ? {
+              testId: existingSessionData.testId,
+              testMode: existingSessionData.testMode,
+              answersCount: Object.keys(existingSessionData.answers).length,
+            }
+          : null,
+      });
+
+      if (existingSessionData) {
+        // Show dialog asking user what to do
+        console.log('Found existing session, showing dialog');
+        setExistingSession(existingSessionData);
+        setPendingNavigation(targetUrl);
+        setShowContinueDialog(true);
+      } else {
+        // No existing session, create new session and navigate
+        console.log('No existing session found, creating new one');
+        if (testData) {
+          const timeLimit =
+            (testMode === 'custom' ? parseInt(customTime || '30', 10) : 120) *
+            60 *
+            1000;
+          await startTest(testData, timeLimit, testMode, partsToCheck);
+        }
+        navigate(targetUrl + '&start=true');
+      }
+    } catch (error) {
+      console.error('Error checking existing session:', error);
+      // If error occurs, proceed with navigation anyway
+      navigate(targetUrl);
+    }
+  };
+
+  const handleContinueSession = () => {
+    setShowContinueDialog(false);
+    if (pendingNavigation) {
+      // Navigate without continue parameter, the TestExam will handle continue logic
+      navigate(pendingNavigation + '&continue=true');
+    }
+  };
+
+  const handleRestartSession = async () => {
+    setShowContinueDialog(false);
+
+    if (testData && existingSession) {
+      try {
+        console.log(
+          '🔄 User chose to restart - directly calling forceStartFresh...'
+        );
+
+        // Get the test mode and selectedParts from the existing session
+        const testMode = existingSession.testMode as 'full' | 'custom';
+        const sessionParts =
+          typeof existingSession.selectedParts === 'string'
+            ? existingSession.selectedParts.split('-')
+            : existingSession.selectedParts || [];
+
+        // Calculate time limit (convert minutes to milliseconds)
+        const timeInMinutes =
+          testMode === 'custom' ? parseInt(customTime || '30', 10) : 120;
+        const timeLimit = timeInMinutes * 60 * 1000;
+
+        // Force start fresh session directly
+        await forceStartFresh(testData, timeLimit, testMode, sessionParts);
+
+        console.log('✅ Successfully restarted session, navigating...');
+
+        // Navigate without restart parameter
+        if (pendingNavigation) {
+          navigate(pendingNavigation);
+        }
+      } catch (error) {
+        console.error('❌ Failed to restart session:', error);
+        // Fallback: navigate anyway
+        if (pendingNavigation) {
+          navigate(pendingNavigation);
+        }
+      }
+    }
+  };
+
+  const handleCancelSession = () => {
+    setShowContinueDialog(false);
+    setPendingNavigation(null);
+    setExistingSession(null);
   };
 
   return (
@@ -256,6 +391,23 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
 
       {/* Test History */}
       <TestHistory />
+
+      {/* Continue Test Dialog */}
+      {showContinueDialog && existingSession && (
+        <ContinueTestDialog
+          isOpen={showContinueDialog}
+          testTitle={existingSession.testTitle || 'TOEIC Practice Test'}
+          progress={Math.round(
+            (Object.keys(existingSession.answers).length / 200) * 100
+          )}
+          timeElapsed={`${Math.floor((Date.now() - Number(existingSession.startTime)) / (1000 * 60))} phút`}
+          answeredQuestions={Object.keys(existingSession.answers).length}
+          totalQuestions={200}
+          onContinue={handleContinueSession}
+          onRestart={handleRestartSession}
+          onCancel={handleCancelSession}
+        />
+      )}
     </div>
   );
 };

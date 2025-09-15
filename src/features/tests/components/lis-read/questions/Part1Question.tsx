@@ -10,6 +10,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import type { TestPart } from '@/features/tests/types/toeic-test.types';
+import { useTestSession } from '@/features/tests/hooks/useTestSession';
 
 interface Part1QuestionProps {
   part: TestPart;
@@ -27,10 +28,11 @@ export const Part1Question = ({
   const [expandedTranslations, setExpandedTranslations] = useState<number[]>(
     []
   );
-  // State to manage user answers when not in history view
-  const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
 
-  // Function to get user answer (mock for history view, state for current test)
+  // Use Redux-based test session management
+  const { saveAnswer, getAnswer } = useTestSession();
+
+  // Function to get user answer (mock for history view, Redux for current test)
   const getUserAnswer = (questionNumber: number) => {
     if (showCorrectAnswers) {
       // Return mock answer for history view
@@ -44,17 +46,14 @@ export const Part1Question = ({
       };
       return mockAnswers[questionNumber] || null;
     }
-    // Return actual user answer for current test
-    return userAnswers[questionNumber] || null;
+    // Return actual user answer from Redux for current test
+    return getAnswer(questionNumber);
   };
 
   // Handle answer selection
   const handleAnswerSelect = (questionNumber: number, answer: string) => {
     if (!showCorrectAnswers) {
-      setUserAnswers((prev) => ({
-        ...prev,
-        [questionNumber]: answer,
-      }));
+      saveAnswer(questionNumber, answer);
     }
   };
 

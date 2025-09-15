@@ -10,7 +10,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-
+import { useTestSession } from '@/features/tests/hooks/useTestSession';
 interface Part5QuestionProps {
   part: TestPart;
   showCorrectAnswers?: boolean;
@@ -24,43 +24,56 @@ export const Part5Question = ({
     []
   );
 
-  // Mock user answers for demonstration - only show when viewing history
-  const getMockUserAnswer = (questionNumber: number) => {
-    if (!showCorrectAnswers) return null;
+  // Use Redux-based test session management
+  const { saveAnswer, getAnswer } = useTestSession();
 
-    const mockAnswers: { [key: number]: string } = {
-      101: 'B', // correct
-      102: 'D', // correct
-      103: 'C', // correct
-      104: 'A', // incorrect - correct is B
-      105: 'B', // correct
-      106: 'C',
-      107: 'A',
-      108: 'D',
-      109: 'B',
-      110: 'C',
-      111: 'A',
-      112: 'D',
-      113: 'B',
-      114: 'C',
-      115: 'A',
-      116: 'D',
-      117: 'B',
-      118: 'C',
-      119: 'A',
-      120: 'D',
-      121: 'B',
-      122: 'C',
-      123: 'A',
-      124: 'D',
-      125: 'B',
-      126: 'C',
-      127: 'A',
-      128: 'D',
-      129: 'B',
-      130: 'C',
-    };
-    return mockAnswers[questionNumber] || 'A';
+  // Function to get user answer (mock for history view, Redux for current test)
+  const getUserAnswer = (questionNumber: number) => {
+    if (showCorrectAnswers) {
+      // Return mock answer for history view
+      const mockAnswers: { [key: number]: string } = {
+        101: 'B',
+        102: 'D',
+        103: 'C',
+        104: 'A',
+        105: 'B',
+        106: 'C',
+        107: 'A',
+        108: 'D',
+        109: 'B',
+        110: 'A',
+        111: 'C',
+        112: 'B',
+        113: 'D',
+        114: 'A',
+        115: 'C',
+        116: 'B',
+        117: 'D',
+        118: 'A',
+        119: 'C',
+        120: 'B',
+        121: 'D',
+        122: 'A',
+        123: 'C',
+        124: 'B',
+        125: 'D',
+        126: 'A',
+        127: 'C',
+        128: 'B',
+        129: 'D',
+        130: 'A',
+      };
+      return mockAnswers[questionNumber] || '';
+    }
+    // Use Redux to get current test answer
+    return getAnswer(questionNumber) || '';
+  };
+
+  // Handle answer selection
+  const handleAnswerSelect = (questionNumber: number, answer: string) => {
+    if (!showCorrectAnswers) {
+      saveAnswer(questionNumber, answer);
+    }
   };
 
   const toggleExplanation = (questionNumber: number) => {
@@ -98,8 +111,8 @@ export const Part5Question = ({
       {/* All Questions */}
       <div className="space-y-6">
         {part.questions?.map((question) => {
-          const mockUserAnswer = getMockUserAnswer(question.questionNumber);
-          const isCorrect = mockUserAnswer === question.correctAnswer;
+          const userAnswer = getUserAnswer(question.questionNumber);
+          const isCorrect = userAnswer === question.correctAnswer;
           const isExplanationExpanded = expandedExplanations.includes(
             question.questionNumber
           );
@@ -182,51 +195,64 @@ export const Part5Question = ({
 
                   {/* Options - Vertical layout */}
                   <div className="space-y-3">
-                    {question.options.map((option) => (
-                      <div
-                        key={option.label}
-                        className={`p-4 rounded-lg border-2 transition-colors cursor-pointer hover:shadow-md ${
-                          showCorrectAnswers &&
-                          option.label === question.correctAnswer
-                            ? 'border-green-500 bg-green-50 dark:bg-green-950'
-                            : showCorrectAnswers &&
-                                option.label === mockUserAnswer &&
-                                mockUserAnswer !== question.correctAnswer
-                              ? 'border-red-500 bg-red-50 dark:bg-red-950'
-                              : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-                              showCorrectAnswers &&
-                              option.label === question.correctAnswer
-                                ? 'border-green-500 bg-green-500 text-white'
-                                : showCorrectAnswers &&
-                                    option.label === mockUserAnswer &&
-                                    mockUserAnswer !== question.correctAnswer
-                                  ? 'border-red-500 bg-red-500 text-white'
-                                  : 'border-gray-400 text-gray-600 hover:border-blue-500'
-                            }`}
-                          >
-                            {option.label}
-                          </div>
-                          <span className="text-sm flex-1">{option.text}</span>
-                          {option.label === question.correctAnswer && (
-                            <Badge
-                              variant="secondary"
-                              className="bg-green-500 text-white"
+                    {question.options.map((option) => {
+                      const userAnswer = getUserAnswer(question.questionNumber);
+                      const isSelected = userAnswer === option.label;
+                      const isCorrect = option.label === question.correctAnswer;
+
+                      return (
+                        <div
+                          key={option.label}
+                          onClick={() =>
+                            handleAnswerSelect(
+                              question.questionNumber,
+                              option.label
+                            )
+                          }
+                          className={`p-4 rounded-lg border-2 transition-colors cursor-pointer hover:shadow-md ${
+                            showCorrectAnswers && isCorrect
+                              ? 'border-green-500 bg-green-50 dark:bg-green-950'
+                              : showCorrectAnswers && isSelected && !isCorrect
+                                ? 'border-red-500 bg-red-50 dark:bg-red-950'
+                                : isSelected
+                                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+                                  : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
+                                showCorrectAnswers && isCorrect
+                                  ? 'border-green-500 bg-green-500 text-white'
+                                  : showCorrectAnswers &&
+                                      isSelected &&
+                                      !isCorrect
+                                    ? 'border-red-500 bg-red-500 text-white'
+                                    : isSelected
+                                      ? 'border-blue-500 bg-blue-500 text-white'
+                                      : 'border-gray-400 text-gray-600 hover:border-blue-500'
+                              }`}
                             >
-                              Correct
-                            </Badge>
-                          )}
-                          {option.label === mockUserAnswer &&
-                            mockUserAnswer !== question.correctAnswer && (
+                              {option.label}
+                            </div>
+                            <span className="text-sm flex-1">
+                              {option.text}
+                            </span>
+                            {showCorrectAnswers && isCorrect && (
+                              <Badge
+                                variant="secondary"
+                                className="bg-green-500 text-white"
+                              >
+                                Correct
+                              </Badge>
+                            )}
+                            {showCorrectAnswers && isSelected && !isCorrect && (
                               <Badge variant="destructive">Your choice</Badge>
                             )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>

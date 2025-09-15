@@ -9,6 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { useTestSession } from '@/features/tests/hooks/useTestSession';
 
 interface Part7QuestionProps {
   part: TestPart;
@@ -27,37 +28,80 @@ export const Part7Question = ({
     []
   );
 
-  // Mock user answers for demonstration
-  const getMockUserAnswer = (questionNumber: number) => {
-    const mockAnswers: { [key: number]: string } = {
-      // Single passage questions (147-200)
-      147: 'C', // correct
-      148: 'B', // correct
-      149: 'B', // correct
-      150: 'C', // correct
-      151: 'B', // correct
-      152: 'D', // correct
-      153: 'A', // correct
-      154: 'B', // correct
-      155: 'A', // correct
-      156: 'D', // correct
-      157: 'B', // correct
-      158: 'B', // correct
-      159: 'A', // correct
-      160: 'B', // correct
-      161: 'C', // incorrect - should be A
-      162: 'B', // correct
-      163: 'D', // incorrect - should be C
-      164: 'A', // correct
-      165: 'B', // correct
-      // Multiple passage questions would continue...
-      196: 'A', // correct
-      197: 'C', // correct
-      198: 'C', // correct
-      199: 'D', // correct
-      200: 'B', // correct
-    };
-    return mockAnswers[questionNumber] || 'A';
+  // Use Redux-based test session management
+  const { saveAnswer, getAnswer } = useTestSession();
+
+  // Function to get user answer (mock for history view, Redux for current test)
+  const getUserAnswer = (questionNumber: number) => {
+    if (showCorrectAnswers) {
+      // Return mock answer for history view
+      const mockAnswers: { [key: number]: string } = {
+        147: 'C',
+        148: 'B',
+        149: 'B',
+        150: 'C',
+        151: 'B',
+        152: 'D',
+        153: 'A',
+        154: 'B',
+        155: 'C',
+        156: 'D',
+        157: 'A',
+        158: 'B',
+        159: 'C',
+        160: 'D',
+        161: 'A',
+        162: 'B',
+        163: 'C',
+        164: 'D',
+        165: 'A',
+        166: 'B',
+        167: 'C',
+        168: 'D',
+        169: 'A',
+        170: 'B',
+        171: 'C',
+        172: 'D',
+        173: 'A',
+        174: 'B',
+        175: 'C',
+        176: 'D',
+        177: 'A',
+        178: 'B',
+        179: 'C',
+        180: 'D',
+        181: 'A',
+        182: 'B',
+        183: 'C',
+        184: 'D',
+        185: 'A',
+        186: 'B',
+        187: 'C',
+        188: 'D',
+        189: 'A',
+        190: 'B',
+        191: 'C',
+        192: 'D',
+        193: 'A',
+        194: 'B',
+        195: 'C',
+        196: 'D',
+        197: 'A',
+        198: 'B',
+        199: 'C',
+        200: 'D',
+      };
+      return mockAnswers[questionNumber] || '';
+    }
+    // Use Redux to get current test answer
+    return getAnswer(questionNumber) || '';
+  };
+
+  // Handle answer selection
+  const handleAnswerSelect = (questionNumber: number, answer: string) => {
+    if (!showCorrectAnswers) {
+      saveAnswer(questionNumber, answer);
+    }
   };
 
   const toggleExplanation = (questionNumber: number) => {
@@ -249,10 +293,8 @@ export const Part7Question = ({
                 }}
               >
                 {group.questions.map((question) => {
-                  const mockUserAnswer = getMockUserAnswer(
-                    question.questionNumber
-                  );
-                  const isCorrect = mockUserAnswer === question.correctAnswer;
+                  const userAnswer = getUserAnswer(question.questionNumber);
+                  const isCorrect = userAnswer === question.correctAnswer;
                   const isExplanationExpanded = expandedExplanations.includes(
                     question.questionNumber
                   );
@@ -279,41 +321,55 @@ export const Part7Question = ({
 
                       {/* Options */}
                       <div className="space-y-2 mb-4">
-                        {question.options.map((option) => (
-                          <div
-                            key={option.label}
-                            className={`p-3 rounded-lg border-2 transition-colors ${
-                              showCorrectAnswers &&
-                              option.label === question.correctAnswer
-                                ? 'border-green-500 bg-green-50 dark:bg-green-950'
-                                : showCorrectAnswers &&
-                                    option.label === mockUserAnswer &&
-                                    mockUserAnswer !== question.correctAnswer
-                                  ? 'border-red-500 bg-red-50 dark:bg-red-950'
-                                  : 'border-gray-200 dark:border-gray-700'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-                                  showCorrectAnswers &&
-                                  option.label === question.correctAnswer
-                                    ? 'border-green-500 bg-green-500 text-white'
-                                    : showCorrectAnswers &&
-                                        option.label === mockUserAnswer &&
-                                        mockUserAnswer !==
-                                          question.correctAnswer
-                                      ? 'border-red-500 bg-red-500 text-white'
-                                      : 'border-gray-400 text-gray-600 hover:border-blue-500'
-                                }`}
-                              >
-                                {option.label}
-                              </div>
-                              <span className="text-sm flex-1">
-                                {option.text}
-                              </span>
-                              {showCorrectAnswers &&
-                                option.label === question.correctAnswer && (
+                        {question.options.map((option) => {
+                          const userAnswer = getUserAnswer(
+                            question.questionNumber
+                          );
+                          const isSelected = userAnswer === option.label;
+                          const isCorrect =
+                            option.label === question.correctAnswer;
+
+                          return (
+                            <div
+                              key={option.label}
+                              onClick={() =>
+                                handleAnswerSelect(
+                                  question.questionNumber,
+                                  option.label
+                                )
+                              }
+                              className={`p-3 rounded-lg border-2 transition-colors cursor-pointer ${
+                                showCorrectAnswers && isCorrect
+                                  ? 'border-green-500 bg-green-50 dark:bg-green-950'
+                                  : showCorrectAnswers &&
+                                      isSelected &&
+                                      !isCorrect
+                                    ? 'border-red-500 bg-red-50 dark:bg-red-950'
+                                    : isSelected
+                                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+                                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
+                                    showCorrectAnswers && isCorrect
+                                      ? 'border-green-500 bg-green-500 text-white'
+                                      : showCorrectAnswers &&
+                                          isSelected &&
+                                          !isCorrect
+                                        ? 'border-red-500 bg-red-500 text-white'
+                                        : isSelected
+                                          ? 'border-blue-500 bg-blue-500 text-white'
+                                          : 'border-gray-400 text-gray-600 hover:border-blue-500'
+                                  }`}
+                                >
+                                  {option.label}
+                                </div>
+                                <span className="text-sm flex-1">
+                                  {option.text}
+                                </span>
+                                {showCorrectAnswers && isCorrect && (
                                   <Badge
                                     variant="secondary"
                                     className="bg-green-500 text-white"
@@ -321,16 +377,17 @@ export const Part7Question = ({
                                     Correct
                                   </Badge>
                                 )}
-                              {showCorrectAnswers &&
-                                option.label === mockUserAnswer &&
-                                mockUserAnswer !== question.correctAnswer && (
-                                  <Badge variant="destructive">
-                                    Your choice
-                                  </Badge>
-                                )}
+                                {showCorrectAnswers &&
+                                  isSelected &&
+                                  !isCorrect && (
+                                    <Badge variant="destructive">
+                                      Your choice
+                                    </Badge>
+                                  )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {/* Explanation */}

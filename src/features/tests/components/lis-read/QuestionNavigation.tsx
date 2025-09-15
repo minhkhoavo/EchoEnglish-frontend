@@ -9,6 +9,7 @@ interface QuestionNavigationProps {
   testData: TOEICTestDetail;
   showParts?: string[];
   isHistoryView?: boolean;
+  userAnswers?: { [questionNumber: number]: string }; // Add user answers prop
 }
 
 export const QuestionNavigation = ({
@@ -17,6 +18,7 @@ export const QuestionNavigation = ({
   testData,
   showParts = ['part1', 'part2', 'part3', 'part4', 'part5', 'part6', 'part7'],
   isHistoryView = false,
+  userAnswers = {},
 }: QuestionNavigationProps) => {
   // Scroll to question function
   const scrollToQuestion = (questionNumber: number) => {
@@ -33,76 +35,82 @@ export const QuestionNavigation = ({
     onQuestionSelect(questionNumber);
   };
 
-  // Generate question status for all 200 questions - only show when in history view
+  // Generate question status for all 200 questions
   const getQuestionStatus = (questionNum: number) => {
-    if (!isHistoryView) return null;
+    // For history view, show correct/incorrect/unanswered
+    if (isHistoryView) {
+      // Mock user answers for demonstration
+      const mockAnswers = {
+        1: { userAnswer: 'A', correctAnswer: 'A' },
+        2: { userAnswer: 'C', correctAnswer: 'B' },
+        3: { userAnswer: 'B', correctAnswer: 'B' },
+        4: { userAnswer: 'D', correctAnswer: 'D' },
+        5: { userAnswer: 'C', correctAnswer: 'C' },
+        6: { userAnswer: 'C', correctAnswer: 'C' },
+        7: { userAnswer: 'C', correctAnswer: 'B' },
+        8: { userAnswer: 'C', correctAnswer: 'C' },
+        9: { userAnswer: 'C', correctAnswer: 'C' },
+        10: { userAnswer: 'A', correctAnswer: 'A' },
+        11: { userAnswer: 'C', correctAnswer: 'C' },
+        12: { userAnswer: 'C', correctAnswer: 'C' },
+        32: { userAnswer: 'D', correctAnswer: 'D' },
+        33: { userAnswer: 'B', correctAnswer: 'B' },
+        34: { userAnswer: 'B', correctAnswer: 'B' },
+        71: { userAnswer: 'B', correctAnswer: 'D' },
+        72: { userAnswer: 'A', correctAnswer: 'A' },
+        73: { userAnswer: 'C', correctAnswer: 'C' },
+        // Part 5 mock answers
+        101: { userAnswer: 'B', correctAnswer: 'B' },
+        102: { userAnswer: 'D', correctAnswer: 'D' },
+        103: { userAnswer: 'C', correctAnswer: 'C' },
+        104: { userAnswer: 'A', correctAnswer: 'B' }, // incorrect
+        105: { userAnswer: 'B', correctAnswer: 'B' },
+        // Part 6 mock answers
+        131: { userAnswer: 'D', correctAnswer: 'D' },
+        132: { userAnswer: 'D', correctAnswer: 'D' },
+        133: { userAnswer: 'A', correctAnswer: 'A' },
+        134: { userAnswer: 'B', correctAnswer: 'B' },
+        135: { userAnswer: 'C', correctAnswer: 'C' },
+        136: { userAnswer: 'A', correctAnswer: 'A' },
+        137: { userAnswer: 'B', correctAnswer: 'B' },
+        138: { userAnswer: 'B', correctAnswer: 'B' },
+        139: { userAnswer: 'A', correctAnswer: 'B' }, // incorrect
+        140: { userAnswer: 'C', correctAnswer: 'C' },
+        // Part 7 mock answers
+        147: { userAnswer: 'C', correctAnswer: 'C' },
+        148: { userAnswer: 'B', correctAnswer: 'B' },
+        149: { userAnswer: 'B', correctAnswer: 'B' },
+        150: { userAnswer: 'C', correctAnswer: 'C' },
+        151: { userAnswer: 'B', correctAnswer: 'B' },
+        152: { userAnswer: 'D', correctAnswer: 'D' },
+        153: { userAnswer: 'A', correctAnswer: 'A' },
+        154: { userAnswer: 'B', correctAnswer: 'B' },
+        155: { userAnswer: 'A', correctAnswer: 'A' },
+        156: { userAnswer: 'D', correctAnswer: 'D' },
+        157: { userAnswer: 'B', correctAnswer: 'B' },
+        158: { userAnswer: 'B', correctAnswer: 'B' },
+        159: { userAnswer: 'A', correctAnswer: 'A' },
+        160: { userAnswer: 'B', correctAnswer: 'B' },
+        161: { userAnswer: 'C', correctAnswer: 'A' }, // incorrect
+        190: { userAnswer: 'A', correctAnswer: 'A' },
+        195: { userAnswer: 'C', correctAnswer: 'B' }, // incorrect
+        196: { userAnswer: 'A', correctAnswer: 'A' },
+        197: { userAnswer: 'C', correctAnswer: 'C' },
+        198: { userAnswer: 'C', correctAnswer: 'C' },
+        199: { userAnswer: 'D', correctAnswer: 'D' },
+        200: { userAnswer: 'B', correctAnswer: 'B' },
+      };
 
-    // Mock user answers for demonstration
-    const mockAnswers = {
-      1: { userAnswer: 'A', correctAnswer: 'A' },
-      2: { userAnswer: 'C', correctAnswer: 'B' },
-      3: { userAnswer: 'B', correctAnswer: 'B' },
-      4: { userAnswer: 'D', correctAnswer: 'D' },
-      5: { userAnswer: 'C', correctAnswer: 'C' },
-      6: { userAnswer: 'C', correctAnswer: 'C' },
-      7: { userAnswer: 'C', correctAnswer: 'B' },
-      8: { userAnswer: 'C', correctAnswer: 'C' },
-      9: { userAnswer: 'C', correctAnswer: 'C' },
-      10: { userAnswer: 'A', correctAnswer: 'A' },
-      11: { userAnswer: 'C', correctAnswer: 'C' },
-      12: { userAnswer: 'C', correctAnswer: 'C' },
-      32: { userAnswer: 'D', correctAnswer: 'D' },
-      33: { userAnswer: 'B', correctAnswer: 'B' },
-      34: { userAnswer: 'B', correctAnswer: 'B' },
-      71: { userAnswer: 'B', correctAnswer: 'D' },
-      72: { userAnswer: 'A', correctAnswer: 'A' },
-      73: { userAnswer: 'C', correctAnswer: 'C' },
-      // Part 5 mock answers
-      101: { userAnswer: 'B', correctAnswer: 'B' },
-      102: { userAnswer: 'D', correctAnswer: 'D' },
-      103: { userAnswer: 'C', correctAnswer: 'C' },
-      104: { userAnswer: 'A', correctAnswer: 'B' }, // incorrect
-      105: { userAnswer: 'B', correctAnswer: 'B' },
-      // Part 6 mock answers
-      131: { userAnswer: 'D', correctAnswer: 'D' },
-      132: { userAnswer: 'D', correctAnswer: 'D' },
-      133: { userAnswer: 'A', correctAnswer: 'A' },
-      134: { userAnswer: 'B', correctAnswer: 'B' },
-      135: { userAnswer: 'C', correctAnswer: 'C' },
-      136: { userAnswer: 'A', correctAnswer: 'A' },
-      137: { userAnswer: 'B', correctAnswer: 'B' },
-      138: { userAnswer: 'B', correctAnswer: 'B' },
-      139: { userAnswer: 'A', correctAnswer: 'B' }, // incorrect
-      140: { userAnswer: 'C', correctAnswer: 'C' },
-      // Part 7 mock answers
-      147: { userAnswer: 'C', correctAnswer: 'C' },
-      148: { userAnswer: 'B', correctAnswer: 'B' },
-      149: { userAnswer: 'B', correctAnswer: 'B' },
-      150: { userAnswer: 'C', correctAnswer: 'C' },
-      151: { userAnswer: 'B', correctAnswer: 'B' },
-      152: { userAnswer: 'D', correctAnswer: 'D' },
-      153: { userAnswer: 'A', correctAnswer: 'A' },
-      154: { userAnswer: 'B', correctAnswer: 'B' },
-      155: { userAnswer: 'A', correctAnswer: 'A' },
-      156: { userAnswer: 'D', correctAnswer: 'D' },
-      157: { userAnswer: 'B', correctAnswer: 'B' },
-      158: { userAnswer: 'B', correctAnswer: 'B' },
-      159: { userAnswer: 'A', correctAnswer: 'A' },
-      160: { userAnswer: 'B', correctAnswer: 'B' },
-      161: { userAnswer: 'C', correctAnswer: 'A' }, // incorrect
-      190: { userAnswer: 'A', correctAnswer: 'A' },
-      195: { userAnswer: 'C', correctAnswer: 'B' }, // incorrect
-      196: { userAnswer: 'A', correctAnswer: 'A' },
-      197: { userAnswer: 'C', correctAnswer: 'C' },
-      198: { userAnswer: 'C', correctAnswer: 'C' },
-      199: { userAnswer: 'D', correctAnswer: 'D' },
-      200: { userAnswer: 'B', correctAnswer: 'B' },
-    };
+      const answer = mockAnswers[questionNum as keyof typeof mockAnswers];
+      if (!answer) return 'unanswered';
 
-    const answer = mockAnswers[questionNum as keyof typeof mockAnswers];
-    if (!answer) return 'unanswered';
+      return answer.userAnswer === answer.correctAnswer
+        ? 'correct'
+        : 'incorrect';
+    }
 
-    return answer.userAnswer === answer.correctAnswer ? 'correct' : 'incorrect';
+    // For current test, just check if user has answered
+    return userAnswers[questionNum] ? 'answered' : 'unanswered';
   };
 
   const getButtonVariant = (questionNum: number) => {
@@ -113,6 +121,8 @@ export const QuestionNavigation = ({
         return 'secondary';
       case 'incorrect':
         return 'destructive';
+      case 'answered':
+        return 'default'; // Blue background for answered questions in current test
       default:
         return 'outline';
     }
@@ -132,6 +142,11 @@ export const QuestionNavigation = ({
         return cn(
           baseClass,
           'bg-red-500 hover:bg-red-600 text-white border-red-500'
+        );
+      case 'answered':
+        return cn(
+          baseClass,
+          'bg-blue-500 hover:bg-blue-600 text-white border-blue-500'
         );
       default:
         return cn(baseClass, 'hover:bg-muted-foreground/10 text-black');
@@ -182,23 +197,36 @@ export const QuestionNavigation = ({
           </div>
         </ScrollArea>
       </div>
-      {/* Legend - Fixed at bottom - only show in history view */}
-      {isHistoryView && (
-        <div className="mt-4 pt-4 border-t space-y-2 text-xs flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded flex-shrink-0"></div>
-            <span className="text-muted-foreground">Correct</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-red-500 rounded flex-shrink-0"></div>
-            <span className="text-muted-foreground">Incorrect</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-muted border rounded flex-shrink-0"></div>
-            <span className="text-muted-foreground">Unanswered</span>
-          </div>
-        </div>
-      )}
+      {/* Legend - Fixed at bottom */}
+      <div className="mt-4 pt-4 border-t space-y-2 text-xs flex-shrink-0">
+        {isHistoryView ? (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-500 rounded flex-shrink-0"></div>
+              <span className="text-muted-foreground">Correct</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-500 rounded flex-shrink-0"></div>
+              <span className="text-muted-foreground">Incorrect</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-muted border rounded flex-shrink-0"></div>
+              <span className="text-muted-foreground">Unanswered</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-500 rounded flex-shrink-0"></div>
+              <span className="text-muted-foreground">Answered</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-muted border rounded flex-shrink-0"></div>
+              <span className="text-muted-foreground">Unanswered</span>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };

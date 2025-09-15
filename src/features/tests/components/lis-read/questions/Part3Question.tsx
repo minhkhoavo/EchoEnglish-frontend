@@ -10,6 +10,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { useTestSession } from '@/features/tests/hooks/useTestSession';
 
 interface Part3QuestionProps {
   part: TestPart;
@@ -28,22 +29,35 @@ export const Part3Question = ({
     []
   );
 
-  // Mock user answers for demonstration - only show when viewing history
-  const getMockUserAnswer = (questionNumber: number) => {
-    if (!showCorrectAnswers) return null;
+  // Use Redux-based test session management
+  const { saveAnswer, getAnswer } = useTestSession();
 
-    const mockAnswers: { [key: number]: string } = {
-      32: 'D',
-      33: 'B',
-      34: 'B',
-      35: 'A',
-      36: 'C',
-      37: 'B',
-      38: 'D',
-      39: 'A',
-      40: 'C',
-    };
-    return mockAnswers[questionNumber] || 'A';
+  // Function to get user answer (mock for history view, Redux for current test)
+  const getUserAnswer = (questionNumber: number) => {
+    if (showCorrectAnswers) {
+      // Return mock answer for history view
+      const mockAnswers: { [key: number]: string } = {
+        32: 'D',
+        33: 'B',
+        34: 'B',
+        35: 'A',
+        36: 'C',
+        37: 'B',
+        38: 'D',
+        39: 'A',
+        40: 'C',
+      };
+      return mockAnswers[questionNumber] || null;
+    }
+    // Return actual user answer from Redux for current test
+    return getAnswer(questionNumber);
+  };
+
+  // Handle answer selection
+  const handleAnswerSelect = (questionNumber: number, answer: string) => {
+    if (!showCorrectAnswers) {
+      saveAnswer(questionNumber, answer);
+    }
   };
 
   const toggleTranscript = (groupIndex: number) => {
@@ -205,10 +219,8 @@ export const Part3Question = ({
                 {/* Questions */}
                 <div className="lg:col-span-2 space-y-4">
                   {group.questions?.map((question) => {
-                    const mockUserAnswer = getMockUserAnswer(
-                      question.questionNumber
-                    );
-                    const isCorrect = mockUserAnswer === question.correctAnswer;
+                    const userAnswer = getUserAnswer(question.questionNumber);
+                    const isCorrect = userAnswer === question.correctAnswer;
                     const isExplanationExpanded = expandedExplanations.includes(
                       question.questionNumber
                     );
@@ -235,12 +247,20 @@ export const Part3Question = ({
                                   option.label === question.correctAnswer
                                     ? 'border-green-500 bg-green-50 dark:bg-green-950'
                                     : showCorrectAnswers &&
-                                        option.label === mockUserAnswer &&
-                                        mockUserAnswer !==
-                                          question.correctAnswer
+                                        option.label === userAnswer &&
+                                        userAnswer !== question.correctAnswer
                                       ? 'border-red-500 bg-red-50 dark:bg-red-950'
-                                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 cursor-pointer'
+                                      : !showCorrectAnswers &&
+                                          option.label === userAnswer
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950'
+                                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 cursor-pointer'
                                 }`}
+                                onClick={() =>
+                                  handleAnswerSelect(
+                                    question.questionNumber,
+                                    option.label
+                                  )
+                                }
                               >
                                 <div className="flex items-start gap-3">
                                   <div
@@ -249,11 +269,14 @@ export const Part3Question = ({
                                       option.label === question.correctAnswer
                                         ? 'border-green-500 bg-green-500 text-white'
                                         : showCorrectAnswers &&
-                                            option.label === mockUserAnswer &&
-                                            mockUserAnswer !==
+                                            option.label === userAnswer &&
+                                            userAnswer !==
                                               question.correctAnswer
                                           ? 'border-red-500 bg-red-500 text-white'
-                                          : 'border-gray-400 hover:border-blue-500'
+                                          : !showCorrectAnswers &&
+                                              option.label === userAnswer
+                                            ? 'border-blue-500 bg-blue-500 text-white'
+                                            : 'border-gray-400 hover:border-blue-500'
                                     }`}
                                   >
                                     {option.label}
@@ -269,9 +292,8 @@ export const Part3Question = ({
                                       </Badge>
                                     )}
                                   {showCorrectAnswers &&
-                                    option.label === mockUserAnswer &&
-                                    mockUserAnswer !==
-                                      question.correctAnswer && (
+                                    option.label === userAnswer &&
+                                    userAnswer !== question.correctAnswer && (
                                       <Badge variant="destructive">
                                         Your choice
                                       </Badge>
