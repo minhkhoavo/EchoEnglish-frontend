@@ -1,5 +1,8 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { TOEICTest as ListeningReadingTest } from '../types/toeic-test.types';
+import type {
+  TOEICTest as ListeningReadingTest,
+  TestSession,
+} from '../types/toeic-test.types';
 
 interface TestState {
   filters: {
@@ -14,15 +17,7 @@ interface TestState {
   sortDirection: 'asc' | 'desc';
   searchQuery: string;
   activeTest: ListeningReadingTest | null;
-  currentSession: {
-    testId: string;
-    testType: 'listening-reading';
-    startTime: number;
-    currentQuestionIndex: number;
-    answers: Record<string, string>;
-    timeRemaining: number;
-    isPaused: boolean;
-  } | null;
+  currentSession: TestSession | null;
   lastResult: {
     testId: string;
     testType: 'listening-reading';
@@ -96,58 +91,44 @@ const testSlice = createSlice({
     // Test session actions
     startTest: (
       state,
-      action: PayloadAction<{ test: ListeningReadingTest; timeLimit: number }>
+      action: PayloadAction<{
+        test: ListeningReadingTest;
+        timeLimit: number;
+        testMode?: 'full' | 'custom';
+        selectedParts?: string[];
+      }>
     ) => {
       state.activeTest = action.payload.test;
       state.currentSession = {
         testId: action.payload.test.testId,
-        testType: action.payload.test.type,
-        startTime: Date.now(),
-        currentQuestionIndex: 0,
+        testTitle: action.payload.test.testTitle,
+        startTime: new Date(Date.now()).toISOString(),
+        timeLimit: new Date(
+          Date.now() + action.payload.timeLimit
+        ).toISOString(),
+        timeRemaining: new Date(
+          Date.now() + action.payload.timeLimit
+        ).toISOString(),
         answers: {},
-        timeRemaining: action.payload.timeLimit,
-        isPaused: false,
+        testMode: action.payload.testMode || 'full',
+        selectedParts: action.payload.selectedParts
+          ? action.payload.selectedParts.join('-')
+          : '',
+        partsKey: action.payload.selectedParts
+          ? action.payload.selectedParts.slice().sort().join('-')
+          : 'full',
       };
       state.showResults = false;
       state.error = null;
     },
 
-    pauseTest: (state) => {
-      if (state.currentSession) {
-        state.currentSession.isPaused = true;
-      }
-    },
-
-    resumeTest: (state) => {
-      if (state.currentSession) {
-        state.currentSession.isPaused = false;
-      }
-    },
-
     updateTimeRemaining: (state, action: PayloadAction<number>) => {
       if (state.currentSession) {
-        state.currentSession.timeRemaining = action.payload;
-      }
-    },
-
-    setCurrentQuestion: (state, action: PayloadAction<number>) => {
-      if (state.currentSession) {
-        state.currentSession.currentQuestionIndex = action.payload;
-      }
-    },
-
-    nextQuestion: (state) => {
-      if (state.currentSession) {
-        state.currentSession.currentQuestionIndex += 1;
-      }
-    },
-
-    previousQuestion: (state) => {
-      if (state.currentSession) {
-        state.currentSession.currentQuestionIndex = Math.max(
-          0,
-          state.currentSession.currentQuestionIndex - 1
-        );
+        // Convert milliseconds to ISODate by adding to current time
+        const remainingTime = new Date(
+          Date.now() + action.payload
+        ).toISOString();
+        state.currentSession.timeRemaining = remainingTime;
       }
     },
 
@@ -156,8 +137,49 @@ const testSlice = createSlice({
       action: PayloadAction<{ questionId: string; answer: string }>
     ) => {
       if (state.currentSession) {
-        state.currentSession.answers[action.payload.questionId] =
+        const questionNumber = parseInt(action.payload.questionId, 10);
+        state.currentSession.answers[questionNumber] = action.payload.answer;
+      }
+    },
+
+    saveAnswerByNumber: (
+      state,
+      action: PayloadAction<{ questionNumber: number; answer: string }>
+    ) => {
+      if (state.currentSession) {
+        state.currentSession.answers[action.payload.questionNumber] =
           action.payload.answer;
+      }
+    },
+
+    restoreSession: (state, action: PayloadAction<TestSession>) => {
+      state.currentSession = action.payload;
+    },
+
+    updateSession: (
+      state,
+      action: PayloadAction<
+        Partial<{
+          answers: Record<string, string>;
+          timeRemaining: number;
+          savedAt: string;
+        }>
+      >
+    ) => {
+      if (state.currentSession) {
+        // Convert timeRemaining to string if present
+        const update = { ...action.payload } as Partial<TestSession>;
+        if (typeof update.timeRemaining === 'number') {
+          // Convert milliseconds to ISODate by adding to current time
+          update.timeRemaining = new Date(
+            Date.now() + update.timeRemaining
+          ).toISOString();
+        }
+        // If selectedParts is present and is string[], convert to string
+        if (Array.isArray(update.selectedParts)) {
+          update.selectedParts = update.selectedParts.join('-');
+        }
+        Object.assign(state.currentSession, update);
       }
     },
 
@@ -209,13 +231,11 @@ export const {
 
   // Test session actions
   startTest,
-  pauseTest,
-  resumeTest,
   updateTimeRemaining,
-  setCurrentQuestion,
-  nextQuestion,
-  previousQuestion,
   saveAnswer,
+  saveAnswerByNumber,
+  restoreSession,
+  updateSession,
   submitTest,
   endTest,
 
