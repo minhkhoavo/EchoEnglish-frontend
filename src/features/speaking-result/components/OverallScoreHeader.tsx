@@ -22,13 +22,14 @@ interface OverallScoreHeaderProps {
 export const OverallScoreHeader: React.FC<OverallScoreHeaderProps> = ({
   result,
 }) => {
-  const overallPercentage =
-    (result.overallScore / result.maxOverallScore) * 100;
+  const rawPercentage = (result.overallScore / result.maxOverallScore) * 100;
+
+  const roundTo10 = (n: number) => Math.round(n / 10) * 10;
+  const scaledScore = roundTo10((result.overallScore / 35) * 200);
+  const scaledMax = 200;
+  const overallPercentage = (scaledScore / scaledMax) * 100;
   const proficiencyColorClass = getProficiencyColor(result.proficiencyLevel);
-  const scoreColorClass = getScoreColor(
-    result.overallScore,
-    result.maxOverallScore
-  );
+  const scoreColorClass = getScoreColor(scaledScore, scaledMax);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -96,11 +97,9 @@ export const OverallScoreHeader: React.FC<OverallScoreHeaderProps> = ({
                 {/* Score text in center */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className={`text-3xl font-bold ${scoreColorClass}`}>
-                    {result.overallScore}
+                    {scaledScore}
                   </span>
-                  <span className="text-sm text-gray-500">
-                    /{result.maxOverallScore}
-                  </span>
+                  <span className="text-sm text-gray-500">/{scaledMax}</span>
                 </div>
               </div>
             </div>
