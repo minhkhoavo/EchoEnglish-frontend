@@ -1,11 +1,21 @@
 // TOEIC Speaking Result Types
-export interface SpeakingQuestionResult {
+
+export type ProficiencyLevel =
+  | 'Beginner'
+  | 'Intermediate'
+  | 'Advanced'
+  | 'Expert';
+
+interface ScoreInfo {
+  score: number;
+  maxScore: number;
+  proficiencyLevel: ProficiencyLevel;
+}
+
+export interface SpeakingQuestionResult extends ScoreInfo {
   questionId: number;
   questionNumber: number;
   questionText: string;
-  score: number;
-  maxScore: number;
-  proficiencyLevel: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
   audioUrl?: string;
   imageUrl?: string;
   userResponseUrl?: string;
@@ -22,14 +32,11 @@ export interface SpeakingQuestionResult {
   sample_answer?: string;
 }
 
-export interface SpeakingPartResult {
+export interface SpeakingPartResult extends ScoreInfo {
   partNumber: number;
   partName: string;
   description: string;
   questionsCount: number;
-  score: number;
-  maxScore: number;
-  proficiencyLevel: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
   strengths: string[];
   improvements: string[];
   icon: string; // Icon identifier
@@ -39,7 +46,7 @@ export interface SpeakingPartResult {
 export interface SpeakingOverallResult {
   overallScore: number;
   maxOverallScore: number;
-  proficiencyLevel: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
+  proficiencyLevel: ProficiencyLevel;
   testDate: string;
   testDuration: number; // in minutes
   testTitle: string;

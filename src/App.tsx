@@ -17,6 +17,7 @@ import { useLocation } from 'react-router-dom';
 import TestExam from './pages/test/TestExam';
 import SpeechAnalyzePage from './pages/SpeechAnalyzePage';
 import SpeakingResultDemoPage from './pages/SpeakingResultDemoPage';
+import SpeakingResultPage from './pages/SpeakingResultPage';
 
 const QuizRouteWrapper = () => {
   const location = useLocation();
@@ -49,6 +50,7 @@ function App() {
         <Route path="/speaking-exam/:testId" element={<SpeakingExam />} />
         <Route path="/writing-exam/:testId" element={<WritingExam />} />
         <Route path="/test-exam/:testId" element={<TestExam />} />
+        <Route path="/speaking-result" element={<SpeakingResultPage />} />
       </Routes>
       <Toaster />
     </Router>
