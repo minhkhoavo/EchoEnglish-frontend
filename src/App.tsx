@@ -16,6 +16,8 @@ import { QuizInterface } from './features/quiz/QuizInterface';
 import { useLocation } from 'react-router-dom';
 import TestExam from './pages/test/TestExam';
 import SpeechAnalyzePage from './pages/SpeechAnalyzePage';
+import SpeakingResultDemoPage from './pages/SpeakingResultDemoPage';
+import SpeakingResultPage from './pages/SpeakingResultPage';
 
 const QuizRouteWrapper = () => {
   const location = useLocation();
@@ -39,7 +41,7 @@ function App() {
 
         {/* Main App Routes */}
         {/* <Route path="/" element={<ContentPage />} /> */}
-        <Route path="/" element={<ContentPage />} />
+        <Route path="/" element={<SpeakingResultDemoPage />} />
         <Route path="/speech/recordings/:id" element={<SpeechAnalyzePage />} />
         <Route path="/recordings" element={<RecordingsPage />} />
         <Route path="/flashcards" element={<FlashcardPage />} />
@@ -48,6 +50,7 @@ function App() {
         <Route path="/speaking-exam/:testId" element={<SpeakingExam />} />
         <Route path="/writing-exam/:testId" element={<WritingExam />} />
         <Route path="/test-exam/:testId" element={<TestExam />} />
+        <Route path="/speaking-result" element={<SpeakingResultPage />} />
       </Routes>
       <Toaster />
     </Router>
