@@ -1,6 +1,6 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { TestPart } from '../constants/testConstants';
+import type { TestPart } from '@/features/tests/constants/testConstants';
 
 interface TestPartListProps {
   parts: TestPart[];

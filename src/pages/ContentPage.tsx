@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { ContentManager } from '@/features/content-manager/ContentManager';
 import FlashcardPage from './FlashcardPage';
 import AllTestsPage from './test/AllTestsPage';
-import { ToeicTestDetail } from '@/features/tests/components/TOEICTestDetail';
+import { ToeicTestDetail } from '@/features/tests/components/lis-read/TOEICTestDetail';
 
 const ContentPage = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -66,8 +66,7 @@ const ContentPage = () => {
     dispatch(setActiveTab(tabId as ActiveTab));
     // Reset test detail view when switching tabs
     if (tabId !== 'tests') {
-      setShowTestDetail(false);
-      setSelectedTestId(null);
+      handleBackToTests();
     }
   };
 
@@ -77,8 +76,8 @@ const ContentPage = () => {
   };
 
   const handleBackToTests = () => {
-    setShowTestDetail(false);
     setSelectedTestId(null);
+    setShowTestDetail(false);
   };
 
   const renderContent = () => {

@@ -22,7 +22,7 @@ import {
   useGetProfileQuery,
   useUpdateProfileMutation,
 } from '../services/authApi';
-import { setUser, setLoading, setError, clearError } from '../slices/authSlice';
+import { setUser, setLoading, setError } from '../slices/authSlice';
 import { User, Mail, Calendar, Phone, MapPin, Camera } from 'lucide-react';
 
 const ProfileForm: React.FC = () => {
@@ -70,7 +70,7 @@ const ProfileForm: React.FC = () => {
   useEffect(() => {
     if (error) {
       toast.error(error);
-      dispatch(clearError());
+      dispatch(setError(null));
     }
   }, [error, dispatch]);
 

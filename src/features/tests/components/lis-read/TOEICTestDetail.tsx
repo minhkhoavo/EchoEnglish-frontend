@@ -4,8 +4,8 @@ import { Clock, ArrowLeft } from 'lucide-react';
 import { TestHistory } from './TestHistory';
 import { ContinueTestDialog } from './ContinueTestDialog';
 import { TestStructure } from './TestStructure';
-import { useTestSessionManagement } from '../hooks/useTestSessionManagement';
-import { useGetTOEICTestByIdQuery } from '../services/listeningReadingTestAPI';
+import { useTestSessionManagement } from '@/features/tests/hooks/useTestSessionManagement';
+import { useGetTOEICTestByIdQuery } from '@/features/tests/services/listeningReadingTestAPI';
 
 interface ToeicTestDetailProps {
   testId?: string;
@@ -19,7 +19,7 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
 
   // Get test data for session creation
   const { data: testData } = useGetTOEICTestByIdQuery(testId || '', {
-    skip: !testId,
+    skip: !testId, // Skip query if no testId
   });
 
   // Test session management
@@ -69,7 +69,12 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
         <div className="flex items-center gap-4 text-muted-foreground">
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4" />
-            <span>Test duration: 2 hours</span>
+            <span>
+              Test duration:{' '}
+              {isCustomMode
+                ? `${customTime} minute${customTime === '1' ? '' : 's'}`
+                : '2 hours'}
+            </span>
           </div>
         </div>
       </div>
@@ -80,7 +85,7 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
         isCustomMode={isCustomMode}
         customTime={customTime}
         onPartToggle={handlePartToggle}
-        onCustomModeChange={(checked) => setIsCustomMode(checked)}
+        onCustomModeChange={setIsCustomMode}
         onTimeChange={setCustomTime}
         onStartTest={startTest}
       />
@@ -96,8 +101,14 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
           progress={Math.round(
             (Object.keys(existingSession.answers).length / 200) * 100
           )}
-          timeElapsed={`${Math.floor((Date.now() - Number(existingSession.startTime)) / (1000 * 60))} min`}
-          answeredQuestions={Object.keys(existingSession.answers).length}
+          timeRemaining={
+            typeof existingSession.timeRemaining === 'number'
+              ? existingSession.timeRemaining
+              : 0
+          }
+          numberOfAnsweredQuestions={
+            Object.keys(existingSession.answers).length
+          }
           totalQuestions={200}
           onContinue={handleContinueSession}
           onRestart={() => handleRestartSession(customTime)}

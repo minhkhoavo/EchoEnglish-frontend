@@ -8,7 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { timeOptions, getTotalQuestions } from '../constants/testConstants';
+import {
+  timeOptions,
+  getTotalQuestions,
+} from '@/features/tests/constants/testConstants';
 
 interface CustomModeControlsProps {
   isCustomMode: boolean;
@@ -58,16 +61,6 @@ export const CustomModeControls: React.FC<CustomModeControlsProps> = ({
               ))}
             </SelectContent>
           </Select>
-        </div>
-      )}
-
-      {/* Selected Parts Summary */}
-      {isCustomMode && selectedParts.length > 0 && (
-        <div className="bg-accent/10 p-4 rounded-lg mb-4">
-          <p className="text-sm font-medium text-accent-foreground">
-            Selected: {selectedParts.length} part(s) - {totalQuestions}{' '}
-            questions - {customTime} minutes
-          </p>
         </div>
       )}
 

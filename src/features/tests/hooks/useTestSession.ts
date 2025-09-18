@@ -11,10 +11,11 @@ import { testStorageService } from '../services/testStorageService';
 import type {
   TOEICTest,
   TOEICTestDetail,
-  TestPart,
   TestSession,
 } from '../types/toeic-test.types';
 
+// Quản lý logic dữ liệu và trạng thái phiên làm bài kiểm tra TOEIC
+// Đồng bộ dữ liệu giữa Redux store và IndexedDB (qua testStorageService).
 export const useTestSession = () => {
   const dispatch = useAppDispatch();
   const currentSession = useAppSelector((state) => state.test.currentSession);
@@ -25,27 +26,21 @@ export const useTestSession = () => {
   const userId = user?._id || 'guest';
 
   // Flag to prevent auto-save during restart
+  // Khi bạn restart session, Redux sẽ clear currentSession, sau đó tạo session mới.
+  // Trong khoảng thời gian này, không nên auto-save session null vào IndexedDB.
   const isRestarting = useRef(false);
 
-  // Auto-save to IndexedDB whenever session changes
+  // "Auto-save" to IndexedDB whenever session changes
   useEffect(() => {
     const saveSessionToIndexedDB = async () => {
       if (currentSession && !isRestarting.current) {
         try {
-          // Use the session's testMode, but validate it's correct
-          const testMode = currentSession.testMode || 'full';
-
           // Validate that the session is still compatible
           if (!currentSession.testMode) {
             return;
           }
 
-          await testStorageService.saveTestSession(
-            userId,
-            currentSession.testId,
-            testMode,
-            currentSession
-          );
+          await testStorageService.saveTestSession(userId, currentSession);
         } catch (error) {
           console.error('❌ Failed to save test session to IndexedDB:', error);
         }
@@ -56,12 +51,6 @@ export const useTestSession = () => {
     const timeoutId = setTimeout(saveSessionToIndexedDB, 1000); // Reduce delay to 1 second
     return () => clearTimeout(timeoutId);
   }, [currentSession, userId]);
-
-  // Initialize IndexedDB on first load
-  useEffect(() => {
-    // Clean up old sessions periodically - DISABLED FOR TESTING
-    // testStorageService.clearOldSessions().catch(console.error);
-  }, [userId, user]);
 
   const startTest = useCallback(
     async (
@@ -339,7 +328,9 @@ export const useTestSession = () => {
     answer: string;
   }> => {
     if (!currentSession) return [];
-
+    // Convert answers object to sorted array
+    // Object.entries chuyển { "1": "A", "2": "B" } thành [ ["1", "A"], ["2", "B"] ]
+    // Sau đó map thành { questionNumber: 1, answer: "A" }
     return Object.entries(currentSession.answers).map(
       ([questionId, answer]) => ({
         questionNumber: parseInt(questionId),
@@ -352,16 +343,16 @@ export const useTestSession = () => {
     // State
     currentSession,
     activeTest,
-    isActive: !!currentSession,
+    isActive: !!currentSession, // !! cast to boolean
 
     // Actions
-    startTest,
-    forceStartFresh,
-    endTest,
+    startTest, // Bắt đầu một bài thi mới hoặc khôi phục từ phiên cũ trong IndexedDB
+    forceStartFresh, // Luôn bắt đầu phiên thi mới mà không quan tâm phiên cũ trong IndexedDB
+    endTest, // Kết thúc phiên thi, đồng thời xóa dữ liệu lưu trong IndexedDB và Redux.
     saveAnswer,
-    getAnswer,
+    getAnswer, // Lấy đáp án theo questionNumber
     updateCurrentSession,
     getAllAnswers,
-    checkExistingSession,
+    checkExistingSession, // Kiểm tra có phiên thi nào đang lưu trong IndexedDB không, nếu có thì trả về dữ liệu session đó
   };
 };

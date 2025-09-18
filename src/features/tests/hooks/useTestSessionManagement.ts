@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTestSession } from '../hooks/useTestSession';
 import type { TestSession, TOEICTest } from '../types/toeic-test.types';
 
+// quản lý logic giao diện và điều hướng liên quan đến việc bắt đầu, tiếp tục,
+// hoặc làm lại bài kiểm tra, sử dụng các hàm từ useTestSession
 export const useTestSessionManagement = (
   testId?: string,
   testData?: TOEICTest

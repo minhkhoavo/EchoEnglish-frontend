@@ -40,8 +40,11 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
 
         {/* Main App Routes */}
-        {/* <Route path="/" element={<ContentPage />} /> */}
-        <Route path="/" element={<SpeakingResultDemoPage />} />
+        <Route path="/" element={<ContentPage />} />
+        <Route
+          path="/speaking-result-demo"
+          element={<SpeakingResultDemoPage />}
+        />
         <Route path="/speech/recordings/:id" element={<SpeechAnalyzePage />} />
         <Route path="/recordings" element={<RecordingsPage />} />
         <Route path="/flashcards" element={<FlashcardPage />} />

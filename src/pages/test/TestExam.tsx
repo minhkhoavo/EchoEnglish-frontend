@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { formatMs } from '@/features/tests/utils/formatMs';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,10 +29,10 @@ import {
 } from '@/components/ui/dialog';
 
 const TestExam = () => {
-  const { testId } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const [searchParams] = useSearchParams();
+  const { testId } = useParams(); // path param
+  const [searchParams] = useSearchParams(); // query params
   const [selectedPart, setSelectedPart] = useState('part1');
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [showContinueDialog, setShowContinueDialog] = useState(false);
@@ -209,15 +210,34 @@ const TestExam = () => {
     }
   }, [testMode, currentSession, dispatch]);
 
+  // Cleanup Redux state when leaving TestExam page to prevent unwanted auto-save
+  useEffect(() => {
+    return () => {
+      dispatch(endTestAction());
+    };
+  }, [dispatch]);
+
+  // Đã dùng formatMs dùng chung
+
   const handleBackToTests = async () => {
-    // Update savedAt before exiting if there's an active session
+    // Update savedAt và timeRemaining trước khi exit nếu đang làm bài
     if (currentSession) {
       try {
+        // Tính lại timeRemaining thực tế
+        const endTime =
+          new Date(currentSession.startTime).getTime() +
+          (typeof currentSession.timeLimit === 'string'
+            ? new Date(currentSession.timeLimit).getTime() -
+              new Date(currentSession.startTime).getTime()
+            : currentSession.timeLimit);
+        const now = Date.now();
+        const newTimeRemaining = Math.max(0, endTime - now);
         await updateCurrentSession({
           savedAt: new Date().toISOString(),
+          timeRemaining: newTimeRemaining,
         });
       } catch (error) {
-        console.error('Failed to update savedAt on exit:', error);
+        console.error('Failed to update savedAt/timeRemaining on exit:', error);
       }
     }
     navigate('/');

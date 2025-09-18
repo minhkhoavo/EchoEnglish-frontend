@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Headphones, BookOpen } from 'lucide-react';
 import { TestPartList } from './TestPartList';
 import { CustomModeControls } from './CustomModeControls';
-import { getPartsByType } from '../constants/testConstants';
+import { getPartsByType } from '@/features/tests/constants/testConstants';
 
 interface TestStructureProps {
   selectedParts: string[];

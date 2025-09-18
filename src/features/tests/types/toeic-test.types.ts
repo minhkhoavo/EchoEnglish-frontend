@@ -50,11 +50,7 @@ export interface TestMedia {
   transcript: string | null;
   translation: string | null;
 }
-interface StorageTestSession extends TestSession {
-  userId: string; // User identifier
-  testType: 'listening-reading';
-  savedAt?: string; // ISODate string
-}
+
 export interface TestQuestion {
   questionNumber: number;
   questionText: string | null;
@@ -101,7 +97,7 @@ export interface TestSession {
   startTime: string;
   endTime?: string;
   timeLimit: string;
-  timeRemaining: string;
+  timeRemaining: number; // milliseconds remaining
   answers: { [questionNumber: number]: string };
   testMode?: 'full' | 'custom';
   selectedParts?: string;
