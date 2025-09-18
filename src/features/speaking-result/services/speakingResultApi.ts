@@ -4,20 +4,18 @@ import type {
   SpeakingPartResult,
   SpeakingQuestionResult,
   SpeakingResultStats,
-} from '../types';
+} from '../types/speaking-result.types';
 
-// Backend response types (minimal needed) — support both legacy {$oid,$date} and new string formats
 type MaybeOID = string | { $oid: string };
 type MaybeISO = string | { $date: string };
 
-// New API: `result` is the score object containing scores, overallScore and feedback
 type BackendScore = {
   provider: string;
   scoredAt: MaybeISO;
-  scores: Record<string, number> & {
-    pronunciation?: number;
-    intonationAndStress?: number;
-  };
+  //   scores: Record<string, number> & {
+  //     pronunciation?: number;
+  //     intonationAndStress?: number;
+  //   };
   overallScore: number;
   feedback?: {
     summary?: string;
@@ -30,9 +28,8 @@ type BackendQuestion = {
   questionNumber: number;
   promptText: string;
   promptImage: string | null;
-  s3AudioUrl: string | null; // user's response audio
+  s3AudioUrl: string | null;
   recordingId: MaybeOID | null;
-  // new API uses `result` only
   result?: BackendScore | null;
 };
 
@@ -126,8 +123,8 @@ function fillMissingScoresTemplate(
     const placeholder: BackendScore = {
       provider: template.provider,
       scoredAt: new Date().toISOString(),
-      scores: { ...template.scores },
-      overallScore: 0, // keep numeric score zero for unscored
+      //   scores: { ...template.scores },
+      overallScore: 0,
       feedback: {
         summary:
           'Awaiting scoring. This is placeholder feedback copied from a scored item for consistent structure.',
@@ -186,17 +183,15 @@ function transformSpeakingResult(input: BackendSpeakingResult): {
           score,
           maxScore,
           proficiencyLevel: getProficiencyFromPercent(pct),
-          audioUrl: undefined, // system audio (prompt) not provided here
           imageUrl: q.promptImage ?? undefined,
           userResponseUrl: q.s3AudioUrl ?? undefined,
+          recordingId: getIdString(q.recordingId) ?? '',
           feedback: feedbackSummary ? [feedbackSummary] : [],
           strengths,
           improvements,
           title: p.partTitle,
           time_to_think: undefined,
           limit_time: undefined,
-          idea: undefined,
-          sample_answer: undefined,
         };
       }
     );

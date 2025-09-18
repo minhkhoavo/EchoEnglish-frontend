@@ -3,12 +3,12 @@ import { OverallScoreHeader } from './OverallScoreHeader';
 import { PartScoreCard } from './PartScoreCard';
 import { TestStatsCard } from './TestStatsCard';
 import { ActionButtons } from './ActionButtons';
-import type { SpeakingResultPageProps } from '../types';
+import type { SpeakingResultPageProps, SpeakingPartResult } from '../types';
 
 export const SpeakingResultOverview: React.FC<SpeakingResultPageProps> = ({
   result,
   stats,
-  onRetakeTest,
+  onTakeAnotherTest,
   onViewDetails,
 }) => {
   const handleDownloadReport = () => {
@@ -29,12 +29,6 @@ export const SpeakingResultOverview: React.FC<SpeakingResultPageProps> = ({
   const handleViewRecommendations = () => {
     // Implementation for study recommendations
     console.log('Viewing recommendations...');
-  };
-
-  const handleAnalyzeQuestion = (questionId: number) => {
-    // Navigate to speech-analyzer for detailed question analysis
-    console.log(`Analyzing question ${questionId} in speech-analyzer...`);
-    // This would navigate to /speech/recordings/:id or similar route
   };
 
   return (
@@ -61,12 +55,11 @@ export const SpeakingResultOverview: React.FC<SpeakingResultPageProps> = ({
 
             {/* Parts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {result.parts.map((part) => (
+              {result.parts.map((part: SpeakingPartResult) => (
                 <PartScoreCard
                   key={part.partNumber}
                   part={part}
                   onViewDetails={() => onViewDetails?.(part.partNumber)}
-                  onAnalyzeQuestion={handleAnalyzeQuestion}
                 />
               ))}
             </div>
@@ -79,7 +72,7 @@ export const SpeakingResultOverview: React.FC<SpeakingResultPageProps> = ({
 
             {/* Action Buttons */}
             <ActionButtons
-              onRetakeTest={onRetakeTest}
+              onTakeAnotherTest={onTakeAnotherTest}
               onDownloadReport={handleDownloadReport}
               onShareResult={handleShareResult}
               onViewDetailedAnalysis={handleViewDetailedAnalysis}
@@ -107,8 +100,9 @@ export const SpeakingResultOverview: React.FC<SpeakingResultPageProps> = ({
               <div className="text-center">
                 <div className="text-3xl font-bold text-emerald-600 mb-2">
                   {
-                    result.parts.filter((p) => p.score / p.maxScore >= 0.8)
-                      .length
+                    result.parts.filter(
+                      (p: SpeakingPartResult) => p.score / p.maxScore >= 0.8
+                    ).length
                   }
                 </div>
                 <div className="text-sm text-gray-600">Parts Above 80%</div>

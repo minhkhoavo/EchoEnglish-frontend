@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,19 +14,18 @@ import {
   Target,
 } from 'lucide-react';
 import { AudioPlayer } from '@/components/AudioPlayer';
-import type { SpeakingQuestionResult } from '../types';
-import { getProficiencyColor, getScoreColor } from '../data/mockData';
+import type { SpeakingQuestionResult } from '../types/speaking-result.types';
+import { getProficiencyColor, getScoreColor } from '../utils/utils';
 
 interface QuestionResultCardProps {
   question: SpeakingQuestionResult;
-  onAnalyzeInDepth?: (questionId: number) => void;
 }
 
 export const QuestionResultCard: React.FC<QuestionResultCardProps> = ({
   question,
-  onAnalyzeInDepth,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
   const scorePercentage = (question.score / question.maxScore) * 100;
   const proficiencyColorClass = getProficiencyColor(question.proficiencyLevel);
   const scoreColorClass = getScoreColor(question.score, question.maxScore);
@@ -61,17 +61,17 @@ export const QuestionResultCard: React.FC<QuestionResultCardProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {onAnalyzeInDepth && (
-              <Button
-                onClick={() => onAnalyzeInDepth(question.questionId)}
-                size="sm"
-                variant="outline"
-                className="text-xs"
-              >
-                <BarChart3 className="h-3 w-3 mr-1" />
-                Analyze
-              </Button>
-            )}
+            <Button
+              onClick={() =>
+                navigate(`/speech/recordings/${question.recordingId}`)
+              }
+              size="sm"
+              variant="outline"
+              className="text-xs"
+            >
+              <BarChart3 className="h-3 w-3 mr-1" />
+              Analyze
+            </Button>
             <Button
               onClick={() => setIsExpanded(!isExpanded)}
               size="sm"
@@ -147,14 +147,14 @@ export const QuestionResultCard: React.FC<QuestionResultCardProps> = ({
 
             {/* Media Content */}
             <div className="grid grid-cols-1 gap-4">
-              {(question.imageUrl || question.image) && (
+              {question.imageUrl && (
                 <div>
                   <h5 className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
                     <Image className="h-3 w-3" />
                     Image
                   </h5>
                   <img
-                    src={question.imageUrl || question.image}
+                    src={question.imageUrl}
                     alt="Question image"
                     className="w-full h-24 object-cover rounded border"
                   />

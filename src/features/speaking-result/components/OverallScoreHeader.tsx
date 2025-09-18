@@ -12,8 +12,8 @@ import {
   Award,
   CheckCircle,
 } from 'lucide-react';
-import type { SpeakingOverallResult } from '../types';
-import { getProficiencyColor, getScoreColor } from '../data/mockData';
+import type { SpeakingOverallResult } from '../types/speaking-result.types';
+import { getProficiencyColor, getScoreColor } from '../utils/utils';
 
 interface OverallScoreHeaderProps {
   result: SpeakingOverallResult;
