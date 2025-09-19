@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { SpeakingQuestion } from '@/features/tests/components/speak-write/speaking/SpeakingQuestion';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { useGetSpeakingTestByIdQuery } from '@/features/tests/services/speakingTestApi';
 import {
-  useStartSpeakingAttemptMutation,
   useSubmitSpeakingQuestionMutation,
   useFinishSpeakingAttemptMutation,
 } from '@/features/tests/services/speakingAttemptApi';
@@ -27,11 +26,20 @@ import { TestPartSidebar } from '@/features/tests/components/speak-write/TestPar
 const SpeakingExam = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
   const [answers, setAnswers] = useState<Map<number, string>>(new Map());
   const [totalTime] = useState(20 * 60); // 20 minutes
   const [timeRemaining, setTimeRemaining] = useState(totalTime);
-  const [testAttemptId, setTestAttemptId] = useState<string | null>(null);
+
+  const testAttemptId = location.state?.testAttemptId;
+
+  useEffect(() => {
+    if (!testAttemptId) {
+      navigate(`/test/speaking/${testId}/check`);
+      return;
+    }
+  }, [testAttemptId, navigate, testId]);
 
   // API call to get test data
   const {
@@ -40,8 +48,6 @@ const SpeakingExam = () => {
     isLoading,
   } = useGetSpeakingTestByIdQuery(Number(testId!));
 
-  const [startAttempt, { isLoading: isStarting }] =
-    useStartSpeakingAttemptMutation();
   const [submitQuestion, { isLoading: isSubmitting }] =
     useSubmitSpeakingQuestionMutation();
   const [finishAttempt, { isLoading: isFinishing }] =
@@ -84,69 +90,6 @@ const SpeakingExam = () => {
 
   const handleAnswer = (questionId: number, answer: string) => {
     setAnswers((prev) => new Map(prev.set(questionId, answer)));
-  };
-
-  const handleStartTest = async () => {
-    console.log(
-      'Starting test attempt for test ID:',
-      testData?.testId ?? testId
-    );
-
-    if (!testData) return;
-    try {
-      console.log(
-        'Starting test attempt for test ID:',
-        testData.testId ?? testId
-      );
-      const res = await startAttempt({
-        toeicSpeakingTestId: String(testData.testId ?? testId),
-      }).unwrap();
-
-      // backend may return different shapes. Try a few common ones.
-      let attemptId: string | undefined;
-      const r: unknown = res;
-      if (r && typeof r === 'object') {
-        const obj = r as Record<string, unknown>;
-        if (
-          typeof obj.testAttemptId === 'string' ||
-          typeof obj.testAttemptId === 'number'
-        ) {
-          attemptId = String(obj.testAttemptId);
-        } else if (
-          obj.data &&
-          typeof obj.data === 'object' &&
-          (obj.data as Record<string, unknown>).testAttemptId
-        ) {
-          attemptId = String(
-            (obj.data as Record<string, unknown>).testAttemptId
-          );
-        } else if (obj._id) {
-          attemptId = String(obj._id);
-        } else if (obj.id) {
-          attemptId = String(obj.id);
-        }
-      }
-
-      if (attemptId) {
-        setTestAttemptId(String(attemptId));
-        console.log('Started test attempt:', attemptId);
-        toast.success('Test attempt started');
-      } else {
-        console.warn('Start attempt returned unexpected shape:', res);
-        toast(
-          'Test started but server response was unexpected. Check console.'
-        );
-      }
-    } catch (e) {
-      console.error('Failed to start test attempt', e);
-      toast.error('Failed to start test attempt');
-    }
-  };
-
-  const handleStartButtonClick = (e: React.MouseEvent) => {
-    console.log('Start button clicked', { testId, currentPartIndex });
-    e.preventDefault();
-    void handleStartTest();
   };
 
   const handleSubmitQuestion = async ({
@@ -243,29 +186,16 @@ const SpeakingExam = () => {
               <Clock className="h-4 xl:h-5 w-4 xl:w-5" />
               <span>{formatTime(timeRemaining)}</span>
             </div>
-            {!testAttemptId ? (
-              <Button
-                onClick={handleStartButtonClick}
-                variant="default"
-                size="sm"
-                className="xl:text-base"
-                disabled={isStarting}
-              >
-                <span className="hidden sm:inline">Start Test</span>
-                <span className="sm:hidden">Start</span>
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                variant="default"
-                size="sm"
-                className="xl:text-base"
-                disabled={isFinishing}
-              >
-                <span className="hidden sm:inline">Finish Test</span>
-                <span className="sm:hidden">Finish</span>
-              </Button>
-            )}
+            <Button
+              onClick={handleSubmit}
+              variant="default"
+              size="sm"
+              className="xl:text-base"
+              disabled={isFinishing}
+            >
+              <span className="hidden sm:inline">Finish Test</span>
+              <span className="sm:hidden">Finish</span>
+            </Button>
           </div>
         </div>
 
