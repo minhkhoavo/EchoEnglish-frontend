@@ -142,13 +142,6 @@ class TestStorageService {
     testMode: string,
     selectedParts?: string[]
   ): Promise<void> {
-    console.log('🗑️ deleteTestSession called with:', {
-      userId,
-      testId,
-      testMode,
-      selectedParts,
-    });
-
     try {
       const db = await this.initDB();
       const transaction = db.transaction([this.storeName], 'readwrite');
@@ -157,12 +150,9 @@ class TestStorageService {
       const partsKey = this.generatePartsKey(selectedParts);
       const compoundKey = [userId, testId, testMode, partsKey];
 
-      console.log('🔑 Compound key for deletion:', compoundKey);
-
       await new Promise<void>((resolve, reject) => {
         const request = store.delete(compoundKey);
         request.onsuccess = () => {
-          console.log('✅ IndexedDB delete request successful');
           resolve();
         };
         request.onerror = () => {
@@ -174,7 +164,6 @@ class TestStorageService {
       // Wait for transaction to complete
       await new Promise<void>((resolve, reject) => {
         transaction.oncomplete = () => {
-          console.log('✅ IndexedDB transaction completed');
           resolve();
         };
         transaction.onerror = () => {
@@ -184,7 +173,6 @@ class TestStorageService {
       });
 
       db.close();
-      console.log('✅ deleteTestSession completed successfully');
     } catch (error) {
       console.error('❌ Error deleting test session:', error);
       throw error;

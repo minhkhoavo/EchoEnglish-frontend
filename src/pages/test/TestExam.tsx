@@ -208,11 +208,15 @@ const TestExam = () => {
 
   // Determine which parts to show based on mode
   const partsToShow = useMemo(() => {
+    if (isReviewMode && reviewResult?.parts && reviewResult.parts.length > 0) {
+      // In review mode, use the partKeys from the test result collection
+      return reviewResult.parts;
+    }
     const showAllParts = testMode === 'full' || selectedParts.length === 0;
     return showAllParts
       ? ['part1', 'part2', 'part3', 'part4', 'part5', 'part6', 'part7']
       : selectedParts;
-  }, [testMode, selectedParts]);
+  }, [testMode, selectedParts, isReviewMode, reviewResult?.parts]);
 
   // Set initial part based on available parts
   useEffect(() => {

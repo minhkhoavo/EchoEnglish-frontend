@@ -72,9 +72,6 @@ export const useTestSession = (isReviewMode?: boolean) => {
       try {
         // Skip IndexedDB operations in review mode
         if (isReviewMode) {
-          console.log(
-            '📖 Review mode: skipping IndexedDB check and starting directly'
-          );
           dispatch(
             startTestAction({
               test,
@@ -275,16 +272,8 @@ export const useTestSession = (isReviewMode?: boolean) => {
   );
 
   const endTest = useCallback(async () => {
-    console.log('🔚 endTest called', { currentSession, userId, isReviewMode });
     if (currentSession && !isReviewMode) {
       try {
-        console.log('🗑️ Deleting IndexedDB session:', {
-          userId,
-          testId: currentSession.testId,
-          testMode: currentSession.testMode || 'full',
-          selectedParts: currentSession.selectedParts,
-        });
-
         // Clean up IndexedDB entry when test is completed (not in review mode)
         await testStorageService.deleteTestSession(
           userId,
@@ -296,17 +285,12 @@ export const useTestSession = (isReviewMode?: boolean) => {
               : (currentSession.selectedParts as string).split('-')
             : []
         );
-        console.log('✅ IndexedDB record deleted successfully');
       } catch (error) {
         console.error('❌ Failed to clean up IndexedDB:', error);
       }
-    } else if (isReviewMode) {
-      console.log('📖 Review mode: skipping IndexedDB cleanup');
     }
 
-    console.log('🔄 Clearing Redux state');
     dispatch(endTestAction());
-    console.log('✅ endTest completed');
   }, [currentSession, dispatch, userId, isReviewMode]);
 
   const checkExistingSession = useCallback(

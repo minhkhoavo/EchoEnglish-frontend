@@ -57,75 +57,8 @@ export const QuestionNavigation = ({
         }
         return 'unanswered';
       }
-
-      // Fallback mock data for demonstration (when reviewAnswers not provided)
-      const mockAnswers = {
-        1: { userAnswer: 'A', correctAnswer: 'A' },
-        2: { userAnswer: 'C', correctAnswer: 'B' },
-        3: { userAnswer: 'B', correctAnswer: 'B' },
-        4: { userAnswer: 'D', correctAnswer: 'D' },
-        5: { userAnswer: 'C', correctAnswer: 'C' },
-        6: { userAnswer: 'C', correctAnswer: 'C' },
-        7: { userAnswer: 'C', correctAnswer: 'B' },
-        8: { userAnswer: 'C', correctAnswer: 'C' },
-        9: { userAnswer: 'C', correctAnswer: 'C' },
-        10: { userAnswer: 'A', correctAnswer: 'A' },
-        11: { userAnswer: 'C', correctAnswer: 'C' },
-        12: { userAnswer: 'C', correctAnswer: 'C' },
-        32: { userAnswer: 'D', correctAnswer: 'D' },
-        33: { userAnswer: 'B', correctAnswer: 'B' },
-        34: { userAnswer: 'B', correctAnswer: 'B' },
-        71: { userAnswer: 'B', correctAnswer: 'D' },
-        72: { userAnswer: 'A', correctAnswer: 'A' },
-        73: { userAnswer: 'C', correctAnswer: 'C' },
-        // Part 5 mock answers
-        101: { userAnswer: 'B', correctAnswer: 'B' },
-        102: { userAnswer: 'D', correctAnswer: 'D' },
-        103: { userAnswer: 'C', correctAnswer: 'C' },
-        104: { userAnswer: 'A', correctAnswer: 'B' }, // incorrect
-        105: { userAnswer: 'B', correctAnswer: 'B' },
-        // Part 6 mock answers
-        131: { userAnswer: 'D', correctAnswer: 'D' },
-        132: { userAnswer: 'D', correctAnswer: 'D' },
-        133: { userAnswer: 'A', correctAnswer: 'A' },
-        134: { userAnswer: 'B', correctAnswer: 'B' },
-        135: { userAnswer: 'C', correctAnswer: 'C' },
-        136: { userAnswer: 'A', correctAnswer: 'A' },
-        137: { userAnswer: 'B', correctAnswer: 'B' },
-        138: { userAnswer: 'B', correctAnswer: 'B' },
-        139: { userAnswer: 'A', correctAnswer: 'B' }, // incorrect
-        140: { userAnswer: 'C', correctAnswer: 'C' },
-        // Part 7 mock answers
-        147: { userAnswer: 'C', correctAnswer: 'C' },
-        148: { userAnswer: 'B', correctAnswer: 'B' },
-        149: { userAnswer: 'B', correctAnswer: 'B' },
-        150: { userAnswer: 'C', correctAnswer: 'C' },
-        151: { userAnswer: 'B', correctAnswer: 'B' },
-        152: { userAnswer: 'D', correctAnswer: 'D' },
-        153: { userAnswer: 'A', correctAnswer: 'A' },
-        154: { userAnswer: 'B', correctAnswer: 'B' },
-        155: { userAnswer: 'A', correctAnswer: 'A' },
-        156: { userAnswer: 'D', correctAnswer: 'D' },
-        157: { userAnswer: 'B', correctAnswer: 'B' },
-        158: { userAnswer: 'B', correctAnswer: 'B' },
-        159: { userAnswer: 'A', correctAnswer: 'A' },
-        160: { userAnswer: 'B', correctAnswer: 'B' },
-        161: { userAnswer: 'C', correctAnswer: 'A' }, // incorrect
-        190: { userAnswer: 'A', correctAnswer: 'A' },
-        195: { userAnswer: 'C', correctAnswer: 'B' }, // incorrect
-        196: { userAnswer: 'A', correctAnswer: 'A' },
-        197: { userAnswer: 'C', correctAnswer: 'C' },
-        198: { userAnswer: 'C', correctAnswer: 'C' },
-        199: { userAnswer: 'D', correctAnswer: 'D' },
-        200: { userAnswer: 'B', correctAnswer: 'B' },
-      };
-
-      const answer = mockAnswers[questionNum as keyof typeof mockAnswers];
-      if (!answer) return 'unanswered';
-
-      return answer.userAnswer === answer.correctAnswer
-        ? 'correct'
-        : 'incorrect';
+      // No mock data fallback - use unanswered if no real data
+      return 'unanswered';
     }
 
     // For current test, just check if user has answered

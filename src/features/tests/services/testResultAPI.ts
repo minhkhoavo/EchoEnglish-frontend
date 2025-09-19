@@ -30,6 +30,7 @@ export interface TestHistoryItem {
   totalQuestions: number;
   duration: number;
   percentage: number;
+  partsKey: string;
 }
 
 export interface TestResultDetail {
@@ -52,9 +53,9 @@ export interface TestResultDetail {
 }
 
 export interface UserStats {
-  totalTests: number;
+  listeningReadingTests: number;
   averageScore: number;
-  bestScore: number;
+  highestScore: number;
   recentTests: TestHistoryItem[];
 }
 

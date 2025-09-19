@@ -46,14 +46,6 @@ export const useTestSessionManagement = (
 
     // Check for existing session with the specific test configuration
     try {
-      console.log('TOEICTestDetail checking session:', {
-        testId,
-        testMode,
-        partsToCheck,
-        isCustomMode,
-        selectedParts,
-      });
-
       const existingSessionData = await checkExistingSession(
         testId,
         testMode,

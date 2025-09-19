@@ -118,6 +118,20 @@ export const TestHistory: React.FC<TestHistoryProps> = ({ testId }) => {
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {result.testTitle}
+                          {result.partsKey !== 'full' ? (
+                            <>
+                              {' - '}
+                              <span>
+                                {/* Chuyển partKey thành dạng Part 2, 3, 5 */}
+                                {result.partsKey
+                                  .split('-')
+                                  .map((p) => p.replace('part', 'Part '))
+                                  .join(', ')}
+                              </span>
+                            </>
+                          ) : (
+                            '- Full'
+                          )}
                         </div>
                       </div>
                     </td>
@@ -132,9 +146,13 @@ export const TestHistory: React.FC<TestHistoryProps> = ({ testId }) => {
                                 : 'bg-red-100 text-red-800'
                           }`}
                         >
-                          {result.score}/{result.totalQuestions}
+                          {/* Nếu là full test thì hiển thị điểm TOEIC, còn lại chỉ hiển thị số câu đúng */}
+                          {result.partsKey === 'full'
+                            ? result.score * 5
+                            : result.score}
                         </span>
                         <span className="text-xs text-muted-foreground">
+                          {result.score}/{result.totalQuestions} |{' '}
                           {result.percentage}%
                         </span>
                       </div>
