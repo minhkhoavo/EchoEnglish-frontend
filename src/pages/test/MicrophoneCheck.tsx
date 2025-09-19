@@ -12,6 +12,8 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useGetSpeakingTestByIdQuery } from '@/features/tests/services/speakingTestApi';
 import { useStartSpeakingAttemptMutation } from '@/features/tests/services/speakingAttemptApi';
+import { useAppDispatch, useAppSelector } from '@/core/store/store';
+import { setExamMode } from '@/features/tests/slices/speakingExamSlice';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -23,11 +25,15 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  Clock,
+  BookOpen,
 } from 'lucide-react';
 
 const MicrophoneCheck: React.FC = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { examMode } = useAppSelector((state) => state.speakingExam);
 
   const [micPermission, setMicPermission] = useState<
     'pending' | 'granted' | 'denied'
@@ -437,9 +443,95 @@ const MicrophoneCheck: React.FC = () => {
                 </div>
               )}
 
+              {/* Test Mode Selection */}
+              {canStartTest && (
+                <div className="space-y-4 pt-4 border-t">
+                  <div>
+                    <h4 className="font-semibold mb-3">Test Mode</h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      {/* Normal Mode */}
+                      <Card
+                        className={`cursor-pointer transition-all ${
+                          examMode === 'normal'
+                            ? 'ring-2 ring-blue-500 bg-blue-50'
+                            : 'hover:bg-gray-50'
+                        }`}
+                        onClick={() => dispatch(setExamMode('normal'))}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start space-x-3">
+                            <div className="mt-1">
+                              <div
+                                className={`w-4 h-4 rounded-full border-2 ${
+                                  examMode === 'normal'
+                                    ? 'bg-blue-500 border-blue-500'
+                                    : 'border-gray-300'
+                                }`}
+                              >
+                                {examMode === 'normal' && (
+                                  <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2">
+                                <BookOpen className="h-4 w-4 text-blue-600" />
+                                <h5 className="font-medium">Practice Mode</h5>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Navigate freely between questions, unlimited
+                                time, review answers
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Exam Mode */}
+                      <Card
+                        className={`cursor-pointer transition-all ${
+                          examMode === 'exam'
+                            ? 'ring-2 ring-red-500 bg-red-50'
+                            : 'hover:bg-gray-50'
+                        }`}
+                        onClick={() => dispatch(setExamMode('exam'))}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start space-x-3">
+                            <div className="mt-1">
+                              <div
+                                className={`w-4 h-4 rounded-full border-2 ${
+                                  examMode === 'exam'
+                                    ? 'bg-red-500 border-red-500'
+                                    : 'border-gray-300'
+                                }`}
+                              >
+                                {examMode === 'exam' && (
+                                  <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2">
+                                <Clock className="h-4 w-4 text-red-600" />
+                                <h5 className="font-medium">Real Exam Mode</h5>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Timed questions, automatic progression, no going
+                                back - like real TOEIC
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Start Test Button */}
               {canStartTest && (
-                <div className="pt-4 border-t">
+                <div className="pt-4">
                   <Button
                     onClick={handleStartTest}
                     className="w-full"
@@ -452,11 +544,13 @@ const MicrophoneCheck: React.FC = () => {
                         Starting Test...
                       </>
                     ) : (
-                      'Start Speaking Test'
+                      `Start ${examMode === 'exam' ? 'Real Exam' : 'Practice'} Test`
                     )}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-2">
-                    You will have 20 minutes to complete the test
+                    {examMode === 'exam'
+                      ? 'You will have 20 minutes to complete the test automatically'
+                      : 'Practice at your own pace with no time limits'}
                   </p>
                 </div>
               )}

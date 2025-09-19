@@ -4,6 +4,7 @@ import contentReducer from '../../features/content-manager/slices/contentSlice';
 import quizReducer from '../../features/quiz/slices/quizSlice';
 import flashcardReducer from '../../features/flashcard/slices/flashcardSlice';
 import testReducer from '../../features/tests/slices/testSlice';
+import speakingExamReducer from '../../features/tests/slices/speakingExamSlice';
 import authReducer from '../../features/auth/slices/authSlice';
 import speechAnalyzerReducer from '../../features/speech-analyzer/slices/speechAnalyzerSlice';
 import { api } from '../api/api';
@@ -18,6 +19,7 @@ export const store = configureStore({
     quiz: quizReducer,
     flashcard: flashcardReducer,
     test: testReducer,
+    speakingExam: speakingExamReducer,
     auth: authReducer,
     speechAnalyzer: speechAnalyzerReducer,
     [api.reducerPath]: api.reducer,

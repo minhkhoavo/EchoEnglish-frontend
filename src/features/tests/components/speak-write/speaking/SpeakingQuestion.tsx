@@ -5,6 +5,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Clock } from 'lucide-react';
 import type { SpeakingQuestionProps } from '@/features/tests/types/speaking-test.types';
 import { Loader2, Upload } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '@/core/store/store';
+import {
+  updateQuestionPhase,
+  updateQuestionTime,
+  markQuestionSubmitted,
+  nextQuestion,
+  initQuestionState,
+} from '@/features/tests/slices/speakingExamSlice';
+import { useSubmitSpeakingQuestionMutation } from '@/features/tests/services/speakingAttemptApi';
 
 // Import new shared components
 import { QuestionTimer } from '../QuestionTimer';
@@ -19,6 +28,31 @@ import { RecordingPlayback } from '../RecordingPlayback';
 import { QuestionHeader } from '../QuestionHeader';
 import { toast } from 'sonner';
 
+// Audio context for pip sounds
+const audioContext = new (window.AudioContext ||
+  (window as typeof window & { webkitAudioContext: typeof AudioContext })
+    .webkitAudioContext)();
+
+const playPipSound = (frequency: number = 800, duration: number = 200) => {
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+
+  oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+  oscillator.type = 'sine';
+
+  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(
+    0.01,
+    audioContext.currentTime + duration / 1000
+  );
+
+  oscillator.start(audioContext.currentTime);
+  oscillator.stop(audioContext.currentTime + duration / 1000);
+};
+
 export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
   question,
   partTitle,
@@ -30,24 +64,52 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
   absoluteQuestionNumber,
   testAttemptId,
   onSubmitRecording,
+  onBlobRecorded,
 }) => {
+  const dispatch = useAppDispatch();
+  const { examMode, questionStates, isAutoFlow, playPipSounds } =
+    useAppSelector((state) => state.speakingExam);
+  const [submitSpeakingQuestion] = useSubmitSpeakingQuestionMutation();
+
+  // Get current question state from Redux or initialize
+  const questionState = questionStates[question.id] || {
+    id: question.id,
+    phase: 'idle',
+    preparationTimeLeft: question.time_to_think,
+    recordingTimeLeft: question.limit_time,
+    hasAudio: false,
+  };
+
+  // Use Redux state for phase and timing
+  const currentPhase = questionState.phase;
+  const preparationTimeLeft = questionState.preparationTimeLeft;
+  const responseTimeLeft = questionState.recordingTimeLeft;
+
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
-  const [preparationTimeLeft, setPreparationTimeLeft] = useState(
-    question.time_to_think
-  );
-  const [responseTimeLeft, setResponseTimeLeft] = useState(question.limit_time);
-  const [currentPhase, setCurrentPhase] = useState<
-    'idle' | 'preparation' | 'response' | 'completed'
-  >('idle');
   const [showSampleAnswer, setShowSampleAnswer] = useState(false);
   const [showIdea, setShowIdea] = useState(false);
-  const [hasStartedPreparation, setHasStartedPreparation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
+  const autoFlowTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Initialize refs from question props to avoid referencing block-scoped
+  // Redux variables before they're declared during module evaluation.
+  const preparationTimeRef = useRef<number>(question.time_to_think ?? 0);
+  const responseTimeRef = useRef<number>(question.limit_time ?? 0);
+  const audioResumedRef = useRef<boolean>(false);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Map Redux phase to component phase
+  const componentPhase =
+    currentPhase === 'recording'
+      ? ('response' as const)
+      : currentPhase === 'submitted'
+        ? ('completed' as const)
+        : (currentPhase as 'idle' | 'preparation' | 'completed');
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -55,7 +117,30 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
+      if (autoFlowTimeoutRef.current) {
+        clearTimeout(autoFlowTimeoutRef.current);
+      }
     };
+  }, [question.id]);
+
+  // Keep refs in sync with latest redux values so interval callbacks use fresh numbers
+  useEffect(() => {
+    preparationTimeRef.current = preparationTimeLeft;
+  }, [preparationTimeLeft]);
+
+  useEffect(() => {
+    responseTimeRef.current = responseTimeLeft;
+  }, [responseTimeLeft]);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current !== null) {
+      try {
+        window.clearInterval(timerRef.current);
+      } catch (e) {
+        clearInterval(Number(timerRef.current));
+      }
+      timerRef.current = null;
+    }
   }, []);
 
   const startRecording = useCallback(async () => {
@@ -68,137 +153,278 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
         audioChunksRef.current.push(event.data);
       };
 
-      mediaRecorderRef.current.onstop = () => {
+      mediaRecorderRef.current.onstop = async () => {
         const blob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         setRecordedBlob(blob);
+        onBlobRecorded?.(question.id, blob);
+
+        // Auto-submit in exam mode
+        if (testAttemptId) {
+          try {
+            await submitSpeakingQuestion({
+              testAttemptId,
+              questionNumber: absoluteQuestionNumber ?? 0,
+              file: blob,
+            }).unwrap();
+
+            dispatch(
+              markQuestionSubmitted({
+                questionId: question.id,
+                hasAudio: true,
+              })
+            );
+
+            if (playPipSounds) {
+              playPipSound(600, 300);
+            }
+
+            if ((examMode === 'exam' && isAutoFlow) || examMode === 'normal') {
+              setTimeout(() => dispatch(nextQuestion()), 1500);
+            }
+
+            toast.success('Question submitted successfully');
+          } catch (error) {
+            console.error('Failed to submit:', error);
+            toast.error('Failed to submit recording');
+            if ((examMode === 'exam' && isAutoFlow) || examMode === 'normal') {
+              dispatch(
+                markQuestionSubmitted({
+                  questionId: question.id,
+                  hasAudio: true,
+                })
+              );
+              setTimeout(() => dispatch(nextQuestion()), 1500);
+            }
+          }
+        }
+
         stream.getTracks().forEach((track) => track.stop());
       };
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
+      dispatch(
+        updateQuestionPhase({ questionId: question.id, phase: 'recording' })
+      );
     } catch (error) {
       console.error('Error starting recording:', error);
+      toast.error('Failed to start recording');
     }
-  }, []);
+  }, [
+    dispatch,
+    question.id,
+    onBlobRecorded,
+    testAttemptId,
+    absoluteQuestionNumber,
+    examMode,
+    isAutoFlow,
+    playPipSounds,
+    submitSpeakingQuestion,
+  ]);
 
-  const clearTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
-  const continueResponseTimer = useCallback(() => {
+  // Helper function to handle timeout logic
+  const handleTimeout = useCallback(() => {
     clearTimer();
-    timerRef.current = setInterval(() => {
-      setResponseTimeLeft((prev) => {
-        const safePrev = typeof prev === 'number' ? prev : 0;
-        if (safePrev <= 1) {
-          clearTimer();
-          if (isRecording && mediaRecorderRef.current) {
-            mediaRecorderRef.current.stop();
-            setIsRecording(false);
+
+    // Stop recording if still active
+    try {
+      if (mediaRecorderRef.current?.state === 'recording') {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+      }
+    } catch (e) {
+      // ignore stop errors
+    }
+
+    // Handle auto-flow modes
+    if ((examMode === 'exam' && isAutoFlow) || examMode === 'normal') {
+      if (recordedBlob && testAttemptId) {
+        // Submit will be handled by onstop callback
+      } else {
+        dispatch(
+          markQuestionSubmitted({
+            questionId: question.id,
+            hasAudio: !!recordedBlob,
+          })
+        );
+        setTimeout(() => dispatch(nextQuestion()), 1500);
+      }
+    } else {
+      dispatch(
+        updateQuestionPhase({ questionId: question.id, phase: 'completed' })
+      );
+    }
+  }, [
+    clearTimer,
+    examMode,
+    isAutoFlow,
+    recordedBlob,
+    testAttemptId,
+    dispatch,
+    question.id,
+  ]);
+
+  // Generic timer function
+  const createTimer = useCallback(
+    (
+      timeRef: React.MutableRefObject<number>,
+      onTick: (time: number) => void,
+      onTimeout: () => void,
+      pipFrequency: number = 800
+    ) => {
+      clearTimer();
+      audioResumedRef.current = false;
+
+      timerRef.current = window.setInterval(() => {
+        const newTime = Math.max(0, timeRef.current - 1);
+        timeRef.current = newTime;
+        onTick(newTime);
+
+        if (playPipSounds && newTime > 2) {
+          try {
+            if (
+              !audioResumedRef.current &&
+              audioContext.state === 'suspended'
+            ) {
+              void audioContext.resume();
+              audioResumedRef.current = true;
+            }
+            playPipSound(pipFrequency, 100);
+          } catch (e) {
+            // ignore
           }
-          setCurrentPhase('completed');
-          return 0;
         }
-        return safePrev - 1;
-      });
-    }, 1000);
-  }, [isRecording, clearTimer]);
+
+        if (newTime <= 0) {
+          clearTimer();
+          onTimeout();
+        }
+      }, 1000) as unknown as number;
+    },
+    [clearTimer, playPipSounds]
+  );
+
+  const startResponseTimer = useCallback(() => {
+    createTimer(
+      responseTimeRef,
+      (time) =>
+        dispatch(
+          updateQuestionTime({ questionId: question.id, recordingTime: time })
+        ),
+      () => setTimeout(handleTimeout, 350)
+    );
+  }, [createTimer, dispatch, question.id, handleTimeout]);
+
+  const handleStartPreparation = useCallback(() => {
+    if (currentPhase !== 'idle') return;
+
+    dispatch(
+      updateQuestionPhase({ questionId: question.id, phase: 'preparation' })
+    );
+    if (playPipSounds) playPipSound(800, 200);
+
+    createTimer(
+      preparationTimeRef,
+      (time) =>
+        dispatch(
+          updateQuestionTime({ questionId: question.id, preparationTime: time })
+        ),
+      () => {
+        dispatch(
+          updateQuestionPhase({ questionId: question.id, phase: 'recording' })
+        );
+        if (playPipSounds) playPipSound(1000, 200);
+
+        if ((examMode === 'exam' && isAutoFlow) || examMode === 'normal') {
+          setTimeout(() => {
+            startRecording();
+            startResponseTimer();
+          }, 500);
+        } else {
+          startResponseTimer();
+        }
+      }
+    );
+  }, [
+    currentPhase,
+    dispatch,
+    question.id,
+    playPipSounds,
+    createTimer,
+    examMode,
+    isAutoFlow,
+    startRecording,
+    startResponseTimer,
+  ]);
+
+  // Auto-start preparation in exam mode
+  useEffect(() => {
+    if (examMode === 'exam' && isAutoFlow && currentPhase === 'idle') {
+      autoFlowTimeoutRef.current = setTimeout(() => {
+        handleStartPreparation();
+      }, 1000);
+    }
+  }, [examMode, isAutoFlow, currentPhase, handleStartPreparation]);
+
+  const handleManualStartRecording = useCallback(() => {
+    if (currentPhase === 'recording' && !isRecording) {
+      startRecording();
+    } else if (currentPhase === 'recording' && isRecording) {
+      if (mediaRecorderRef.current) {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+      }
+    }
+  }, [currentPhase, isRecording, startRecording]);
+
+  const handleRecordAgain = useCallback(() => {
+    setRecordedBlob(null);
+    if (currentPhase === 'recording') {
+      dispatch(
+        updateQuestionPhase({ questionId: question.id, phase: 'preparation' })
+      );
+    } else {
+      dispatch(
+        updateQuestionPhase({ questionId: question.id, phase: 'recording' })
+      );
+    }
+    dispatch(
+      updateQuestionTime({
+        questionId: question.id,
+        recordingTime: question.limit_time || 60,
+      })
+    );
+    startResponseTimer();
+  }, [
+    dispatch,
+    question.id,
+    question.limit_time,
+    startResponseTimer,
+    currentPhase,
+  ]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      const safeResponseTimeLeft =
-        typeof responseTimeLeft === 'number' ? responseTimeLeft : 0;
-      if (currentPhase === 'response' && safeResponseTimeLeft > 0) {
-        continueResponseTimer();
-      }
     }
-  }, [isRecording, currentPhase, responseTimeLeft, continueResponseTimer]);
-
-  useEffect(() => {
-    if (currentPhase === 'completed' && recordedBlob) {
-      // Auto-save logic if needed
-    }
-  }, [currentPhase, recordedBlob, question.id]);
-
-  const handleStartPreparation = () => {
-    if (hasStartedPreparation || currentPhase !== 'idle') {
-      return;
-    }
-
-    setHasStartedPreparation(true);
-    setCurrentPhase('preparation');
-    clearTimer();
-
-    timerRef.current = setInterval(() => {
-      setPreparationTimeLeft((prev) => {
-        const safePrev = typeof prev === 'number' ? prev : 0;
-        if (safePrev <= 1) {
-          clearTimer();
-          setCurrentPhase('response');
-          startResponseTimer();
-          return 0;
-        }
-        return safePrev - 1;
-      });
-    }, 1000);
-  };
-
-  const startResponseTimer = () => {
-    clearTimer();
-    startRecording();
-
-    timerRef.current = setInterval(() => {
-      setResponseTimeLeft((prev) => {
-        const safePrev = typeof prev === 'number' ? prev : 0;
-        if (safePrev <= 1) {
-          clearTimer();
-          if (isRecording && mediaRecorderRef.current) {
-            mediaRecorderRef.current.stop();
-            setIsRecording(false);
-          }
-          setCurrentPhase('completed');
-          return 0;
-        }
-        return safePrev - 1;
-      });
-    }, 1000);
-  };
-
-  const handleRecordAgain = () => {
-    setRecordedBlob(null);
-    if (currentPhase === 'completed') {
-      setCurrentPhase('response');
-      setResponseTimeLeft(question.limit_time);
-      startResponseTimer();
-    } else if (currentPhase === 'response') {
-      startRecording();
-    }
-  };
+  }, [isRecording]);
 
   const handleNewRecording = () => {
     setRecordedBlob(null);
     startRecording();
   };
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const handleSubmitRecorded = async () => {
-    if (!recordedBlob || !absoluteQuestionNumber || !onSubmitRecording) return;
-    try {
-      setIsSubmitting(true);
-      await onSubmitRecording({
-        questionNumber: absoluteQuestionNumber,
-        file: recordedBlob,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // Initialize question state in Redux
+  useEffect(() => {
+    dispatch(
+      initQuestionState({
+        questionId: question.id,
+        preparationTime: question.time_to_think ?? 0,
+        recordingTime: question.limit_time ?? 0,
+      })
+    );
+  }, [dispatch, question.id, question.time_to_think, question.limit_time]);
 
   return (
     <Card className="w-full border-l-4 border-cyan-500">
@@ -212,7 +438,7 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
         />
 
         <QuestionTimer
-          currentPhase={currentPhase}
+          currentPhase={componentPhase}
           preparationTime={
             typeof question.time_to_think === 'number'
               ? question.time_to_think
@@ -241,7 +467,7 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
           )}
 
           <RecordingControls
-            currentPhase={currentPhase}
+            currentPhase={componentPhase}
             isRecording={isRecording}
             recordedBlob={recordedBlob}
             responseTimeLeft={
@@ -249,7 +475,7 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
             }
             onStartRecording={startRecording}
             onStopRecording={stopRecording}
-            onRecordAgain={handleNewRecording}
+            onRecordAgain={handleRecordAgain}
             preparationTime={
               typeof question.time_to_think === 'number'
                 ? question.time_to_think
@@ -257,15 +483,17 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
             }
           />
 
-          {currentPhase === 'completed' && recordedBlob && (
-            <Button
-              onClick={handleRecordAgain}
-              variant="outline"
-              className="flex-1"
-            >
-              Record Again
-            </Button>
-          )}
+          {(currentPhase === 'completed' ||
+            (examMode === 'exam' && questionState.phase === 'submitted')) &&
+            recordedBlob && (
+              <Button
+                onClick={handleRecordAgain}
+                variant="outline"
+                className="flex-1"
+              >
+                Record Again
+              </Button>
+            )}
 
           <HelperButtons
             hasIdea={!!question.idea}
@@ -278,29 +506,7 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
             onToggleSuggestions={() => {}}
           />
 
-          {/* Submit button (only when attemptId present) */}
-          {testAttemptId && (
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={handleSubmitRecorded}
-                variant="default"
-                disabled={!recordedBlob || isSubmitting}
-                title={!recordedBlob ? 'Record first to enable submit' : ''}
-              >
-                {isSubmitting ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Submitting
-                  </span>
-                ) : (
-                  'Submit Answer'
-                )}
-              </Button>
-            </div>
-          )}
-
-          {/* TEMP testing helper: manual upload ALWAYS VISIBLE */}
-          {/* NOTE: This helper is intentionally always visible for quick QA. Remove later. */}
+          {/* File upload for manual submission */}
           <input
             ref={fileInputRef}
             type="file"
@@ -308,37 +514,44 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
             className="hidden"
             onChange={async (e) => {
               const file = e.target.files?.[0];
-              if (!file) return;
-              if (onSubmitRecording && absoluteQuestionNumber) {
-                // If backend is wired, call it
-                try {
-                  setIsSubmitting(true);
-                  await onSubmitRecording({
-                    questionNumber: absoluteQuestionNumber,
-                    file,
-                  });
-                } finally {
-                  setIsSubmitting(false);
-                }
-              } else {
-                // No backend handler - load file locally for playback and show info toast
-                const blob = file;
-                setRecordedBlob(blob);
-                toast(
-                  'Loaded audio locally for playback (no backend submit configured)',
-                  { duration: 4000 }
+              if (!file || !testAttemptId) return;
+
+              try {
+                setIsSubmitting(true);
+                await submitSpeakingQuestion({
+                  testAttemptId,
+                  questionNumber: absoluteQuestionNumber ?? 0,
+                  file,
+                }).unwrap();
+
+                dispatch(
+                  markQuestionSubmitted({
+                    questionId: question.id,
+                    hasAudio: true,
+                  })
                 );
+
+                if (playPipSounds) {
+                  playPipSound(600, 300);
+                }
+
+                toast.success('File uploaded and submitted successfully');
+              } catch (error) {
+                console.error('Failed to submit file:', error);
+                toast.error('Failed to submit file');
+              } finally {
+                setIsSubmitting(false);
+                // Reset input
+                e.currentTarget.value = '';
               }
-              // reset so same file can be selected again
-              e.currentTarget.value = '';
             }}
           />
           <div className="flex items-center gap-2 ml-auto">
             <Button
               onClick={() => fileInputRef.current?.click()}
               variant="outline"
-              disabled={isSubmitting}
-              title="Temporary helper to upload an audio file manually for this question"
+              disabled={isSubmitting || !testAttemptId}
+              title="Upload an audio file manually for this question"
             >
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
@@ -346,14 +559,14 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-2">
-                  <Upload className="h-4 w-4" /> Upload (temp)
+                  <Upload className="h-4 w-4" /> Upload File
                 </span>
               )}
             </Button>
           </div>
         </div>
         <AnswerDisplay
-          currentPhase={currentPhase}
+          currentPhase={componentPhase}
           recordedBlob={recordedBlob}
           onRecordAgain={handleRecordAgain}
         />

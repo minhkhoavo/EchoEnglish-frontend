@@ -43,6 +43,8 @@ export interface SpeakingPart extends BasePart {
 export interface SpeakingTestDetail extends BaseTestDetail {
   type: 'speaking';
   parts: SpeakingPart[];
+  testEndTime?: string;
+  isRecoverable?: boolean;
 }
 
 // Extended types for UI components
@@ -67,6 +69,7 @@ export interface SpeakingQuestionProps {
     questionNumber: number;
     file: Blob | File;
   }) => Promise<void> | void;
+  onBlobRecorded?: (questionId: number, blob: Blob) => void;
 }
 
 export interface SpeakingPartProps {
