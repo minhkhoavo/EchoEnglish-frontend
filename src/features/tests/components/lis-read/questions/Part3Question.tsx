@@ -11,35 +11,32 @@ import { useExpanded } from '@/features/tests/hooks/useExpanded';
 import {
   getUserAnswer,
   handleAnswerSelect,
+  getUserAnswerUnified,
 } from '@/features/tests/utils/answerUtils';
 
 interface Part3QuestionProps {
   part: TestPart;
   showCorrectAnswers?: boolean;
+  userAnswers?: Record<number, string>; // For review mode
+  reviewAnswers?: Array<{
+    questionNumber: number;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+  }>;
 }
 
 export const Part3Question = ({
   part,
   showCorrectAnswers = false,
+  userAnswers = {},
+  reviewAnswers = [],
 }: Part3QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
-
-  // Mock data for history view
-  const mockAnswers: Record<number, string> = {
-    32: 'D',
-    33: 'B',
-    34: 'B',
-    35: 'A',
-    36: 'C',
-    37: 'B',
-    38: 'D',
-    39: 'A',
-    40: 'C',
-  };
 
   const toggleTranscript = (groupIndex: number) => {
     toggleExpanded(groupIndex + 3000); // Group level transcript
@@ -51,13 +48,6 @@ export const Part3Question = ({
 
   const toggleExplanation = (questionNumber: number) => {
     toggleExpanded(questionNumber); // Question level explanation
-  };
-
-  const scrollToGroup = (groupIndex: number) => {
-    const element = document.getElementById(`group-${groupIndex}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
   };
 
   // Get all questions for navigation
@@ -137,11 +127,12 @@ export const Part3Question = ({
                 {/* Questions */}
                 <div className="lg:col-span-2 space-y-4">
                   {group.questions?.map((question) => {
-                    const userAnswer = getUserAnswer(
+                    const userAnswer = getUserAnswerUnified(
                       showCorrectAnswers,
                       getAnswer,
                       question.questionNumber,
-                      mockAnswers
+                      reviewAnswers,
+                      userAnswers
                     );
                     const isExplanationExpanded = isExpanded(
                       question.questionNumber

@@ -20,6 +20,13 @@ import { useAppDispatch, useAppSelector } from '@/core/store/store';
 import { endTest as endTestAction } from '@/features/tests/slices/testSlice';
 import type { TestSession } from '@/features/tests/types/toeic-test.types';
 import {
+  useSubmitTestResultMutation,
+  useGetTestResultDetailQuery,
+  type SubmitTestResultRequest,
+  type TestResultDetail,
+} from '@/features/tests/services/testResultAPI';
+import { toast } from '@/hooks/use-toast';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -42,20 +49,35 @@ const TestExam = () => {
     restartSession?: () => Promise<void>;
   } | null>(null);
 
-  // Get test mode and parameters from URL
-  const testMode = searchParams.get('mode') || 'full'; // 'full' or 'custom'
+  // Review mode states
+  const [reviewData, setReviewData] = useState<{
+    result: TestResultDetail;
+    userAnswers: Record<number, string>;
+  } | null>(null);
+
+  // Get test mode and parameters from URL (moved before RTK Query hooks)
+  const testMode = searchParams.get('mode') || 'full'; // 'full', 'custom', or 'review'
+  const resultId = searchParams.get('resultId'); // for review mode
   const selectedParts = useMemo(
     () => searchParams.get('parts')?.split(',') || [],
     [searchParams]
   );
   const testTime = parseInt(searchParams.get('time') || '120', 10);
   const isHistoryView = searchParams.get('history') === 'true';
+  const isReviewMode = testMode === 'review';
   const shouldContinue = searchParams.get('continue') === 'true';
   const isDirectStart = searchParams.get('start') === 'true';
 
+  // RTK Query hooks
+  const [submitTestResult] = useSubmitTestResultMutation();
+  const { data: reviewResult, isLoading: reviewLoading } =
+    useGetTestResultDetailQuery(resultId || '', {
+      skip: !isReviewMode || !resultId,
+    });
+
   // Redux-based test session management (moved before useEffect that uses currentSession)
   const { startTest, currentSession, isActive, endTest, updateCurrentSession } =
-    useTestSession();
+    useTestSession(isReviewMode);
 
   // Get user from Redux for userId
   const user = useAppSelector((state) => state.auth.user);
@@ -64,13 +86,83 @@ const TestExam = () => {
   // Handle test submission
   const handleSubmitTest = async () => {
     console.log('🚀 handleSubmitTest called', { currentSession });
+    console.log('🔍 testId check:', {
+      testId: currentSession?.testId,
+      testTitle: currentSession?.testTitle,
+      hasAnswers: currentSession?.answers
+        ? Object.keys(currentSession.answers).length
+        : 0,
+    });
+
     if (currentSession) {
-      console.log('📤 Calling endTest to delete IndexedDB record');
-      await endTest();
-      console.log('✅ endTest completed, navigating to home');
-      navigate('/');
+      try {
+        // Calculate actual test duration
+        const startTime = new Date(currentSession.startTime).getTime();
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+
+        // Convert answers from currentSession to API format
+        const userAnswers = Object.entries(currentSession.answers).map(
+          ([questionNumber, selectedAnswer]) => ({
+            questionNumber: parseInt(questionNumber, 10),
+            selectedAnswer: selectedAnswer as string,
+          })
+        );
+
+        // Prepare submission data
+        const submitData: SubmitTestResultRequest = {
+          testId: currentSession.testId || testId || '1', // Fallback to testId from URL or default
+          testTitle: currentSession.testTitle || 'TOEIC Practice Test',
+          testType: 'listening-reading',
+          duration,
+          userAnswers,
+          parts: Array.isArray(currentSession.selectedParts)
+            ? currentSession.selectedParts
+            : currentSession.selectedParts
+              ? [currentSession.selectedParts]
+              : ['part1', 'part2', 'part3', 'part4', 'part5', 'part6', 'part7'],
+        };
+
+        console.log('📤 Submitting test result:', submitData);
+
+        // Validate critical data before submitting
+        if (!submitData.testId) {
+          throw new Error('Test ID is missing');
+        }
+        if (!submitData.userAnswers || submitData.userAnswers.length === 0) {
+          throw new Error('No answers to submit');
+        }
+
+        // Submit to API using RTK Query
+        const result = await submitTestResult(submitData).unwrap();
+
+        // Show success notification
+        toast({
+          title: 'Test Submitted Successfully!',
+          description: result.message,
+          variant: 'default',
+        });
+
+        console.log('📤 Calling endTest to delete IndexedDB record');
+        await endTest();
+        console.log('✅ endTest completed, navigating to home');
+        navigate('/');
+      } catch (error) {
+        console.error('❌ Failed to submit test:', error);
+        toast({
+          title: 'Submission Failed',
+          description:
+            'There was an error submitting your test. Please try again.',
+          variant: 'destructive',
+        });
+      }
     } else {
       console.log('❌ No current session to submit');
+      toast({
+        title: 'No Test Session',
+        description: 'No active test session found to submit.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -134,15 +226,30 @@ const TestExam = () => {
     data: testData,
     isLoading: loading,
     error,
-  } = useGetTOEICTestByIdQuery(testId || '', {
-    skip: !testId,
+  } = useGetTOEICTestByIdQuery(testId || reviewResult?.testId || '', {
+    skip: !testId && (!isReviewMode || !reviewResult?.testId),
   });
 
-  // Initialize test session when test data is loaded and not in history view
+  // Load review data when in review mode
+  useEffect(() => {
+    if (isReviewMode && reviewResult) {
+      // Convert userAnswers array to object for easy lookup
+      const userAnswersMap: Record<number, string> = {};
+      reviewResult.userAnswers.forEach((answer) => {
+        userAnswersMap[answer.questionNumber] = answer.selectedAnswer;
+      });
+
+      setReviewData({
+        result: reviewResult,
+        userAnswers: userAnswersMap,
+      });
+    }
+  }, [isReviewMode, reviewResult]); // Initialize test session when test data is loaded and not in history view or review mode
   useEffect(() => {
     if (
       testData &&
       !isHistoryView &&
+      !isReviewMode &&
       !isActive &&
       (!isDirectStart || shouldContinue)
     ) {
@@ -191,6 +298,7 @@ const TestExam = () => {
   }, [
     testData,
     isHistoryView,
+    isReviewMode,
     isActive,
     testTime,
     testMode,
@@ -223,15 +331,14 @@ const TestExam = () => {
     // Update savedAt và timeRemaining trước khi exit nếu đang làm bài
     if (currentSession) {
       try {
-        // Tính lại timeRemaining thực tế
-        const endTime =
-          new Date(currentSession.startTime).getTime() +
-          (typeof currentSession.timeLimit === 'string'
-            ? new Date(currentSession.timeLimit).getTime() -
-              new Date(currentSession.startTime).getTime()
-            : currentSession.timeLimit);
-        const now = Date.now();
-        const newTimeRemaining = Math.max(0, endTime - now);
+        // Tính timeRemaining dựa trên thời gian đã trôi qua từ lúc bắt đầu
+        const startTime = new Date(currentSession.startTime).getTime();
+        const elapsed = Date.now() - startTime;
+        const newTimeRemaining = Math.max(
+          0,
+          currentSession.timeRemaining - elapsed
+        );
+
         await updateCurrentSession({
           savedAt: new Date().toISOString(),
           timeRemaining: newTimeRemaining,
@@ -288,39 +395,62 @@ const TestExam = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-4">
-            <ConfirmationDialog
-              title="Exit Test"
-              description="Are you sure you want to exit the test? Your progress will be saved."
-              confirmText="Exit"
-              cancelText="Continue Test"
-              variant="default"
-              onConfirm={handleBackToTests}
-            >
+            {isReviewMode ? (
+              // In review mode, no confirmation needed
               <Button
                 variant="outline"
                 size="sm"
                 className="flex items-center gap-2"
+                onClick={handleBackToTests}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Exit
               </Button>
-            </ConfirmationDialog>
+            ) : (
+              // In test mode, show confirmation dialog
+              <ConfirmationDialog
+                title="Exit Test"
+                description="Are you sure you want to exit the test? Your progress will be saved."
+                confirmText="Exit"
+                cancelText="Continue Test"
+                variant="default"
+                onConfirm={handleBackToTests}
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Exit
+                </Button>
+              </ConfirmationDialog>
+            )}
             <h1 className="text-2xl font-bold text-foreground">
-              {testData.testTitle}
+              {isReviewMode
+                ? `Review: ${reviewData?.result.testTitle || 'Test Result'}`
+                : testData.testTitle}
             </h1>
             {testMode === 'custom' && (
               <span className="text-sm text-muted-foreground">
                 ({partsToShow.length} parts - {testTime} minutes)
               </span>
             )}
+            {isReviewMode && reviewData && (
+              <span className="text-sm text-muted-foreground">
+                Score: {reviewData.result.score}/
+                {reviewData.result.totalQuestions} (
+                {reviewData.result.percentage}%)
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Test Timer */}
-            {!isHistoryView && <TestTimer />}
+            {/* Test Timer - only show in active test mode */}
+            {!isHistoryView && !isReviewMode && <TestTimer />}
 
-            {/* Submit Test Button */}
-            {!isHistoryView && (
+            {/* Submit Test Button - only show in active test mode */}
+            {!isHistoryView && !isReviewMode && (
               <ConfirmationDialog
                 title="Submit Test"
                 description="Are you sure you want to submit your test? This action cannot be undone."
@@ -384,7 +514,15 @@ const TestExam = () => {
                       {testData?.parts[0] && (
                         <Part1Question
                           part={testData.parts[0]}
-                          showCorrectAnswers={isHistoryView}
+                          showCorrectAnswers={isHistoryView || isReviewMode}
+                          userAnswers={
+                            isReviewMode ? reviewData?.userAnswers : undefined
+                          }
+                          reviewAnswers={
+                            isReviewMode
+                              ? reviewData?.result.userAnswers
+                              : undefined
+                          }
                         />
                       )}
                     </TabsContent>
@@ -395,7 +533,15 @@ const TestExam = () => {
                       {testData?.parts[1] && (
                         <Part2Question
                           part={testData.parts[1]}
-                          showCorrectAnswers={isHistoryView}
+                          showCorrectAnswers={isHistoryView || isReviewMode}
+                          userAnswers={
+                            isReviewMode ? reviewData?.userAnswers : undefined
+                          }
+                          reviewAnswers={
+                            isReviewMode
+                              ? reviewData?.result.userAnswers
+                              : undefined
+                          }
                         />
                       )}
                     </TabsContent>
@@ -406,7 +552,15 @@ const TestExam = () => {
                       {testData?.parts[2] && (
                         <Part3Question
                           part={testData.parts[2]}
-                          showCorrectAnswers={isHistoryView}
+                          showCorrectAnswers={isHistoryView || isReviewMode}
+                          userAnswers={
+                            isReviewMode ? reviewData?.userAnswers : undefined
+                          }
+                          reviewAnswers={
+                            isReviewMode
+                              ? reviewData?.result.userAnswers
+                              : undefined
+                          }
                         />
                       )}
                     </TabsContent>
@@ -417,7 +571,15 @@ const TestExam = () => {
                       {testData?.parts[3] && (
                         <Part4Question
                           part={testData.parts[3]}
-                          showCorrectAnswers={isHistoryView}
+                          showCorrectAnswers={isHistoryView || isReviewMode}
+                          userAnswers={
+                            isReviewMode ? reviewData?.userAnswers : undefined
+                          }
+                          reviewAnswers={
+                            isReviewMode
+                              ? reviewData?.result.userAnswers
+                              : undefined
+                          }
                         />
                       )}
                     </TabsContent>
@@ -428,7 +590,15 @@ const TestExam = () => {
                       {testData?.parts[4] && (
                         <Part5Question
                           part={testData.parts[4]}
-                          showCorrectAnswers={isHistoryView}
+                          showCorrectAnswers={isHistoryView || isReviewMode}
+                          userAnswers={
+                            isReviewMode ? reviewData?.userAnswers : undefined
+                          }
+                          reviewAnswers={
+                            isReviewMode
+                              ? reviewData?.result.userAnswers
+                              : undefined
+                          }
                         />
                       )}
                     </TabsContent>
@@ -439,7 +609,15 @@ const TestExam = () => {
                       {testData?.parts[5] && (
                         <Part6Question
                           part={testData.parts[5]}
-                          showCorrectAnswers={isHistoryView}
+                          showCorrectAnswers={isHistoryView || isReviewMode}
+                          userAnswers={
+                            isReviewMode ? reviewData?.userAnswers : undefined
+                          }
+                          reviewAnswers={
+                            isReviewMode
+                              ? reviewData?.result.userAnswers
+                              : undefined
+                          }
                         />
                       )}
                     </TabsContent>
@@ -450,7 +628,15 @@ const TestExam = () => {
                       {testData?.parts[6] && (
                         <Part7Question
                           part={testData.parts[6]}
-                          showCorrectAnswers={isHistoryView}
+                          showCorrectAnswers={isHistoryView || isReviewMode}
+                          userAnswers={
+                            isReviewMode ? reviewData?.userAnswers : undefined
+                          }
+                          reviewAnswers={
+                            isReviewMode
+                              ? reviewData?.result.userAnswers
+                              : undefined
+                          }
                         />
                       )}
                     </TabsContent>
@@ -471,62 +657,20 @@ const TestExam = () => {
                 onQuestionSelect={jumpToQuestion}
                 testData={testData}
                 showParts={partsToShow}
-                isHistoryView={isHistoryView}
-                userAnswers={currentSession?.answers || {}}
+                isHistoryView={isHistoryView || isReviewMode}
+                userAnswers={
+                  isReviewMode
+                    ? reviewData?.userAnswers || {}
+                    : currentSession?.answers || {}
+                }
+                reviewAnswers={
+                  isReviewMode ? reviewData?.result.userAnswers : undefined
+                }
               />
             </div>
           </div>
         </div>
       </div>
-
-      {/* Continue Test Dialog */}
-      <Dialog open={showContinueDialog} onOpenChange={setShowContinueDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Test in Progress</DialogTitle>
-            <DialogDescription>
-              You have an unfinished test session. Would you like to continue
-              where you left off or start fresh?
-              {existingSessionData?.existingSession && (
-                <div className="mt-2 text-sm text-muted-foreground">
-                  <p>
-                    Saved:{' '}
-                    {new Date(
-                      existingSessionData.existingSession.savedAt || ''
-                    ).toLocaleString()}
-                  </p>
-                  <p>
-                    Answers:{' '}
-                    {
-                      Object.keys(
-                        existingSessionData.existingSession.answers || {}
-                      ).length
-                    }{' '}
-                    questions completed
-                  </p>
-                </div>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={handleRestartSession}
-              className="flex items-center gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Start Fresh
-            </Button>
-            <Button
-              onClick={handleContinueSession}
-              className="flex items-center gap-2"
-            >
-              <Play className="h-4 w-4" />
-              Continue
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

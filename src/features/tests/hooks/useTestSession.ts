@@ -16,7 +16,7 @@ import type {
 
 // Quản lý logic dữ liệu và trạng thái phiên làm bài kiểm tra TOEIC
 // Đồng bộ dữ liệu giữa Redux store và IndexedDB (qua testStorageService).
-export const useTestSession = () => {
+export const useTestSession = (isReviewMode?: boolean) => {
   const dispatch = useAppDispatch();
   const currentSession = useAppSelector((state) => state.test.currentSession);
   const activeTest = useAppSelector((state) => state.test.activeTest);
@@ -40,6 +40,11 @@ export const useTestSession = () => {
             return;
           }
 
+          // Don't save to IndexedDB in review mode
+          if (isReviewMode) {
+            return;
+          }
+
           await testStorageService.saveTestSession(userId, currentSession);
         } catch (error) {
           console.error('❌ Failed to save test session to IndexedDB:', error);
@@ -50,7 +55,7 @@ export const useTestSession = () => {
     // Debounce saves to avoid too frequent writes
     const timeoutId = setTimeout(saveSessionToIndexedDB, 1000); // Reduce delay to 1 second
     return () => clearTimeout(timeoutId);
-  }, [currentSession, userId]);
+  }, [currentSession, userId, isReviewMode]);
 
   const startTest = useCallback(
     async (
@@ -65,6 +70,26 @@ export const useTestSession = () => {
       restartSession?: () => Promise<void>;
     }> => {
       try {
+        // Skip IndexedDB operations in review mode
+        if (isReviewMode) {
+          console.log(
+            '📖 Review mode: skipping IndexedDB check and starting directly'
+          );
+          dispatch(
+            startTestAction({
+              test,
+              timeLimit,
+              testMode,
+              selectedParts: Array.isArray(selectedParts)
+                ? selectedParts
+                : typeof selectedParts === 'string'
+                  ? (selectedParts as string).split('-')
+                  : [],
+            })
+          );
+          return { hasExisting: false };
+        }
+
         // Check if there's an existing session for this test configuration
         const existingSession = await testStorageService.getTestSession(
           userId,
@@ -179,7 +204,7 @@ export const useTestSession = () => {
         return { hasExisting: false };
       }
     },
-    [dispatch, userId]
+    [dispatch, userId, isReviewMode]
   );
 
   // Force start a completely fresh session, bypassing any existing session checks
@@ -250,8 +275,8 @@ export const useTestSession = () => {
   );
 
   const endTest = useCallback(async () => {
-    console.log('🔚 endTest called', { currentSession, userId });
-    if (currentSession) {
+    console.log('🔚 endTest called', { currentSession, userId, isReviewMode });
+    if (currentSession && !isReviewMode) {
       try {
         console.log('🗑️ Deleting IndexedDB session:', {
           userId,
@@ -260,7 +285,7 @@ export const useTestSession = () => {
           selectedParts: currentSession.selectedParts,
         });
 
-        // Clean up IndexedDB entry when test is completed
+        // Clean up IndexedDB entry when test is completed (not in review mode)
         await testStorageService.deleteTestSession(
           userId,
           currentSession.testId,
@@ -275,12 +300,14 @@ export const useTestSession = () => {
       } catch (error) {
         console.error('❌ Failed to clean up IndexedDB:', error);
       }
+    } else if (isReviewMode) {
+      console.log('📖 Review mode: skipping IndexedDB cleanup');
     }
 
     console.log('🔄 Clearing Redux state');
     dispatch(endTestAction());
     console.log('✅ endTest completed');
-  }, [currentSession, dispatch, userId]);
+  }, [currentSession, dispatch, userId, isReviewMode]);
 
   const checkExistingSession = useCallback(
     async (

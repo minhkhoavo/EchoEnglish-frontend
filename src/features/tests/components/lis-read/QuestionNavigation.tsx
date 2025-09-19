@@ -9,7 +9,14 @@ interface QuestionNavigationProps {
   testData: TOEICTestDetail;
   showParts?: string[];
   isHistoryView?: boolean;
-  userAnswers?: { [questionNumber: number]: string }; // Add user answers prop
+  userAnswers?: { [questionNumber: number]: string }; // User answers from current session or review
+  reviewAnswers?: Array<{
+    // Detailed review answers with correct/incorrect info
+    questionNumber: number;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+  }>;
 }
 
 export const QuestionNavigation = ({
@@ -19,6 +26,7 @@ export const QuestionNavigation = ({
   showParts = ['part1', 'part2', 'part3', 'part4', 'part5', 'part6', 'part7'],
   isHistoryView = false,
   userAnswers = {},
+  reviewAnswers = [],
 }: QuestionNavigationProps) => {
   // Scroll to question function
   const scrollToQuestion = (questionNumber: number) => {
@@ -37,9 +45,20 @@ export const QuestionNavigation = ({
 
   // Generate question status for all 200 questions
   const getQuestionStatus = (questionNum: number) => {
-    // For history view, show correct/incorrect/unanswered
+    // For history/review view, show correct/incorrect/unanswered
     if (isHistoryView) {
-      // Mock user answers for demonstration
+      // Use real review data if available
+      if (reviewAnswers && reviewAnswers.length > 0) {
+        const answerData = reviewAnswers.find(
+          (ans) => ans.questionNumber === questionNum
+        );
+        if (answerData) {
+          return answerData.isCorrect ? 'correct' : 'incorrect';
+        }
+        return 'unanswered';
+      }
+
+      // Fallback mock data for demonstration (when reviewAnswers not provided)
       const mockAnswers = {
         1: { userAnswer: 'A', correctAnswer: 'A' },
         2: { userAnswer: 'C', correctAnswer: 'B' },

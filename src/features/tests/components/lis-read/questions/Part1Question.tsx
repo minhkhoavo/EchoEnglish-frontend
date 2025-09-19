@@ -11,16 +11,26 @@ import { useExpanded } from '@/features/tests/hooks/useExpanded';
 import {
   getUserAnswer,
   handleAnswerSelect,
+  getUserAnswerUnified,
 } from '@/features/tests/utils/answerUtils';
 
 interface Part1QuestionProps {
   part: TestPart;
   showCorrectAnswers?: boolean;
+  userAnswers?: Record<number, string>; // For review mode
+  reviewAnswers?: Array<{
+    questionNumber: number;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+  }>;
 }
 
 export const Part1Question = ({
   part,
   showCorrectAnswers = false,
+  userAnswers = {},
+  reviewAnswers = [],
 }: Part1QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
@@ -28,33 +38,12 @@ export const Part1Question = ({
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
 
-  // Mock data for history view
-  const mockAnswers: Record<number, string> = {
-    1: 'A',
-    2: 'C',
-    3: 'B',
-    4: 'D',
-    5: 'C',
-    6: 'C',
-  };
-
-  const toggleExplanation = (questionNumber: number) => {
-    toggleExpanded(questionNumber);
-  };
-
   const toggleTranscript = (questionNumber: number) => {
     toggleExpanded(questionNumber + 1000); // Add offset to avoid collision
   };
 
   const toggleTranslation = (questionNumber: number) => {
     toggleExpanded(questionNumber + 2000); // Add offset to avoid collision
-  };
-
-  const scrollToQuestion = (questionNumber: number) => {
-    const element = document.getElementById(`question-${questionNumber}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
   };
 
   return (
@@ -81,11 +70,12 @@ export const Part1Question = ({
       {/* All Questions */}
       <div className="space-y-8">
         {part.questions?.map((question) => {
-          const userAnswer = getUserAnswer(
+          const userAnswer = getUserAnswerUnified(
             showCorrectAnswers,
             getAnswer,
             question.questionNumber,
-            mockAnswers
+            reviewAnswers,
+            userAnswers
           );
           const isCorrect =
             showCorrectAnswers && userAnswer === question.correctAnswer;
@@ -155,9 +145,7 @@ export const Part1Question = ({
                     <ExplanationSection
                       title="Show Explanation"
                       expanded={isExplanationExpanded}
-                      onToggle={() =>
-                        toggleExplanation(question.questionNumber)
-                      }
+                      onToggle={() => toggleExpanded(question.questionNumber)}
                       explanation={question.explanation}
                     />
                   )}

@@ -10,25 +10,32 @@ import { useExpanded } from '@/features/tests/hooks/useExpanded';
 import {
   getUserAnswer,
   handleAnswerSelect,
+  getUserAnswerUnified,
 } from '@/features/tests/utils/answerUtils';
 
 interface Part7QuestionProps {
   part: TestPart;
   showCorrectAnswers?: boolean;
+  userAnswers?: Record<number, string>; // For review mode
+  reviewAnswers?: Array<{
+    questionNumber: number;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+  }>;
 }
 
 export const Part7Question = ({
   part,
   showCorrectAnswers = false,
+  userAnswers = {},
+  reviewAnswers = [],
 }: Part7QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
-
-  // Mock data for history view
-  const mockAnswers: Record<number, string> = {};
 
   // Toggle explanation
   const toggleExplanation = (questionNumber: number) => {
@@ -127,11 +134,18 @@ export const Part7Question = ({
                       title="Show Translation"
                       expanded={isExpanded(groupIndex + 2000)}
                       onToggle={() => toggleTranslation(groupIndex)}
-                      explanation={
-                        group.groupContext.translation ||
-                        group.groupContext.transcript ||
-                        ''
-                      }
+                      explanation={(() => {
+                        const fullText =
+                          group.groupContext.translation ||
+                          group.groupContext.transcript ||
+                          '';
+                        const translationStart = fullText.indexOf(
+                          '<p><strong>Dịch nghĩa:</strong></p>'
+                        );
+                        return translationStart !== -1
+                          ? fullText.substring(translationStart)
+                          : fullText;
+                      })()}
                     />
                   )}
               </div>
@@ -145,11 +159,12 @@ export const Part7Question = ({
                 }}
               >
                 {(group.questions ?? []).map((question) => {
-                  const userAnswer = getUserAnswer(
+                  const userAnswer = getUserAnswerUnified(
                     showCorrectAnswers,
                     getAnswer,
                     question.questionNumber,
-                    mockAnswers
+                    reviewAnswers,
+                    userAnswers
                   );
                   const isExplanationExpanded = isExpanded(
                     question.questionNumber

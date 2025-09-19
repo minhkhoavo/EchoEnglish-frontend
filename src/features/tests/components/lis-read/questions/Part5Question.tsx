@@ -11,55 +11,31 @@ import { useExpanded } from '@/features/tests/hooks/useExpanded';
 import {
   getUserAnswer,
   handleAnswerSelect,
+  getUserAnswerUnified,
 } from '@/features/tests/utils/answerUtils';
 interface Part5QuestionProps {
   part: TestPart;
   showCorrectAnswers?: boolean;
+  userAnswers?: Record<number, string>; // For review mode
+  reviewAnswers?: Array<{
+    questionNumber: number;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+  }>;
 }
 
 export const Part5Question = ({
   part,
   showCorrectAnswers = false,
+  userAnswers = {},
+  reviewAnswers = [],
 }: Part5QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
-
-  // Mock data for history view
-  const mockAnswers: Record<number, string> = {
-    101: 'B',
-    102: 'D',
-    103: 'C',
-    104: 'A',
-    105: 'B',
-    106: 'C',
-    107: 'A',
-    108: 'D',
-    109: 'B',
-    110: 'A',
-    111: 'C',
-    112: 'B',
-    113: 'D',
-    114: 'A',
-    115: 'C',
-    116: 'B',
-    117: 'D',
-    118: 'A',
-    119: 'C',
-    120: 'B',
-    121: 'D',
-    122: 'A',
-    123: 'C',
-    124: 'B',
-    125: 'D',
-    126: 'A',
-    127: 'C',
-    128: 'B',
-    129: 'D',
-    130: 'A',
-  };
 
   const toggleExplanation = (questionNumber: number) => {
     toggleExpanded(questionNumber);
@@ -86,11 +62,12 @@ export const Part5Question = ({
       {/* All Questions */}
       <div className="space-y-6">
         {part.questions?.map((question) => {
-          const userAnswer = getUserAnswer(
+          const userAnswer = getUserAnswerUnified(
             showCorrectAnswers,
             getAnswer,
             question.questionNumber,
-            mockAnswers
+            reviewAnswers,
+            userAnswers
           );
           const isCorrect = userAnswer === question.correctAnswer;
           const isExplanationExpanded = isExpanded(question.questionNumber);

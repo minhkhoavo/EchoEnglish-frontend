@@ -91,7 +91,7 @@ export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
       />
 
       {/* Test History */}
-      <TestHistory />
+      <TestHistory testId={testId} />
 
       {/* Continue Test Dialog */}
       {showContinueDialog && existingSession && (

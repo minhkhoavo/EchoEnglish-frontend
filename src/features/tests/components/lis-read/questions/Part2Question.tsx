@@ -11,51 +11,32 @@ import { useExpanded } from '@/features/tests/hooks/useExpanded';
 import {
   getUserAnswer,
   handleAnswerSelect,
+  getUserAnswerUnified,
 } from '@/features/tests/utils/answerUtils';
 
 interface Part2QuestionProps {
   part: TestPart;
   showCorrectAnswers?: boolean;
+  userAnswers?: Record<number, string>; // For review mode
+  reviewAnswers?: Array<{
+    questionNumber: number;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+  }>;
 }
 
 export const Part2Question = ({
   part,
   showCorrectAnswers = false,
+  userAnswers = {},
+  reviewAnswers = [],
 }: Part2QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
-
-  // Mock data for history view
-  const mockAnswers: Record<number, string> = {
-    7: 'C',
-    8: 'C',
-    9: 'C',
-    10: 'A',
-    11: 'C',
-    12: 'C',
-    13: 'C',
-    14: 'A',
-    15: 'B',
-    16: 'C',
-    17: 'A',
-    18: 'B',
-    19: 'C',
-    20: 'A',
-    21: 'B',
-    22: 'C',
-    23: 'A',
-    24: 'B',
-    25: 'C',
-    26: 'A',
-    27: 'B',
-    28: 'C',
-    29: 'A',
-    30: 'B',
-    31: 'C',
-  };
 
   const toggleExplanation = (questionNumber: number) => {
     toggleExpanded(questionNumber);
@@ -67,13 +48,6 @@ export const Part2Question = ({
 
   const toggleTranslation = (questionNumber: number) => {
     toggleExpanded(questionNumber + 2000);
-  };
-
-  const scrollToQuestion = (questionNumber: number) => {
-    const element = document.getElementById(`question-${questionNumber}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
   };
 
   return (
@@ -99,11 +73,12 @@ export const Part2Question = ({
       {/* All Questions */}
       <div className="space-y-8">
         {part.questions?.map((question) => {
-          const userAnswer = getUserAnswer(
+          const userAnswer = getUserAnswerUnified(
             showCorrectAnswers,
             getAnswer,
             question.questionNumber,
-            mockAnswers
+            reviewAnswers,
+            userAnswers
           );
           const isCorrect = userAnswer === question.correctAnswer;
           const isExplanationExpanded = isExpanded(question.questionNumber);

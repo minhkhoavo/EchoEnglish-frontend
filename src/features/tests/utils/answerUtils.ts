@@ -39,3 +39,27 @@ export function handleAnswerSelect(
     saveAnswer(questionNumber, answer);
   }
 }
+
+export const getUserAnswerUnified = (
+  showCorrectAnswers: boolean,
+  getAnswer: (questionNumber: number) => string | null, // Updated type to match actual return type
+  questionNumber: number,
+  reviewAnswers: Array<{
+    questionNumber: number;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+  }>,
+  userAnswers: Record<number, string>
+) => {
+  if (showCorrectAnswers) {
+    if (reviewAnswers.length > 0) {
+      const reviewAnswer = reviewAnswers.find(
+        (ans) => ans.questionNumber === questionNumber
+      );
+      return reviewAnswer?.selectedAnswer || '';
+    }
+    return userAnswers[questionNumber] || '';
+  }
+  return getAnswer(questionNumber) || ''; // Handles null as empty string
+};

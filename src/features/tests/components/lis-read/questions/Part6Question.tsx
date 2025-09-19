@@ -10,46 +10,32 @@ import { useExpanded } from '@/features/tests/hooks/useExpanded';
 import {
   getUserAnswer,
   handleAnswerSelect,
+  getUserAnswerUnified,
 } from '@/features/tests/utils/answerUtils';
 
 interface Part6QuestionProps {
   part: TestPart;
   showCorrectAnswers?: boolean;
+  userAnswers?: Record<number, string>; // For review mode
+  reviewAnswers?: Array<{
+    questionNumber: number;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+  }>;
 }
 
 export const Part6Question = ({
   part,
   showCorrectAnswers = false,
+  userAnswers = {},
+  reviewAnswers = [],
 }: Part6QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
-
-  // Mock data for history view
-  const mockAnswers: Record<number, string> = {
-    131: 'D',
-    132: 'D',
-    133: 'A',
-    134: 'B',
-    135: 'C',
-    136: 'A',
-    137: 'B',
-    138: 'C',
-    139: 'D',
-    140: 'A',
-    141: 'B',
-    142: 'C',
-    143: 'D',
-    144: 'A',
-    145: 'B',
-    146: 'C',
-  };
-
-  const toggleExplanation = (questionNumber: number) => {
-    toggleExpanded(questionNumber);
-  };
 
   const toggleTranslation = (groupIndex: number) => {
     toggleExpanded(groupIndex + 2000);
@@ -149,11 +135,12 @@ export const Part6Question = ({
                 }}
               >
                 {group.questions.map((question) => {
-                  const userAnswer = getUserAnswer(
+                  const userAnswer = getUserAnswerUnified(
                     showCorrectAnswers,
                     getAnswer,
                     question.questionNumber,
-                    mockAnswers
+                    reviewAnswers,
+                    userAnswers
                   );
                   const isExplanationExpanded = isExpanded(
                     question.questionNumber
@@ -187,7 +174,7 @@ export const Part6Question = ({
                           title="Show Explanation"
                           expanded={isExplanationExpanded}
                           onToggle={() =>
-                            toggleExplanation(question.questionNumber)
+                            toggleExpanded(question.questionNumber)
                           }
                           explanation={question.explanation}
                         />

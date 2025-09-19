@@ -11,56 +11,32 @@ import { useExpanded } from '@/features/tests/hooks/useExpanded';
 import {
   getUserAnswer,
   handleAnswerSelect,
+  getUserAnswerUnified,
 } from '@/features/tests/utils/answerUtils';
 
 interface Part4QuestionProps {
   part: TestPart;
   showCorrectAnswers?: boolean;
+  userAnswers?: Record<number, string>; // For review mode
+  reviewAnswers?: Array<{
+    questionNumber: number;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+  }>;
 }
 
 export const Part4Question = ({
   part,
   showCorrectAnswers = false,
+  userAnswers = {},
+  reviewAnswers = [],
 }: Part4QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
-
-  // Mock data for history view
-  const mockAnswers: Record<number, string> = {
-    71: 'B',
-    72: 'A',
-    73: 'C',
-    74: 'B',
-    75: 'A',
-    76: 'D',
-    77: 'C',
-    78: 'B',
-    79: 'A',
-    80: 'D',
-    81: 'B',
-    82: 'A',
-    83: 'C',
-    84: 'D',
-    85: 'B',
-    86: 'A',
-    87: 'C',
-    88: 'B',
-    89: 'D',
-    90: 'A',
-    91: 'B',
-    92: 'C',
-    93: 'A',
-    94: 'D',
-    95: 'B',
-    96: 'A',
-    97: 'C',
-    98: 'B',
-    99: 'D',
-    100: 'A',
-  };
 
   const toggleTranscript = (groupIndex: number) => {
     toggleExpanded(groupIndex + 3000);
@@ -72,13 +48,6 @@ export const Part4Question = ({
 
   const toggleExplanation = (questionNumber: number) => {
     toggleExpanded(questionNumber);
-  };
-
-  const scrollToGroup = (groupIndex: number) => {
-    const element = document.getElementById(`group-${groupIndex}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
   };
 
   // Get all questions for navigation
@@ -158,11 +127,12 @@ export const Part4Question = ({
                 {/* Questions */}
                 <div className="lg:col-span-2 space-y-4">
                   {group.questions?.map((question) => {
-                    const userAnswer = getUserAnswer(
+                    const userAnswer = getUserAnswerUnified(
                       showCorrectAnswers,
                       getAnswer,
                       question.questionNumber,
-                      mockAnswers
+                      reviewAnswers,
+                      userAnswers
                     );
                     const isExplanationExpanded = isExpanded(
                       question.questionNumber

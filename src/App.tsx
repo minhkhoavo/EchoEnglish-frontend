@@ -53,6 +53,8 @@ function App() {
         <Route path="/speaking-exam/:testId" element={<SpeakingExam />} />
         <Route path="/writing-exam/:testId" element={<WritingExam />} />
         <Route path="/test-exam/:testId" element={<TestExam />} />
+        {/* Support review mode without testId in path */}
+        <Route path="/test-exam" element={<TestExam />} />
         <Route path="/speaking-result" element={<SpeakingResultPage />} />
       </Routes>
       <Toaster />
