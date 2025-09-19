@@ -1,11 +1,19 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Loader2, AlertCircle } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Search, Filter, Clock, BarChart3, FileText, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import CustomPagination from '@/components/ui/custom-pagination';
-import { UnifiedTestCard } from '@/features/tests/components/UnifiedTestCard';
 import { UserSidebar } from '@/features/tests/components/UserSidebar';
+import { UnifiedTestCard } from '@/features/tests/components/UnifiedTestCard';
 import { useGetTOEICTestsQuery } from '@/features/tests/services/listeningReadingTestAPI';
 import { useGetSpeakingTestsQuery } from '@/features/tests/services/speakingTestApi';
 import { useGetWritingTestsQuery } from '@/features/tests/services/writingTestApi';
@@ -22,13 +30,6 @@ const AllTestsPage = ({
   const [selectedTestType, setSelectedTestType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-
-  const testTypes = [
-    { id: 'all', name: 'All Tests' },
-    { id: 'listening-reading', name: 'Listening & Reading' },
-    { id: 'speaking', name: 'Speaking' },
-    { id: 'writing', name: 'Writing' },
-  ];
 
   // API calls
   const {
@@ -100,98 +101,137 @@ const AllTestsPage = ({
     setCurrentPage(1);
   }, [searchTerm, selectedTestType]);
 
-  const isLoading = isToeicLoading || isSpeakingLoading || isWritingLoading;
-  const error = toeicError || speakingError || writingError;
-
-  if (isLoading) {
+  // Loading state
+  if (isToeicLoading || isSpeakingLoading || isWritingLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <span className="text-muted-foreground">Loading tests...</span>
+      <div className="container mx-auto px-4 py-2">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-gray-300 rounded"></div>
+                      <div className="h-3 bg-gray-300 rounded w-5/6"></div>
+                      <div className="h-8 bg-gray-300 rounded w-1/2"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+          <UserSidebar />
         </div>
       </div>
     );
   }
 
-  if (error) {
+  // Error handling
+  if (toeicError || speakingError || writingError) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Alert className="max-w-md border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-700">
-            Unable to load test list. Please try again later.
-          </AlertDescription>
-        </Alert>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <p className="text-destructive mb-4">
+            Error loading tests. Please try again.
+          </p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex gap-8">
-          {/* Main Content */}
-          <div className="flex-1 space-y-6">
-            {/* Header */}
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                TOEIC Test Library
-              </h1>
-              <p className="text-muted-foreground">
-                Complete TOEIC test collection including Reading, Listening,
-                Speaking, and Writing
-              </p>
+    <div className="container mx-auto px-4 py-2">
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex-1">
+          {/* Header */}
+          <div className="flex flex-col gap-6 mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Test Library
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                  Choose from our collection of TOEIC practice tests
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <BarChart3 className="h-4 w-4" />
+                <span>{filteredTests.length} tests available</span>
+              </div>
             </div>
 
             {/* Filters */}
-            <div className="bg-card rounded-lg p-4 shadow-sm border border-border">
-              {/* Test Type Filters */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {testTypes.map((testType) => (
-                  <Button
-                    key={testType.id}
-                    variant={
-                      selectedTestType === testType.id ? 'default' : 'outline'
-                    }
-                    size="sm"
-                    onClick={() => setSelectedTestType(testType.id)}
-                    className="hover-scale"
-                  >
-                    {testType.name}
-                  </Button>
-                ))}
-              </div>
-
-              {/* Search Bar */}
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Search tests by name or testId..."
+                  placeholder="Search tests by title or ID..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className="pl-10"
                 />
               </div>
 
-              {/* Results count */}
-              <div className="mt-3 text-sm text-muted-foreground">
-                Found{' '}
-                <span className="font-semibold">{filteredTests.length}</span>{' '}
-                tests
-                {searchTerm && (
-                  <span>
-                    {' '}
-                    for keyword "
-                    <span className="font-semibold">{searchTerm}</span>"
-                  </span>
-                )}
-              </div>
+              <Select
+                value={selectedTestType}
+                onValueChange={(value) => {
+                  setSelectedTestType(value);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-48">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Tests</SelectItem>
+                  <SelectItem value="listening-reading">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      LR
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="speaking">
+                    <div className="flex items-center gap-2">
+                      <Mic className="h-4 w-4" />
+                      Speaking
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="writing">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Writing
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
 
-            {/* Test Cards Grid */}
-            {currentTests.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {/* Test Grid */}
+          {filteredTests.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="mx-auto w-24 h-24 mb-4 text-muted-foreground">
+                <Search className="w-full h-full" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">No tests found</h3>
+              <p className="text-muted-foreground">
+                Try adjusting your search criteria or filters
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {currentTests.map((test) => (
                   <UnifiedTestCard
                     key={`${test.type}-${test.testId}`}
@@ -200,32 +240,21 @@ const AllTestsPage = ({
                   />
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-muted-foreground text-lg mb-2">
-                  No tests found
-                </div>
-                <div className="text-muted-foreground text-sm">
-                  Try changing the filter or search keyword
-                </div>
-              </div>
-            )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center">
-                <CustomPagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Right Sidebar */}
-          <UserSidebar />
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center">
+                  <CustomPagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              )}
+            </>
+          )}
         </div>
+        <UserSidebar />
       </div>
     </div>
   );

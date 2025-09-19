@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Clock, FileText, RefreshCw } from 'lucide-react';
+import { formatMs } from '@/features/tests/utils/formatMs';
 
 interface ContinueTestDialogProps {
   isOpen: boolean;
@@ -17,8 +18,8 @@ interface ContinueTestDialogProps {
   onCancel: () => void;
   testTitle: string;
   progress: number;
-  timeElapsed: string;
-  answeredQuestions: number;
+  timeRemaining: number; // ms còn lại
+  numberOfAnsweredQuestions: number;
   totalQuestions: number;
 }
 
@@ -29,8 +30,8 @@ export const ContinueTestDialog: React.FC<ContinueTestDialogProps> = ({
   onCancel,
   testTitle,
   progress,
-  timeElapsed,
-  answeredQuestions,
+  timeRemaining,
+  numberOfAnsweredQuestions: answeredQuestions,
   totalQuestions,
 }) => {
   return (
@@ -57,7 +58,7 @@ export const ContinueTestDialog: React.FC<ContinueTestDialogProps> = ({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-blue-500" />
-                <span>Time: {timeElapsed}</span>
+                <span>Time: {formatMs(timeRemaining)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-green-500" />

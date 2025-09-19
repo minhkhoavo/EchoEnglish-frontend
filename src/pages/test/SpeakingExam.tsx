@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatMs } from '@/features/tests/utils/formatMs';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -122,12 +123,6 @@ const SpeakingExam = () => {
     navigate('/');
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -184,7 +179,7 @@ const SpeakingExam = () => {
           <div className="flex items-center gap-2 xl:gap-4 flex-shrink-0">
             <div className="flex items-center gap-1 xl:gap-2 text-sm xl:text-lg font-mono">
               <Clock className="h-4 xl:h-5 w-4 xl:w-5" />
-              <span>{formatTime(timeRemaining)}</span>
+              <span>{formatMs(timeRemaining * 1000)}</span>
             </div>
             <Button
               onClick={handleSubmit}

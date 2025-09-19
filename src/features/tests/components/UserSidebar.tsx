@@ -4,10 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAppSelector } from '@/core/store/store';
+import { useGetUserStatsQuery } from '../services/testResultAPI';
 
 export const UserSidebar = () => {
   const { user } = useAppSelector((state) => state.auth);
-  // Mock user data
+  const { data: userStatsLR, isLoading } = useGetUserStatsQuery();
+
+  // User data
   const userData = {
     username: user?.fullName || 'John Doe',
     avatar:
@@ -101,25 +104,33 @@ export const UserSidebar = () => {
         <CardContent>
           <div className="grid grid-cols-2 gap-4 text-center">
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <div className="text-2xl font-bold text-blue-600">24</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {isLoading ? '...' : userStatsLR?.listeningReadingTests || 0}
+              </div>
               <div className="text-xs text-blue-700 font-medium">
                 Tests Taken
               </div>
             </div>
             <div className="p-3 bg-green-50 rounded-lg border border-green-100">
-              <div className="text-2xl font-bold text-green-600">750</div>
+              <div className="text-2xl font-bold text-green-600">
+                {isLoading ? '...' : userStatsLR?.highestScore || 0}
+              </div>
               <div className="text-xs text-green-700 font-medium">
                 Highest Score
               </div>
             </div>
             <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
-              <div className="text-2xl font-bold text-purple-600">18</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {isLoading ? '...' : 0}
+              </div>
               <div className="text-xs text-purple-700 font-medium">
                 Speaking Tests
               </div>
             </div>
             <div className="p-3 bg-orange-50 rounded-lg border border-orange-100">
-              <div className="text-2xl font-bold text-orange-600">15</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {isLoading ? '...' : 0}
+              </div>
               <div className="text-xs text-orange-700 font-medium">
                 Writing Tests
               </div>

@@ -20,7 +20,7 @@ import {
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
 import { useRegisterMutation } from '../services/authApi';
-import { setLoading, setError, clearError } from '../slices/authSlice';
+import { setLoading, setError } from '../slices/authSlice';
 import type { RegisterFormData } from '../types/auth.types';
 import {
   UserPlus,
@@ -75,7 +75,7 @@ const RegisterForm: React.FC = () => {
   React.useEffect(() => {
     if (error) {
       toast.error(error);
-      dispatch(clearError());
+      dispatch(setError(null));
     }
   }, [error, dispatch]);
 

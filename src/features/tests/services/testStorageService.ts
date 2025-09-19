@@ -8,7 +8,7 @@ interface StorageTestSession extends TestSession {
   startTime: string;
   endTime?: string;
   timeLimit: string;
-  timeRemaining: string;
+  timeRemaining: number; // ms còn lại
   selectedParts?: string;
 }
 
@@ -56,14 +56,10 @@ class TestStorageService {
   }
 
   // Save test session with compound key including partsKey
-  async saveTestSession(
-    userId: string,
-    testId: string,
-    testMode: string,
-    session: TestSession
-  ): Promise<void> {
+  async saveTestSession(userId: string, session: TestSession): Promise<void> {
     try {
-      const db = await this.initDB();
+      const db = await this.initDB(); // Không thể single instance do versioning,
+      // nên mỗi lần gọi đều mở mới và đóng sau khi xong
       const transaction = db.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
 
@@ -79,10 +75,13 @@ class TestStorageService {
         testType: 'listening-reading',
         partsKey,
         savedAt: now,
-        // Keep time fields as ISODate strings (no conversion needed)
         startTime: session.startTime || now,
         timeLimit: session.timeLimit || now,
-        timeRemaining: session.timeRemaining || now,
+        // timeRemaining là số ms còn lại, nếu chưa có thì tính từ timeLimit - now
+        timeRemaining:
+          typeof session.timeRemaining === 'number'
+            ? session.timeRemaining
+            : new Date(session.timeLimit).getTime() - Date.now(),
         selectedParts: session.selectedParts || '',
       };
 
@@ -118,6 +117,10 @@ class TestStorageService {
           const request = store.get([userId, testId, testMode, partsKey]);
           request.onsuccess = () => {
             const result = request.result as StorageTestSession | undefined;
+            // Đảm bảo timeRemaining là number
+            if (result && typeof result.timeRemaining === 'string') {
+              result.timeRemaining = parseInt(result.timeRemaining, 10) || 0;
+            }
             resolve(result || null);
           };
           request.onerror = () => reject(request.error);
@@ -139,13 +142,6 @@ class TestStorageService {
     testMode: string,
     selectedParts?: string[]
   ): Promise<void> {
-    console.log('🗑️ deleteTestSession called with:', {
-      userId,
-      testId,
-      testMode,
-      selectedParts,
-    });
-
     try {
       const db = await this.initDB();
       const transaction = db.transaction([this.storeName], 'readwrite');
@@ -154,12 +150,9 @@ class TestStorageService {
       const partsKey = this.generatePartsKey(selectedParts);
       const compoundKey = [userId, testId, testMode, partsKey];
 
-      console.log('🔑 Compound key for deletion:', compoundKey);
-
       await new Promise<void>((resolve, reject) => {
         const request = store.delete(compoundKey);
         request.onsuccess = () => {
-          console.log('✅ IndexedDB delete request successful');
           resolve();
         };
         request.onerror = () => {
@@ -171,7 +164,6 @@ class TestStorageService {
       // Wait for transaction to complete
       await new Promise<void>((resolve, reject) => {
         transaction.oncomplete = () => {
-          console.log('✅ IndexedDB transaction completed');
           resolve();
         };
         transaction.onerror = () => {
@@ -181,7 +173,6 @@ class TestStorageService {
       });
 
       db.close();
-      console.log('✅ deleteTestSession completed successfully');
     } catch (error) {
       console.error('❌ Error deleting test session:', error);
       throw error;

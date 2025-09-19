@@ -6,77 +6,39 @@ import { useTestSession } from '@/features/tests/hooks/useTestSession';
 import { QuestionHeader } from '../common/QuestionHeader';
 import { AnswerOptions } from '../common/AnswerOptions';
 import { ExplanationSection } from '../common/ExplanationSection';
+import { Instructions } from '../common/Instructions';
+import { useExpanded } from '@/features/tests/hooks/useExpanded';
+import {
+  getUserAnswer,
+  handleAnswerSelect,
+  getUserAnswerUnified,
+} from '@/features/tests/utils/answerUtils';
 interface Part5QuestionProps {
   part: TestPart;
   showCorrectAnswers?: boolean;
+  userAnswers?: Record<number, string>; // For review mode
+  reviewAnswers?: Array<{
+    questionNumber: number;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+  }>;
 }
 
 export const Part5Question = ({
   part,
   showCorrectAnswers = false,
+  userAnswers = {},
+  reviewAnswers = [],
 }: Part5QuestionProps) => {
-  const [expandedExplanations, setExpandedExplanations] = useState<number[]>(
-    []
-  );
+  // Using common useExpanded hook
+  const { toggle: toggleExpanded, isExpanded } = useExpanded();
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
 
-  // Function to get user answer (mock for history view, Redux for current test)
-  const getUserAnswer = (questionNumber: number) => {
-    if (showCorrectAnswers) {
-      // Return mock answer for history view
-      const mockAnswers: { [key: number]: string } = {
-        101: 'B',
-        102: 'D',
-        103: 'C',
-        104: 'A',
-        105: 'B',
-        106: 'C',
-        107: 'A',
-        108: 'D',
-        109: 'B',
-        110: 'A',
-        111: 'C',
-        112: 'B',
-        113: 'D',
-        114: 'A',
-        115: 'C',
-        116: 'B',
-        117: 'D',
-        118: 'A',
-        119: 'C',
-        120: 'B',
-        121: 'D',
-        122: 'A',
-        123: 'C',
-        124: 'B',
-        125: 'D',
-        126: 'A',
-        127: 'C',
-        128: 'B',
-        129: 'D',
-        130: 'A',
-      };
-      return mockAnswers[questionNumber] || '';
-    }
-    // Use Redux to get current test answer
-    return getAnswer(questionNumber) || '';
-  };
-
-  // Handle answer selection
-  const handleAnswerSelect = (questionNumber: number, answer: string) => {
-    if (!showCorrectAnswers) {
-      saveAnswer(questionNumber, answer);
-    }
-  };
-
   const toggleExplanation = (questionNumber: number) => {
-    setExpandedExplanations((prev) =>
-      prev.includes(questionNumber)
-        ? prev.filter((num) => num !== questionNumber)
-        : [...prev, questionNumber]
-    );
+    toggleExpanded(questionNumber);
   };
 
   return (
@@ -91,24 +53,24 @@ export const Part5Question = ({
       />
 
       {/* Part Instructions */}
-      <Card className="bg-blue-50 dark:bg-blue-950">
-        <CardContent className="p-4">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>Instructions:</strong> A word or phrase is missing in each
-            of the sentences below. Four answer choices are given below each
-            sentence. Select the best answer to complete the sentence.
-          </p>
-        </CardContent>
-      </Card>
+      <Instructions>
+        <strong>Instructions:</strong> A word or phrase is missing in each of
+        the sentences below. Four answer choices are given below each sentence.
+        Select the best answer to complete the sentence.
+      </Instructions>
 
       {/* All Questions */}
       <div className="space-y-6">
         {part.questions?.map((question) => {
-          const userAnswer = getUserAnswer(question.questionNumber);
-          const isCorrect = userAnswer === question.correctAnswer;
-          const isExplanationExpanded = expandedExplanations.includes(
-            question.questionNumber
+          const userAnswer = getUserAnswerUnified(
+            showCorrectAnswers,
+            getAnswer,
+            question.questionNumber,
+            reviewAnswers,
+            userAnswers
           );
+          const isCorrect = userAnswer === question.correctAnswer;
+          const isExplanationExpanded = isExpanded(question.questionNumber);
 
           return (
             <div
@@ -125,6 +87,7 @@ export const Part5Question = ({
                   {/* Explanation Section */}
                   {showCorrectAnswers && (
                     <ExplanationSection
+                      title="Show Explanation"
                       expanded={isExplanationExpanded}
                       onToggle={() =>
                         toggleExplanation(question.questionNumber)
@@ -166,7 +129,12 @@ export const Part5Question = ({
                     correctAnswer={question.correctAnswer}
                     showCorrectAnswers={showCorrectAnswers}
                     onSelect={(label) =>
-                      handleAnswerSelect(question.questionNumber, label)
+                      handleAnswerSelect(
+                        showCorrectAnswers,
+                        saveAnswer,
+                        question.questionNumber,
+                        label
+                      )
                     }
                   />
                 </div>
