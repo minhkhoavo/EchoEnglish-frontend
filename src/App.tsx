@@ -4,6 +4,7 @@ import FlashcardPage from './pages/FlashcardPage';
 import AllTestsPage from './pages/test/AllTestsPage';
 import SpeakingExam from './pages/test/SpeakingExam';
 import WritingExam from './pages/test/WritingExam';
+import MicrophoneCheck from './pages/test/MicrophoneCheck';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
@@ -50,7 +51,12 @@ function App() {
         <Route path="/flashcards" element={<FlashcardPage />} />
         <Route path="/quiz" element={<QuizRouteWrapper />} />
         <Route path="/tests" element={<AllTestsPage />} />
-        <Route path="/speaking-exam/:testId" element={<SpeakingExam />} />
+        <Route path="/speaking-exam/:testId" element={<MicrophoneCheck />} />
+        <Route
+          path="/test/speaking/:testId/check"
+          element={<MicrophoneCheck />}
+        />
+        <Route path="/test/speaking/:testId/exam" element={<SpeakingExam />} />
         <Route path="/writing-exam/:testId" element={<WritingExam />} />
         <Route path="/test-exam/:testId" element={<TestExam />} />
         {/* Support review mode without testId in path */}
