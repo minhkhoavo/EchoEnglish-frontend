@@ -44,6 +44,7 @@ export const api = createApi({
     'Category',
     'Flashcard',
     'Test',
+    'TestResult',
     'SWTest',
     'SpeakingTest',
     'WritingTest',

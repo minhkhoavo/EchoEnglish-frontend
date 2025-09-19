@@ -6,105 +6,48 @@ import { useTestSession } from '@/features/tests/hooks/useTestSession';
 import { QuestionHeader } from '../common/QuestionHeader';
 import { AnswerOptions } from '../common/AnswerOptions';
 import { ExplanationSection } from '../common/ExplanationSection';
+import { Instructions } from '../common/Instructions';
+import { useExpanded } from '@/features/tests/hooks/useExpanded';
+import {
+  getUserAnswer,
+  handleAnswerSelect,
+  getUserAnswerUnified,
+} from '@/features/tests/utils/answerUtils';
 
 interface Part4QuestionProps {
   part: TestPart;
   showCorrectAnswers?: boolean;
+  userAnswers?: Record<number, string>; // For review mode
+  reviewAnswers?: Array<{
+    questionNumber: number;
+    selectedAnswer: string;
+    isCorrect: boolean;
+    correctAnswer: string;
+  }>;
 }
 
 export const Part4Question = ({
   part,
   showCorrectAnswers = false,
+  userAnswers = {},
+  reviewAnswers = [],
 }: Part4QuestionProps) => {
-  const [expandedTranscripts, setExpandedTranscripts] = useState<number[]>([]);
-  const [expandedTranslations, setExpandedTranslations] = useState<number[]>(
-    []
-  );
-  const [expandedExplanations, setExpandedExplanations] = useState<number[]>(
-    []
-  );
+  // Using common useExpanded hook
+  const { toggle: toggleExpanded, isExpanded } = useExpanded();
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
 
-  // Function to get user answer (mock for history view, Redux for current test)
-  const getUserAnswer = (questionNumber: number) => {
-    if (showCorrectAnswers) {
-      // Return mock answer for history view
-      const mockAnswers: { [key: number]: string } = {
-        71: 'B',
-        72: 'A',
-        73: 'C',
-        74: 'B',
-        75: 'A',
-        76: 'D',
-        77: 'C',
-        78: 'B',
-        79: 'A',
-        80: 'D',
-        81: 'B',
-        82: 'A',
-        83: 'C',
-        84: 'D',
-        85: 'B',
-        86: 'A',
-        87: 'C',
-        88: 'B',
-        89: 'D',
-        90: 'A',
-        91: 'B',
-        92: 'C',
-        93: 'A',
-        94: 'D',
-        95: 'B',
-        96: 'A',
-        97: 'C',
-        98: 'B',
-        99: 'D',
-        100: 'A',
-      };
-      return mockAnswers[questionNumber] || '';
-    }
-    // Use Redux to get current test answer
-    return getAnswer(questionNumber) || '';
-  };
-
-  // Handle answer selection
-  const handleAnswerSelect = (questionNumber: number, answer: string) => {
-    if (!showCorrectAnswers) {
-      saveAnswer(questionNumber, answer);
-    }
-  };
-
   const toggleTranscript = (groupIndex: number) => {
-    setExpandedTranscripts((prev) =>
-      prev.includes(groupIndex)
-        ? prev.filter((num) => num !== groupIndex)
-        : [...prev, groupIndex]
-    );
+    toggleExpanded(groupIndex + 3000);
   };
 
   const toggleTranslation = (groupIndex: number) => {
-    setExpandedTranslations((prev) =>
-      prev.includes(groupIndex)
-        ? prev.filter((num) => num !== groupIndex)
-        : [...prev, groupIndex]
-    );
+    toggleExpanded(groupIndex + 4000);
   };
 
   const toggleExplanation = (questionNumber: number) => {
-    setExpandedExplanations((prev) =>
-      prev.includes(questionNumber)
-        ? prev.filter((num) => num !== questionNumber)
-        : [...prev, questionNumber]
-    );
-  };
-
-  const scrollToGroup = (groupIndex: number) => {
-    const element = document.getElementById(`group-${groupIndex}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    toggleExpanded(questionNumber);
   };
 
   // Get all questions for navigation
@@ -123,25 +66,20 @@ export const Part4Question = ({
       />
 
       {/* Part Instructions */}
-      <Card className="bg-blue-50 dark:bg-blue-950">
-        <CardContent className="p-4">
-          <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>Instructions:</strong> You will hear some talks given by a
-            single speaker. You will be asked to answer three questions about
-            what the speaker says in each talk. Select the best response to each
-            question and mark the letter (A), (B), (C), or (D) on your answer
-            sheet. The talks will not be printed in your test book and will be
-            spoken only one time.
-          </p>
-        </CardContent>
-      </Card>
+      <Instructions>
+        <strong>Instructions:</strong> You will hear some talks given by a
+        single speaker. You will be asked to answer three questions about what
+        the speaker says in each talk. Select the best response to each question
+        and mark the letter (A), (B), (C), or (D) on your answer sheet. The
+        talks will not be printed in your test book and will be spoken only one
+        time.
+      </Instructions>
 
       {/* All Question Groups */}
       <div className="space-y-12">
         {part.questionGroups?.map((group, groupIndex) => {
-          const isTranscriptExpanded = expandedTranscripts.includes(groupIndex);
-          const isTranslationExpanded =
-            expandedTranslations.includes(groupIndex);
+          const isTranscriptExpanded = isExpanded(groupIndex + 3000);
+          const isTranslationExpanded = isExpanded(groupIndex + 4000);
 
           return (
             <div
@@ -168,6 +106,7 @@ export const Part4Question = ({
                   {/* Transcript Section */}
                   {showCorrectAnswers && (
                     <ExplanationSection
+                      title="Show Transcript"
                       expanded={isTranscriptExpanded}
                       onToggle={() => toggleTranscript(groupIndex)}
                       explanation={group.groupContext?.transcript || ''}
@@ -177,6 +116,7 @@ export const Part4Question = ({
                   {/* Translation Section */}
                   {showCorrectAnswers && (
                     <ExplanationSection
+                      title="Show Translation"
                       expanded={isTranslationExpanded}
                       onToggle={() => toggleTranslation(groupIndex)}
                       explanation={group.groupContext?.translation || ''}
@@ -187,8 +127,14 @@ export const Part4Question = ({
                 {/* Questions */}
                 <div className="lg:col-span-2 space-y-4">
                   {group.questions?.map((question) => {
-                    const userAnswer = getUserAnswer(question.questionNumber);
-                    const isExplanationExpanded = expandedExplanations.includes(
+                    const userAnswer = getUserAnswerUnified(
+                      showCorrectAnswers,
+                      getAnswer,
+                      question.questionNumber,
+                      reviewAnswers,
+                      userAnswers
+                    );
+                    const isExplanationExpanded = isExpanded(
                       question.questionNumber
                     );
                     return (
@@ -209,12 +155,18 @@ export const Part4Question = ({
                             correctAnswer={question.correctAnswer}
                             showCorrectAnswers={showCorrectAnswers}
                             onSelect={(label) =>
-                              handleAnswerSelect(question.questionNumber, label)
+                              handleAnswerSelect(
+                                showCorrectAnswers,
+                                saveAnswer,
+                                question.questionNumber,
+                                label
+                              )
                             }
                           />
                           {/* Explanation */}
                           {showCorrectAnswers && (
                             <ExplanationSection
+                              title="Show Explanation"
                               expanded={isExplanationExpanded}
                               onToggle={() =>
                                 toggleExplanation(question.questionNumber)

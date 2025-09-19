@@ -5,52 +5,20 @@ import type {
 } from '../types/toeic-test.types';
 
 interface TestState {
-  filters: {
-    search: string;
-    difficulty: string;
-    category: string;
-    completed: boolean;
-    favorites: boolean;
-  };
-  viewMode: 'grid' | 'list';
-  sortBy: 'title' | 'difficulty' | 'createdAt' | 'completedAt';
-  sortDirection: 'asc' | 'desc';
-  searchQuery: string;
-  activeTest: ListeningReadingTest | null;
-  currentSession: TestSession | null;
-  lastResult: {
-    testId: string;
-    testType: 'listening-reading';
-    score: number;
-    totalQuestions: number;
-    correctAnswers: number;
-    timeSpent: number;
-    completedAt: number;
-  } | null;
-  showResults: boolean;
+  activeTest: ListeningReadingTest | null; //  Thông tin về đề thi TOEIC hiện
+  // tại mà người dùng đang làm. (Không thay đổi trong quá trình làm bài)
+  currentSession: TestSession | null; // Trạng thái làm bài của người dùng với
+  // đề đó như tiến trình, đáp án, thời gian, ... (Thay đổi liên tục khi người
+  // dùng làm bài)
+  isShowResults: boolean;
   isLoading: boolean;
   error: string | null;
 }
 
 const initialState: TestState = {
-  filters: {
-    search: '',
-    difficulty: '',
-    category: '',
-    completed: false,
-    favorites: false,
-  },
-  viewMode: 'grid',
-  sortBy: 'createdAt',
-  sortDirection: 'desc',
-  searchQuery: '',
-
   activeTest: null,
   currentSession: null,
-
-  lastResult: null,
-  showResults: false,
-
+  isShowResults: false,
   isLoading: false,
   error: null,
 };
@@ -59,35 +27,6 @@ const testSlice = createSlice({
   name: 'test',
   initialState,
   reducers: {
-    // Filter and search actions
-    setFilters: (
-      state,
-      action: PayloadAction<Partial<TestState['filters']>>
-    ) => {
-      state.filters = { ...state.filters, ...action.payload };
-    },
-    setSearchQuery: (state, action: PayloadAction<string>) => {
-      state.searchQuery = action.payload;
-      state.filters.search = action.payload;
-    },
-    setViewMode: (state, action: PayloadAction<'grid' | 'list'>) => {
-      state.viewMode = action.payload;
-    },
-    setSorting: (
-      state,
-      action: PayloadAction<{
-        sortBy: TestState['sortBy'];
-        direction: 'asc' | 'desc';
-      }>
-    ) => {
-      state.sortBy = action.payload.sortBy;
-      state.sortDirection = action.payload.direction;
-    },
-    clearFilters: (state) => {
-      state.filters = initialState.filters;
-      state.searchQuery = '';
-    },
-
     // Test session actions
     startTest: (
       state,
@@ -99,16 +38,13 @@ const testSlice = createSlice({
       }>
     ) => {
       state.activeTest = action.payload.test;
+      const now = Date.now();
       state.currentSession = {
         testId: action.payload.test.testId,
         testTitle: action.payload.test.testTitle,
-        startTime: new Date(Date.now()).toISOString(),
-        timeLimit: new Date(
-          Date.now() + action.payload.timeLimit
-        ).toISOString(),
-        timeRemaining: new Date(
-          Date.now() + action.payload.timeLimit
-        ).toISOString(),
+        startTime: new Date(now).toISOString(),
+        timeLimit: new Date(now + action.payload.timeLimit).toISOString(),
+        timeRemaining: action.payload.timeLimit, // ms
         answers: {},
         testMode: action.payload.testMode || 'full',
         selectedParts: action.payload.selectedParts
@@ -118,28 +54,14 @@ const testSlice = createSlice({
           ? action.payload.selectedParts.slice().sort().join('-')
           : 'full',
       };
-      state.showResults = false;
+      state.isShowResults = false;
       state.error = null;
     },
 
-    updateTimeRemaining: (state, action: PayloadAction<number>) => {
-      if (state.currentSession) {
-        // Convert milliseconds to ISODate by adding to current time
-        const remainingTime = new Date(
-          Date.now() + action.payload
-        ).toISOString();
-        state.currentSession.timeRemaining = remainingTime;
-      }
-    },
-
-    saveAnswer: (
-      state,
-      action: PayloadAction<{ questionId: string; answer: string }>
-    ) => {
-      if (state.currentSession) {
-        const questionNumber = parseInt(action.payload.questionId, 10);
-        state.currentSession.answers[questionNumber] = action.payload.answer;
-      }
+    endTest: (state) => {
+      state.currentSession = null;
+      state.activeTest = null;
+      state.isShowResults = false;
     },
 
     saveAnswerByNumber: (
@@ -167,15 +89,8 @@ const testSlice = createSlice({
       >
     ) => {
       if (state.currentSession) {
-        // Convert timeRemaining to string if present
         const update = { ...action.payload } as Partial<TestSession>;
-        if (typeof update.timeRemaining === 'number') {
-          // Convert milliseconds to ISODate by adding to current time
-          update.timeRemaining = new Date(
-            Date.now() + update.timeRemaining
-          ).toISOString();
-        }
-        // If selectedParts is present and is string[], convert to string
+        // timeRemaining là số ms, không cần chuyển đổi
         if (Array.isArray(update.selectedParts)) {
           update.selectedParts = update.selectedParts.join('-');
         }
@@ -183,27 +98,9 @@ const testSlice = createSlice({
       }
     },
 
-    submitTest: (state, action: PayloadAction<TestState['lastResult']>) => {
-      state.lastResult = action.payload;
-      state.showResults = true;
-      state.currentSession = null;
-      state.activeTest = null;
-    },
-
-    endTest: (state) => {
-      state.currentSession = null;
-      state.activeTest = null;
-      state.showResults = false;
-    },
-
     // Results actions
     setShowResults: (state, action: PayloadAction<boolean>) => {
-      state.showResults = action.payload;
-    },
-
-    clearResults: (state) => {
-      state.lastResult = null;
-      state.showResults = false;
+      state.isShowResults = action.payload;
     },
 
     // UI state actions
@@ -214,39 +111,20 @@ const testSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-
-    clearError: (state) => {
-      state.error = null;
-    },
   },
 });
 
 export const {
-  // Filter actions
-  setFilters,
-  setSearchQuery,
-  setViewMode,
-  setSorting,
-  clearFilters,
-
-  // Test session actions
   startTest,
-  updateTimeRemaining,
-  saveAnswer,
+  setShowResults, // chưa dùng
   saveAnswerByNumber,
   restoreSession,
   updateSession,
-  submitTest,
   endTest,
-
-  // Results actions
-  setShowResults,
-  clearResults,
 
   // UI actions
   setLoading,
   setError,
-  clearError,
 } = testSlice.actions;
 
 export default testSlice.reducer;

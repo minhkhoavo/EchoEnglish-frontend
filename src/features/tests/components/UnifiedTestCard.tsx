@@ -59,10 +59,6 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
   const config = typeConfig[test.type];
   const IconComponent = config.icon;
 
-  const duration = config.duration;
-  const questions = config.numberOfQuestions;
-  const parts = config.numberOfParts;
-
   const handleStartTest = () => {
     if (test.type === 'listening-reading' && onTestSelect) {
       // For listening-reading tests, use onTestSelect to show detail in ContentPage
@@ -110,17 +106,19 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Questions:</span>
-            <span className="font-medium">{questions}</span>
+            <span className="font-medium">{config.numberOfQuestions}</span>
           </div>
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Parts:</span>
-            <span className="font-medium">{parts}</span>
+            <span className="font-medium">{config.numberOfParts}</span>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Duration:</span>
-            <span className="font-medium">{formatDuration(duration)}</span>
+            <span className="font-medium">
+              {formatDuration(config.duration)}
+            </span>
           </div>
         </div>
 

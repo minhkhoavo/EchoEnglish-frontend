@@ -41,8 +41,11 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
 
         {/* Main App Routes */}
-        {/* <Route path="/" element={<ContentPage />} /> */}
-        <Route path="/" element={<SpeakingResultDemoPage />} />
+        <Route path="/" element={<ContentPage />} />
+        <Route
+          path="/speaking-result-demo"
+          element={<SpeakingResultDemoPage />}
+        />
         <Route path="/speech/recordings/:id" element={<SpeechAnalyzePage />} />
         <Route path="/recordings" element={<RecordingsPage />} />
         <Route path="/flashcards" element={<FlashcardPage />} />
@@ -56,6 +59,8 @@ function App() {
         <Route path="/test/speaking/:testId/exam" element={<SpeakingExam />} />
         <Route path="/writing-exam/:testId" element={<WritingExam />} />
         <Route path="/test-exam/:testId" element={<TestExam />} />
+        {/* Support review mode without testId in path */}
+        <Route path="/test-exam" element={<TestExam />} />
         <Route path="/speaking-result" element={<SpeakingResultPage />} />
       </Routes>
       <Toaster />

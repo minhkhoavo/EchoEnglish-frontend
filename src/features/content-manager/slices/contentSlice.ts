@@ -44,9 +44,6 @@ const contentSlice = createSlice({
         (id) => id !== action.payload
       );
     },
-    clearError: (state) => {
-      state.error = null;
-    },
     setItemStatus: (
       state,
       action: PayloadAction<{ id: string; status: ContentItem['status'] }>
@@ -78,12 +75,7 @@ const contentSlice = createSlice({
   },
 });
 
-export const {
-  removeItem,
-  clearError,
-  setItemStatus,
-  setLoadedFiles,
-  setLoading,
-} = contentSlice.actions;
+export const { removeItem, setItemStatus, setLoadedFiles, setLoading } =
+  contentSlice.actions;
 
 export default contentSlice.reducer;
