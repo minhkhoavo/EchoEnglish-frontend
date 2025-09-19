@@ -115,7 +115,7 @@ const SpeechScoreSidebar = ({
 
   const handleBackClick = () => {
     // Navigate back to recordings page
-    navigate('/recordings');
+    navigate(-1);
   };
 
   return (

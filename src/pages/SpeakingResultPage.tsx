@@ -1,9 +1,5 @@
 import React from 'react';
 import { SpeakingResultOverview } from '../features/speaking-result/components/SpeakingResultOverview';
-import {
-  mockSpeakingResult,
-  mockSpeakingStats,
-} from '../features/speaking-result/data/mockData';
 import { useSearchParams } from 'react-router-dom';
 import { useGetSpeakingResultByIdQuery } from '@/features/speaking-result/services/speakingResultApi';
 import { Button } from '@/components/ui/button';
@@ -18,7 +14,7 @@ const SpeakingResultPage: React.FC = () => {
 
   const handleRetakeTest = () => {
     console.log('Retaking test...');
-    // Navigate to test page or show test selection
+    navigate('/tests');
   };
 
   const handleViewDetails = (partNumber: number) => {
@@ -31,14 +27,25 @@ const SpeakingResultPage: React.FC = () => {
   }
 
   if (isError || !data) {
-    // Fallback to mock if API fails
+    // API failed — show fallback UI and link to demo page
     return (
-      <SpeakingResultOverview
-        result={mockSpeakingResult}
-        stats={mockSpeakingStats}
-        onRetakeTest={handleRetakeTest}
-        onViewDetails={handleViewDetails}
-      />
+      <div className="p-8 text-center">
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          Unable to load speaking result
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          There was a problem fetching the speaking result. You can try
+          reloading, check your network connection, or view the demo result.
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Retry
+          </Button>
+          <Button onClick={() => navigate('/speaking-result/demo')}>
+            Open demo
+          </Button>
+        </div>
+      </div>
     );
   }
 
@@ -73,7 +80,7 @@ const SpeakingResultPage: React.FC = () => {
       <SpeakingResultOverview
         result={data.result}
         stats={data.stats}
-        onRetakeTest={handleRetakeTest}
+        onTakeAnotherTest={handleRetakeTest}
         onViewDetails={handleViewDetails}
       />
     </div>

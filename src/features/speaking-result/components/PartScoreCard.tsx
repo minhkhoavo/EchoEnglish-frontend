@@ -15,24 +15,22 @@ import {
   ChevronUp,
   BarChart3,
 } from 'lucide-react';
-import type { SpeakingPartResult } from '../types';
+import type { SpeakingPartResult } from '../types/speaking-result.types';
 import {
   getProficiencyColor,
   getScoreColor,
   getPartIcon,
-} from '../data/mockData';
+} from '../utils/utils';
 import { QuestionResultCard } from './QuestionResultCard';
 
 interface PartScoreCardProps {
   part: SpeakingPartResult;
   onViewDetails?: () => void;
-  onAnalyzeQuestion?: (questionId: number) => void;
 }
 
 export const PartScoreCard: React.FC<PartScoreCardProps> = ({
   part,
   onViewDetails,
-  onAnalyzeQuestion,
 }) => {
   const [showQuestions, setShowQuestions] = useState(true); // Auto-show questions
   const scorePercentage = (part.score / part.maxScore) * 100;
@@ -136,12 +134,11 @@ export const PartScoreCard: React.FC<PartScoreCardProps> = ({
           </div>
 
           {showQuestions && (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-hide">
               {part.questions.map((question) => (
                 <QuestionResultCard
                   key={question.questionId}
                   question={question}
-                  onAnalyzeInDepth={onAnalyzeQuestion}
                 />
               ))}
             </div>

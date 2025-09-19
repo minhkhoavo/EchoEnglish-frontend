@@ -11,6 +11,7 @@ import {
   Award,
 } from 'lucide-react';
 import type { SpeakingResultStats, SpeakingOverallResult } from '../types';
+import type { SpeakingPartResult } from '../types/speaking-result.types';
 
 interface TestStatsCardProps {
   stats: SpeakingResultStats;
@@ -60,9 +61,11 @@ export const TestStatsCard: React.FC<TestStatsCardProps> = ({
     {
       icon: Award,
       label: 'Parts Mastered',
-      value: `${result.parts.filter((p) => p.score / p.maxScore >= 0.8).length}/${result.parts.length}`,
+      value: `${result.parts.filter((p: SpeakingPartResult) => p.score / p.maxScore >= 0.8).length}/${result.parts.length}`,
       percentage:
-        (result.parts.filter((p) => p.score / p.maxScore >= 0.8).length /
+        (result.parts.filter(
+          (p: SpeakingPartResult) => p.score / p.maxScore >= 0.8
+        ).length /
           result.parts.length) *
         100,
       color: 'text-amber-600',

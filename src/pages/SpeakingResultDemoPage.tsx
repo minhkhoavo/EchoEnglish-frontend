@@ -1,12 +1,31 @@
 import React from 'react';
+import type {
+  SpeakingOverallResult,
+  SpeakingResultStats,
+} from '../features/speaking-result/types';
 import { SpeakingResultOverview } from '../features/speaking-result/components/SpeakingResultOverview';
-import {
-  mockSpeakingResult,
-  mockSpeakingStats,
-} from '../features/speaking-result/data/mockData';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+// Inlined mock data for demo page only (moved from shared mockData)
+const mockSpeakingResult: SpeakingOverallResult = {
+  overallScore: 156,
+  maxOverallScore: 200,
+  proficiencyLevel: 'Advanced',
+  testDate: '2024-03-15T10:30:00Z',
+  testDuration: 20,
+  testTitle: 'TOEIC Speaking Practice Test #1',
+  completionRate: 95,
+  parts: [],
+};
+
+const mockSpeakingStats: SpeakingResultStats = {
+  totalQuestions: 11,
+  answeredQuestions: 11,
+  averageResponseTime: 45,
+  totalRecordingTime: 720,
+};
 
 const SpeakingResultDemoPage: React.FC = () => {
   const navigate = useNavigate();
@@ -60,7 +79,7 @@ const SpeakingResultDemoPage: React.FC = () => {
       <SpeakingResultOverview
         result={mockSpeakingResult}
         stats={mockSpeakingStats}
-        onRetakeTest={handleRetakeTest}
+        onTakeAnotherTest={handleRetakeTest}
         onViewDetails={handleViewDetails}
       />
     </div>
