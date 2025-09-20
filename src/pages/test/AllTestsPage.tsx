@@ -23,6 +23,25 @@ interface AllTestsPageProps {
   onTestSelect?: (testId: string) => void;
 }
 
+const testTypes = [
+  {
+    id: 'all',
+    name: 'All Tests',
+  },
+  {
+    id: 'listening-reading',
+    name: 'Listening - Reading',
+  },
+  {
+    id: 'speaking',
+    name: 'Speaking',
+  },
+  {
+    id: 'writing',
+    name: 'Writing',
+  },
+];
+
 const AllTestsPage = ({
   testsPerPage = 6,
   onTestSelect,
@@ -160,61 +179,43 @@ const AllTestsPage = ({
                   Choose from our collection of TOEIC practice tests
                 </p>
               </div>
-
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <BarChart3 className="h-4 w-4" />
-                <span>{filteredTests.length} tests available</span>
-              </div>
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
+            <div className="bg-card rounded-lg p-4 shadow-sm border border-border">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+                {/* Test Type Filters */}
+                <div className="flex flex-wrap gap-2">
+                  {testTypes.map((testType) => (
+                    <div
+                      key={testType.id}
+                      className={`px-3 py-1.5 rounded text-sm font-medium cursor-pointer transition hover:scale-105 ${
+                        selectedTestType === testType.id
+                          ? 'bg-primary text-primary-foreground shadow'
+                          : 'bg-background border border-border text-foreground'
+                      }`}
+                      onClick={() => setSelectedTestType(testType.id)}
+                    >
+                      {testType.name}
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
+                  <BarChart3 className="h-4 w-4" />
+                  <span>{filteredTests.length} tests available</span>
+                </div>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Search tests by title or ID..."
+                  placeholder="Search tests by name or testId..."
                   value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
-
-              <Select
-                value={selectedTestType}
-                onValueChange={(value) => {
-                  setSelectedTestType(value);
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-48">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Tests</SelectItem>
-                  <SelectItem value="listening-reading">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      LR
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="speaking">
-                    <div className="flex items-center gap-2">
-                      <Mic className="h-4 w-4" />
-                      Speaking
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="writing">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Writing
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
 

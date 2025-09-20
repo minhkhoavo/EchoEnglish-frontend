@@ -3,7 +3,7 @@ import { formatMs } from '@/features/tests/utils/formatMs';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ConfirmationDialog } from '@/components/confirmation-dialog';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuestionNavigation } from '@/features/tests/components/lis-read/QuestionNavigation';
 import { TestTimer } from '@/features/tests/components/lis-read/TestTimer';
@@ -416,7 +416,7 @@ const TestExam = () => {
                 title="Exit Test"
                 description="Are you sure you want to exit the test? Your progress will be saved."
                 confirmText="Exit"
-                cancelText="Continue Test"
+                cancelText="Continue"
                 variant="default"
                 onConfirm={handleBackToTests}
               >
@@ -457,7 +457,7 @@ const TestExam = () => {
             {!isHistoryView && !isReviewMode && (
               <ConfirmationDialog
                 title="Submit Test"
-                description="Are you sure you want to submit your test? This action cannot be undone."
+                description="Are you sure you want to submit your test?"
                 confirmText="Submit"
                 cancelText="Continue"
                 variant="default"
