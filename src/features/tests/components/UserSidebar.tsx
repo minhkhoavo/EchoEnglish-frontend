@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAppSelector } from '@/core/store/store';
+
 import { useGetUserStatsQuery } from '../services/testResultAPI';
+import { daysToDate } from '@/features/tests/utils/date';
 
 export const UserSidebar = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -16,8 +18,8 @@ export const UserSidebar = () => {
     avatar:
       user?.image ||
       'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-    examDate: '05/09/2026',
-    daysToExam: 365,
+    examDate: '05/09/2027',
+    daysToExam: daysToDate('20/09/2027'),
     targetScore: 740,
   };
 
