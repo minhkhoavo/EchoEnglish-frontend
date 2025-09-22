@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PaymentStatusComponent } from '../features/payment/components';
 import { CheckCircle, XCircle, Clock, Home, RefreshCw } from 'lucide-react';
 import type { PaymentStatus } from '../features/payment/types';
+import { PaymentStatus as PaymentStatusComponent } from '@/features/payment/components/PaymentStatus';
 
 const PaymentCallbackPage: React.FC = () => {
   const [searchParams] = useSearchParams();

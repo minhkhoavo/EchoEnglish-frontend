@@ -15,6 +15,48 @@ export const PaymentMethod = {
 } as const;
 
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
+export const TransactionType = {
+  PURCHASE: 'purchase',
+  DEDUCTION: 'deduction',
+} as const;
+
+export type TransactionType =
+  (typeof TransactionType)[keyof typeof TransactionType];
+
+export interface Transaction {
+  _id: string;
+  user: string;
+  type: TransactionType;
+  tokens: number;
+  description: string;
+  amount: number;
+  discount: number;
+  status: PaymentStatus;
+  paymentGateway: PaymentMethod;
+  expiredAt?: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  payUrl?: string;
+}
+
+export interface TransactionFilters {
+  type?: TransactionType;
+  status?: PaymentStatus;
+  paymentGateway?: PaymentMethod;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface TransactionHistoryResponse {
+  message: string;
+  data: {
+    transaction: Transaction[];
+  };
+}
 
 export interface UserBalance {
   userId: string;
@@ -50,16 +92,7 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-export const TransactionType = {
-  PURCHASE: 'PURCHASE',
-  USAGE: 'USAGE',
-  REFUND: 'REFUND',
-  BONUS: 'BONUS',
-} as const;
-
-export type TransactionType =
-  (typeof TransactionType)[keyof typeof TransactionType];
-
+// Promo Code Interface
 export interface PromoCode {
   id: string;
   code: string;
@@ -73,48 +106,15 @@ export interface PromoCode {
   usedCount: number;
 }
 
-export interface Transaction {
-  id: string;
-  userId: string;
-  type: TransactionType;
-  credits: number;
-  amountVnd?: number;
-  description: string;
-  paymentId?: string;
-  paymentMethod?: PaymentMethod;
-  status: PaymentStatus;
-  createdAt: string;
-  metadata?: Record<string, unknown>;
-}
-
-export interface TransactionFilter {
-  type?: TransactionType;
-  status?: PaymentStatus;
-  paymentMethod?: PaymentMethod;
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  limit?: number;
-}
-
+// Promo Code Validation Response
 export interface PromoCodeValidation {
   isValid: boolean;
   discountVnd: number;
   message?: string;
-  promoCode?: {
-    id: string;
-    code: string;
-    discountType: 'PERCENTAGE' | 'FIXED';
-    discountValue: number;
-    minAmount: number;
-    maxDiscount?: number;
-    expiryDate: string;
-    isActive: boolean;
-    usageLimit?: number;
-    usedCount: number;
-  };
+  promoCode?: PromoCode;
 }
 
+// Credit Calculation Interface
 export interface CreditCalculation {
   credits: number;
   baseAmountVnd: number;

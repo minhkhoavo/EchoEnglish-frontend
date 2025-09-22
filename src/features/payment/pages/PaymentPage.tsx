@@ -5,18 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CreditCard, Coins, Loader2, AlertCircle } from 'lucide-react';
 
-import {
-  CreditBalance,
-  PaymentMethodSelector,
-  PromoCodeInput,
-  PaymentSummary,
-} from '../components';
+import { PaymentMethodSelector } from '../components/PaymentMethodSelector';
 
 import {
   useCreatePaymentMutation,
   useValidatePromoCodeMutation,
 } from '../services/paymentApi';
 import type { CreditCalculation, PaymentMethod } from '../types';
+import { PromoCodeInput } from '../components/PromoCodeInput';
 
 const PaymentPage: React.FC = () => {
   // RTK Query hooks

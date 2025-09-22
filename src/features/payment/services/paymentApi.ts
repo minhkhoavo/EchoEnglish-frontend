@@ -5,6 +5,8 @@ import type {
   PromoCodeValidation,
   ApiResponse,
   UserBalance,
+  TransactionHistoryResponse,
+  TransactionFilters,
 } from '../types';
 
 const paymentApiInjected = api.injectEndpoints({
@@ -34,6 +36,32 @@ const paymentApiInjected = api.injectEndpoints({
 
     getUserBalance: builder.query<ApiResponse<UserBalance>, void>({
       query: () => ({ url: '/payments/me/credits', method: 'GET' }),
+      providesTags: ['Payment'],
+    }),
+
+    getTransactionHistory: builder.query<
+      TransactionHistoryResponse,
+      TransactionFilters | void
+    >({
+      query: (filters) => {
+        const params = new URLSearchParams();
+
+        if (filters?.type) params.append('type', filters.type);
+        if (filters?.status) params.append('status', filters.status);
+        if (filters?.paymentGateway)
+          params.append('paymentGateway', filters.paymentGateway);
+        if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
+        if (filters?.dateTo) params.append('dateTo', filters.dateTo);
+        if (filters?.page) params.append('page', filters.page.toString());
+        if (filters?.limit) params.append('limit', filters.limit.toString());
+
+        const queryString = params.toString();
+        return {
+          url: `/payments${queryString ? `?${queryString}` : ''}`,
+          method: 'GET',
+        };
+      },
+      providesTags: ['Payment'],
     }),
   }),
   overrideExisting: false,
@@ -44,4 +72,5 @@ export const {
   useCreatePaymentMutation,
   useValidatePromoCodeMutation,
   useGetUserBalanceQuery,
+  useGetTransactionHistoryQuery,
 } = paymentApi;
