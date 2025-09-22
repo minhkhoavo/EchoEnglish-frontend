@@ -99,11 +99,10 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.front.trim() || !formData.back.trim() || !formData.category) {
+    if (!formData.front.trim() || !formData.back.trim()) {
       toast({
         title: 'Validation Error',
-        description:
-          'Please fill in all required fields (Front, Back, Category)',
+        description: 'Please fill in all required fields (Front, Back)',
         variant: 'destructive',
       });
       return;
@@ -276,7 +275,6 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                   onValueChange={(value) => {
                     setFormData((prev) => ({ ...prev, category: value }));
                   }}
-                  required
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />

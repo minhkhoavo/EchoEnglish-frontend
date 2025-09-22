@@ -19,11 +19,16 @@ import {
   BookOpen,
   Bell,
   Search,
+  Coins,
+  CreditCard,
+  History,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
 import { logout } from '@/features/auth/slices/authSlice';
+import { useEffect } from 'react';
+import { useGetUserBalanceQuery } from '@/features/payment/services/paymentApi';
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -34,6 +39,12 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { data: userBalanceResponse } = useGetUserBalanceQuery();
+  const userBalance = userBalanceResponse?.data;
+
+  useEffect(() => {
+    // User balance is fetched automatically by the query
+  }, [user]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -80,6 +91,22 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
 
           {/* Right Section */}
           <div className="flex items-center space-x-3">
+            {/* Token Balance */}
+            {userBalance && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden sm:flex items-center space-x-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                onClick={() => navigate('/payment')}
+              >
+                <Coins className="h-4 w-4" />
+                <span className="font-medium">
+                  {userBalance.credits.toLocaleString('vi-VN')}
+                </span>
+                <span className="text-xs">credits</span>
+              </Button>
+            )}
+
             {/* Premium Badge */}
             <Badge
               variant="outline"
@@ -146,6 +173,20 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
                 >
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate('/payment')}
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  <span>Buy Tokens</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate('/payment/history')}
+                >
+                  <History className="mr-2 h-4 w-4" />
+                  <span>Transaction History</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer">
                   <BookOpen className="mr-2 h-4 w-4" />

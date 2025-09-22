@@ -20,6 +20,8 @@ import SpeechAnalyzePage from './pages/SpeechAnalyzePage';
 import SpeakingResultDemoPage from './pages/SpeakingResultDemoPage';
 import SpeakingResultPage from './pages/SpeakingResultPage';
 import ExamAttemptsPage from './pages/ExamAttemptsPage';
+import PaymentCallbackPage from './pages/PaymentCallbackPage';
+import PaymentPage from './features/payment/pages/PaymentPage';
 
 const QuizRouteWrapper = () => {
   const location = useLocation();
@@ -44,6 +46,10 @@ function App() {
         {/* Main App Routes */}
         <Route path="/" element={<ContentPage />} />
         <Route path="/me/tests" element={<ExamAttemptsPage />} />
+
+        {/* Payment Routes */}
+        <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/payment/callback" element={<PaymentCallbackPage />} />
 
         <Route
           path="/speaking-result-demo"
