@@ -2,7 +2,16 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { HelpCircle, BookOpen, Lightbulb } from 'lucide-react';
+import {
+  HelpCircle,
+  BookOpen,
+  Lightbulb,
+  Crown,
+  ArrowRight,
+  TrendingUp,
+  RefreshCw,
+  FileText,
+} from 'lucide-react';
 import type {
   VocabularyDistribution,
   VocabularyScore,
@@ -45,6 +54,71 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
     C1: 'bg-red-100 text-red-800',
     C2: 'bg-purple-100 text-purple-800',
   };
+
+  // Vocabulary Upgrade suggestions với chi tiết hơn
+  const vocabularyUpgrades = [
+    {
+      basic: 'good',
+      advanced: 'exceptional',
+      basicLevel: 'A1',
+      advancedLevel: 'C1',
+      context: 'Quality description',
+      example: "This meal is exceptional (not just 'good')",
+      impact: '+25 points',
+    },
+    {
+      basic: 'big',
+      advanced: 'substantial',
+      basicLevel: 'A1',
+      advancedLevel: 'B2',
+      context: 'Size/amount',
+      example: 'A substantial improvement in performance',
+      impact: '+15 points',
+    },
+    {
+      basic: 'important',
+      advanced: 'paramount',
+      basicLevel: 'A2',
+      advancedLevel: 'C1',
+      context: 'Significance',
+      example: 'This issue is paramount to our success',
+      impact: '+20 points',
+    },
+    {
+      basic: 'very',
+      advanced: 'remarkably',
+      basicLevel: 'A1',
+      advancedLevel: 'B2',
+      context: 'Intensifier',
+      example: 'The results were remarkably consistent',
+      impact: '+10 points',
+    },
+  ];
+
+  // Paraphrase suggestions
+  const paraphraseSuggestions = [
+    {
+      original: 'I think this is important',
+      paraphrase: 'In my opinion, this holds significant value',
+      technique: 'Opinion expression + formal vocabulary',
+    },
+    {
+      original: 'This is a big problem',
+      paraphrase: 'This represents a considerable challenge',
+      technique: 'Nominalization + academic tone',
+    },
+    {
+      original: 'People should do this',
+      paraphrase:
+        'It would be advisable for individuals to pursue this approach',
+      technique: 'Modal softening + formal register',
+    },
+    {
+      original: "It's very good",
+      paraphrase: 'It demonstrates exceptional quality',
+      technique: 'Active voice + specific adjectives',
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -172,15 +246,14 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
         </Card>
       </div>
 
-      {/* Top Performance & Suggested Words */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Performance */}
+      {/* Strengths - Đặt riêng */}
+      <div className="grid grid-cols-1 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Your Strengths</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {topPerformances.map((performance, index) => (
                 <div
                   key={index}
@@ -202,8 +275,94 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Suggested Vocabulary */}
+      {/* Vocabulary Upgrade & Paraphrase Tips - Gộp chung */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Vocabulary Upgrade */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Crown className="w-5 h-5 text-amber-600" />
+              Vocabulary Upgrade
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {vocabularyUpgrades.slice(0, 4).map((upgrade, index) => (
+                <div
+                  key={index}
+                  className="p-3 bg-amber-50 rounded-lg border border-amber-200"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700">
+                      {upgrade.basic}
+                    </span>
+                    <ArrowRight className="w-3 h-3 text-amber-600" />
+                    <span className="px-2 py-1 bg-amber-100 rounded text-xs font-semibold text-amber-800">
+                      {upgrade.advanced}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-600 mb-1">
+                    <span className="font-medium">Context:</span>{' '}
+                    {upgrade.context}
+                  </div>
+                  <div className="text-xs text-amber-700 bg-amber-100 px-2 py-1 rounded italic">
+                    💬 "{upgrade.example}"
+                  </div>
+                </div>
+              ))}
+              <p className="text-xs text-amber-700 mt-2 text-center">
+                ✨ Transform basic words into sophisticated expressions
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Paraphrase Tips */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <RefreshCw className="w-5 h-5 text-blue-600" />
+              Paraphrase Tips
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {paraphraseSuggestions.map((paraphrase, index) => (
+                <div
+                  key={index}
+                  className="p-3 bg-blue-50 rounded-lg border border-blue-200"
+                >
+                  <div className="mb-2">
+                    <div className="text-xs text-gray-600 mb-1">Original:</div>
+                    <div className="text-xs text-gray-700 italic">
+                      "{paraphrase.original}"
+                    </div>
+                  </div>
+                  <div className="mb-2">
+                    <div className="text-xs text-blue-600 mb-1 font-medium">
+                      Paraphrased:
+                    </div>
+                    <div className="text-xs text-blue-800 font-medium">
+                      "{paraphrase.paraphrase}"
+                    </div>
+                  </div>
+                  <div className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded">
+                    📝 {paraphrase.technique}
+                  </div>
+                </div>
+              ))}
+              <p className="text-xs text-blue-700 mt-2 text-center">
+                🔄 Express the same idea in different ways
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Suggested Words - Chuyển xuống dưới */}
+      <div className="grid grid-cols-1 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -212,7 +371,7 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {suggestedWords.length > 0 ? (
                 suggestedWords.map((word, index) => (
                   <div
@@ -243,7 +402,7 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-6 text-gray-500">
+                <div className="col-span-full text-center py-6 text-gray-500">
                   <Lightbulb className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                   <p className="text-sm">No word suggestions available</p>
                 </div>
