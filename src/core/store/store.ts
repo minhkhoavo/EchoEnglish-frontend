@@ -8,6 +8,7 @@ import speakingExamReducer from '../../features/tests/slices/speakingExamSlice';
 import authReducer from '../../features/auth/slices/authSlice';
 import speechAnalyzerReducer from '../../features/speech-analyzer/slices/speechAnalyzerSlice';
 import examAttemptsReducer from '../../features/exam-attempts/slices/examAttemptsSlice';
+import chatbotReducer from '../../features/chatbot/slices/chatbotSlice';
 import { api } from '../api/api';
 import { quizApi } from '../../features/quiz/services/quizApi';
 import { useDispatch, useSelector } from 'react-redux';
@@ -24,6 +25,7 @@ export const store = configureStore({
     auth: authReducer,
     speechAnalyzer: speechAnalyzerReducer,
     examAttempts: examAttemptsReducer,
+    chatbot: chatbotReducer,
     [api.reducerPath]: api.reducer,
     [quizApi.reducerPath]: quizApi.reducer,
   },
