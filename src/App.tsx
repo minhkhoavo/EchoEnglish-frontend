@@ -23,6 +23,8 @@ import ExamAttemptsPage from './pages/ExamAttemptsPage';
 import PaymentCallbackPage from './pages/PaymentCallbackPage';
 import PaymentPage from './features/payment/pages/PaymentPage';
 import { PaymentHistoryPage } from './pages/PaymentHistoryPage';
+import { ChatbotContainer } from './features/chatbot';
+import ChatbotDemoPage from './pages/ChatbotDemoPage';
 import NotFound from './pages/NotFound';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import AdminNotificationPage from './pages/admin/AdminNotificationPage';
@@ -49,6 +51,7 @@ function App() {
 
         {/* Main App Routes */}
         <Route path="/" element={<ContentPage />} />
+        <Route path="/chatbot-demo" element={<ChatbotDemoPage />} />
         <Route path="/me/tests" element={<ExamAttemptsPage />} />
 
         {/* Payment Routes */}
@@ -85,6 +88,9 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
+
+      {/* AI Chatbot - Available on all pages */}
+      <ChatbotContainer className="bottom-4 right-4" />
     </Router>
   );
 }
