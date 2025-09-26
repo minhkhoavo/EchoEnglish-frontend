@@ -48,6 +48,8 @@ import PracticeDrillPage from './pages/PracticeDrillPage';
 // Payment
 import PaymentPage from './features/payment/pages/PaymentPage';
 import { PaymentHistoryPage } from './pages/PaymentHistoryPage';
+import { ChatbotContainer } from './features/chatbot';
+import ChatbotDemoPage from './pages/ChatbotDemoPage';
 import PaymentCallbackPage from './pages/PaymentCallbackPage';
 
 // Admin Routes
@@ -177,6 +179,9 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
+
+      {/* AI Chatbot - Available on all pages */}
+      <ChatbotContainer className="bottom-4 right-4" />
     </Router>
   );
 }
