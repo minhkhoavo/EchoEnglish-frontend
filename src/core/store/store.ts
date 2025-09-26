@@ -9,6 +9,7 @@ import writingExamReducer from '../../features/tests/slices/writingExamSlice';
 import authReducer from '../../features/auth/slices/authSlice';
 import speechAnalyzerReducer from '../../features/speech-analyzer/slices/speechAnalyzerSlice';
 import examAttemptsReducer from '../../features/exam-attempts/slices/examAttemptsSlice';
+import chatbotReducer from '../../features/chatbot/slices/chatbotSlice';
 import notificationReducer from '../../features/notification/slices/notificationSlice';
 import resourceReducer from '../../features/resource/slices/resourceSlice';
 import dashboardReducer from '../../features/user-dashboard/slices/dashboardSlice';
@@ -29,6 +30,7 @@ export const store = configureStore({
     auth: authReducer,
     speechAnalyzer: speechAnalyzerReducer,
     examAttempts: examAttemptsReducer,
+    chatbot: chatbotReducer,
     notification: notificationReducer,
     resource: resourceReducer,
     dashboard: dashboardReducer,
