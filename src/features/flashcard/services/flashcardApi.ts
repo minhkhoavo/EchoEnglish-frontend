@@ -117,7 +117,7 @@ export const flashcardApi = api.injectEndpoints({
       string
     >({
       query: (categoryId) => ({
-        url: `/flashcards/category/${categoryId}`,
+        url: `/flashcards/category/${categoryId}?page=1&limit=3`,
         method: 'GET',
       }),
       transformResponse: (

@@ -111,7 +111,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
     try {
       if (isEdit && flashcard) {
         await updateFlashcard({
-          id: flashcard._id || flashcard.id || '',
+          id: flashcard._id || '',
           ...formData,
         }).unwrap();
         toast({
@@ -292,8 +292,8 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                       categories.map((category: Category) => {
                         return (
                           <SelectItem
-                            key={category._id || category.id}
-                            value={category._id || category.id || ''}
+                            key={category._id}
+                            value={category._id || ''}
                           >
                             <span className="truncate block max-w-full">
                               {category.name}
