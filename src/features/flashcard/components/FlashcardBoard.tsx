@@ -70,7 +70,7 @@ const FlashcardBoard: React.FC = () => {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
+  const [pageSize, setPageSize] = useState(6);
 
   const isServerDisconnected =
     error &&
@@ -592,7 +592,7 @@ const FlashcardBoard: React.FC = () => {
               >
                 {paginatedFlashcards.map((flashcard) => (
                   <FlashcardItem
-                    key={flashcard._id || flashcard.id}
+                    key={flashcard._id}
                     flashcard={flashcard}
                     onEdit={setEditingFlashcard}
                     onDelete={handleDeleteFlashcard}

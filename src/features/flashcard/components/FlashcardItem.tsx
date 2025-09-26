@@ -76,7 +76,7 @@ const FlashcardItem: React.FC<FlashcardItemProps> = ({
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const id = flashcard._id || flashcard.id;
+    const id = flashcard._id;
     if (id) {
       onDelete?.(id);
     }

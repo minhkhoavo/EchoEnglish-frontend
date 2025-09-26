@@ -1,6 +1,5 @@
 export interface Flashcard {
   _id?: string;
-  id?: string;
   front: string;
   back: string;
   category: string;
@@ -16,7 +15,6 @@ export interface Flashcard {
 
 export interface Category {
   _id?: string;
-  id?: string;
   name: string;
   description?: string;
   color?: string;
