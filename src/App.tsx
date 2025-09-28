@@ -24,6 +24,7 @@ import PaymentCallbackPage from './pages/PaymentCallbackPage';
 import PaymentPage from './features/payment/pages/PaymentPage';
 import { PaymentHistoryPage } from './pages/PaymentHistoryPage';
 import NotFound from './pages/NotFound';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
 const QuizRouteWrapper = () => {
   const location = useLocation();
@@ -75,6 +76,9 @@ function App() {
         <Route path="/test-exam" element={<TestExam />} />
         <Route path="/speaking-result" element={<SpeakingResultPage />} />
         <Route path="*" element={<NotFound />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
       </Routes>
       <Toaster />
     </Router>
