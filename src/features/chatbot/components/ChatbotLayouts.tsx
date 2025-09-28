@@ -4,7 +4,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { ChatbotResponse, ChatbotAction } from '../types';
+import type {
+  ChatbotResponse,
+  ChatbotAction,
+  NoticePayload,
+  ListPayload,
+  DetailPayload,
+  ResultPayload,
+  HtmlEmbedPayload,
+} from '../types';
 import { ActionButtons } from './ChatbotUI';
 
 interface LayoutProps {
@@ -18,22 +26,25 @@ export const NoticeLayout: React.FC<LayoutProps> = ({
   onExecuteAction,
 }) => {
   if (response.layout !== 'notice') return null;
+
+  const payload = response.payload as NoticePayload;
+  if (!payload) return null;
+
   return (
     <Card
       className={cn(
         'p-4 border-l-4',
-        response.status === 'success' && 'border-l-green-500 bg-green-50/50',
-        response.status === 'warning' && 'border-l-yellow-500 bg-yellow-50/50',
-        response.status === 'error' && 'border-l-red-500 bg-red-50/50',
-        response.status === 'info' && 'border-l-blue-500 bg-blue-50/50',
-        !response.status && 'border-l-gray-500 bg-gray-50/50'
+        payload.status === 'success' && 'border-l-green-500 bg-green-50/50',
+        payload.status === 'warning' && 'border-l-yellow-500 bg-yellow-50/50',
+        payload.status === 'error' && 'border-l-red-500 bg-red-50/50',
+        payload.status === 'info' && 'border-l-blue-500 bg-blue-50/50'
       )}
     >
-      {response.title && (
-        <h3 className="font-semibold text-gray-900 mb-1">{response.title}</h3>
+      {payload.title && (
+        <h3 className="font-semibold text-gray-900 mb-1">{payload.title}</h3>
       )}
-      {response.subtitle && (
-        <p className="text-sm text-gray-600 mb-2">{response.subtitle}</p>
+      {payload.subtitle && (
+        <p className="text-sm text-gray-600 mb-2">{payload.subtitle}</p>
       )}
       <ActionButtons
         actions={response.actions || []}
@@ -48,11 +59,17 @@ export const ListLayout: React.FC<LayoutProps> = ({
   response,
   onExecuteAction,
 }) => {
-  if (response.layout !== 'list' || !response.items) return null;
+  if (response.layout !== 'list') return null;
+
+  const payload = response.payload as ListPayload;
+  if (!payload || !payload.items) return null;
 
   return (
     <div className="space-y-3">
-      {response.items.map((item, index) => (
+      {payload.title && (
+        <h3 className="font-semibold text-gray-900 mb-3">{payload.title}</h3>
+      )}
+      {payload.items.map((item, index) => (
         <Card key={index} className="p-3 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -112,6 +129,9 @@ export const DetailLayout: React.FC<LayoutProps> = ({
 }) => {
   if (response.layout !== 'detail') return null;
 
+  const payload = response.payload as DetailPayload;
+  if (!payload) return null;
+
   const getBadgeColor = (type: string) => {
     switch (type) {
       case 'success':
@@ -129,14 +149,12 @@ export const DetailLayout: React.FC<LayoutProps> = ({
 
   return (
     <Card className="p-4">
-      {response.headline && (
-        <h3 className="font-semibold text-gray-900 mb-3">
-          {response.headline}
-        </h3>
+      {payload.headline && (
+        <h3 className="font-semibold text-gray-900 mb-3">{payload.headline}</h3>
       )}
-      {response.properties && response.properties.length > 0 && (
+      {payload.properties && payload.properties.length > 0 && (
         <dl className="grid grid-cols-2 gap-2 mb-4">
-          {response.properties.map((pair, index) => (
+          {payload.properties.map((pair, index) => (
             <div key={index}>
               <dt className="text-sm font-medium text-gray-600">
                 {pair.label}
@@ -146,15 +164,15 @@ export const DetailLayout: React.FC<LayoutProps> = ({
           ))}
         </dl>
       )}
-      {response.badge && (
+      {payload.badge && (
         <Badge
-          className={cn('flex-shrink-0', getBadgeColor(response.badge.type))}
+          className={cn('flex-shrink-0', getBadgeColor(payload.badge.type))}
         >
-          {response.badge.text}
+          {payload.badge.text}
         </Badge>
       )}
-      {response.note && (
-        <p className="text-sm text-gray-600 mt-3 italic">{response.note}</p>
+      {payload.note && (
+        <p className="text-sm text-gray-600 mt-3 italic">{payload.note}</p>
       )}
       <ActionButtons
         actions={response.actions || []}
@@ -171,24 +189,26 @@ export const ResultLayout: React.FC<LayoutProps> = ({
 }) => {
   if (response.layout !== 'result') return null;
 
+  const payload = response.payload as ResultPayload;
+  if (!payload) return null;
+
   return (
     <Card className="p-4">
-      {response.headline && (
+      {payload.headline && (
         <h3
           className={cn(
             'font-semibold mb-3',
-            response.status === 'success' && 'text-green-700',
-            response.status === 'warning' && 'text-yellow-700',
-            response.status === 'error' && 'text-red-700',
-            !response.status && 'text-gray-900'
+            payload.status === 'success' && 'text-green-700',
+            payload.status === 'warning' && 'text-yellow-700',
+            payload.status === 'error' && 'text-red-700'
           )}
         >
-          {response.headline}
+          {payload.headline}
         </h3>
       )}
-      {response.summary_points && response.summary_points.length > 0 && (
+      {payload.summary_points && payload.summary_points.length > 0 && (
         <ul className="space-y-1 mb-3">
-          {response.summary_points.map((point, index) => (
+          {payload.summary_points.map((point, index) => (
             <li key={index} className="text-sm text-gray-700 flex items-start">
               <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
               {point}
@@ -196,11 +216,11 @@ export const ResultLayout: React.FC<LayoutProps> = ({
           ))}
         </ul>
       )}
-      {response.next_steps && response.next_steps.length > 0 && (
+      {payload.next_steps && payload.next_steps.length > 0 && (
         <div className="mb-3">
           <h4 className="font-medium text-gray-800 mb-2">Next Steps:</h4>
           <ol className="space-y-1">
-            {response.next_steps.map((step, index) => (
+            {payload.next_steps.map((step, index) => (
               <li
                 key={index}
                 className="text-sm text-gray-700 flex items-start"
@@ -227,24 +247,25 @@ export const HtmlEmbedLayout: React.FC<LayoutProps> = ({
   response,
   onExecuteAction,
 }) => {
-  if (response.layout !== 'html_embed' || !response.html) return null;
+  if (response.layout !== 'html_embed') return null;
 
-  const height = response.height_hint || 300;
+  const payload = response.payload as HtmlEmbedPayload;
+  if (!payload || !payload.html) return null;
+
+  const height = payload.height_hint || 300;
 
   return (
     <div className="space-y-4">
       {/* Title */}
-      {response.title && (
-        <h3 className="text-lg font-semibold text-gray-900">
-          {response.title}
-        </h3>
+      {payload.title && (
+        <h3 className="text-lg font-semibold text-gray-900">{payload.title}</h3>
       )}
 
       {/* HTML Embed */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
         <div className="w-full bg-white" style={{ height: `${height}px` }}>
           <iframe
-            srcDoc={response.html}
+            srcDoc={payload.html}
             className="w-full h-full border-0"
             title="Embedded Content"
             sandbox="allow-scripts allow-same-origin allow-forms"
@@ -253,7 +274,7 @@ export const HtmlEmbedLayout: React.FC<LayoutProps> = ({
       </div>
 
       {/* Fallback Text */}
-      {response.fallback_text && (
+      {payload.fallback_text && (
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="w-5 h-5 text-yellow-600" />
@@ -261,7 +282,7 @@ export const HtmlEmbedLayout: React.FC<LayoutProps> = ({
               Alternative Content
             </span>
           </div>
-          <p className="text-yellow-700 text-sm">{response.fallback_text}</p>
+          <p className="text-yellow-700 text-sm">{payload.fallback_text}</p>
         </div>
       )}
 
