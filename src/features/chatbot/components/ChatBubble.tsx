@@ -50,10 +50,12 @@ const renderUIContract = (
     const command: ChatbotCommand = {
       action: action.type,
       payload: {
-        ...(action.href && { href: action.href }),
-        ...(action.route && { route: action.route }),
-        ...(action.tool && { tool: action.tool }),
-        ...(action.args && { args: action.args }),
+        ...(action.type === 'OPEN_URL' && { href: action.href }),
+        ...(action.type === 'NAVIGATE' && { route: action.route }),
+        ...(action.type === 'RUN_TOOL' && {
+          tool: action.tool,
+          args: action.args,
+        }),
       },
       buttonText: action.label,
       confirmationRequired: action.confirm,
@@ -195,12 +197,16 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
 
   if (!isOpen) {
     return (
-      <div className={cn('fixed z-50', className)}>
+      <div
+        className={cn('fixed z-[9999]', className)}
+        style={{ bottom: '1rem', right: '1rem' }}
+      >
         <div className="relative chatbot-float">
           <Button
             onClick={onToggle}
             size="lg"
             className="h-16 w-16 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 group chatbot-button"
+            style={{ cursor: 'pointer', pointerEvents: 'auto', zIndex: 9999 }}
           >
             <MessageCircle className="h-7 w-7 text-white group-hover:scale-110 transition-transform duration-300" />
           </Button>
@@ -218,7 +224,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   return (
     <Card
       className={cn(
-        'fixed z-50 w-96 h-[600px] shadow-2xl flex flex-col backdrop-blur-sm bg-white/95 border-0 rounded-2xl overflow-hidden',
+        'fixed z-50 w-96 h-[500px] shadow-2xl flex flex-col backdrop-blur-sm bg-white/95 border-0 rounded-2xl overflow-hidden',
         className
       )}
     >
@@ -232,7 +238,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         <div className="flex items-center space-x-3 relative z-10">
           <div className="relative">
             <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl border border-white/30">
-              <MessageCircle className="h-6 w-6 text-white" />
+              <MessageCircle className="h-4 w-4 text-white" />
             </div>
             {/* Online indicator */}
             <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-400 rounded-full border-2 border-white shadow-sm">
@@ -496,9 +502,9 @@ const ChatMessageComponent: React.FC<ChatMessageComponentProps> = ({
           {/* Message Bubble */}
           <div
             className={cn(
-              'rounded-2xl px-4 py-3 relative shadow-sm border transition-all duration-200 group-hover:shadow-md message-bubble',
+              'rounded-2xl px-4 py-2 relative shadow-sm border transition-all duration-200 group-hover:shadow-md message-bubble',
               isUser
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-tr-md border-blue-600/20'
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 rounded-tr-md text-white [&_*]:text-white'
                 : 'bg-white text-gray-900 border-gray-200 rounded-tl-md hover:border-gray-300'
             )}
           >
@@ -515,13 +521,6 @@ const ChatMessageComponent: React.FC<ChatMessageComponentProps> = ({
           {message.response && (
             <div className="mt-3">
               {renderUIContract(message.response, onExecuteCommand)}
-              {/* Render attachments */}
-              {message.response.attachments &&
-                message.response.attachments.map((attachment, index) => (
-                  <div key={index} className="mt-3">
-                    {renderUIContract(attachment, onExecuteCommand)}
-                  </div>
-                ))}
             </div>
           )}
 
@@ -535,22 +534,6 @@ const ChatMessageComponent: React.FC<ChatMessageComponentProps> = ({
             <span className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
               {formatTime(message.timestamp)}
             </span>
-            {isUser && (
-              <Badge
-                variant={message.status === 'sent' ? 'default' : 'secondary'}
-                className={cn(
-                  'text-xs h-5 px-2 opacity-0 group-hover:opacity-100 transition-opacity',
-                  message.status === 'sent' &&
-                    'bg-green-100 text-green-700 border-green-200',
-                  message.status === 'sending' &&
-                    'bg-yellow-100 text-yellow-700 border-yellow-200',
-                  message.status === 'failed' &&
-                    'bg-red-100 text-red-700 border-red-200'
-                )}
-              >
-                {message.status}
-              </Badge>
-            )}
           </div>
         </div>
       </div>
