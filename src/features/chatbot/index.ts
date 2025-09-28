@@ -3,3 +3,4 @@ export { default as ChatBubble } from './components/ChatBubble';
 export { default as chatbotReducer } from './slices/chatbotSlice';
 export * from './types';
 export * from './slices/chatbotSlice';
+export * from './services/chatbotApi';

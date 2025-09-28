@@ -13,18 +13,12 @@ import {
   addMessage,
   updateMessageStatus,
   setTyping,
-  addPendingCommand,
   executePendingCommand,
   setError,
   clearError,
-  addImageToMessage,
 } from '../slices/chatbotSlice';
-import type {
-  ChatbotCommand,
-  ChatMessage,
-  ChatbotAction,
-  ChatbotResponse,
-} from '../types';
+import { useRunChatMutation } from '../services/chatbotApi';
+import type { ChatbotCommand, ChatMessage } from '../types';
 
 interface ChatbotContainerProps {
   className?: string;
@@ -37,6 +31,7 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [runChat] = useRunChatMutation();
 
   const isOpen = useAppSelector((state: RootState) => state.chatbot.isOpen);
   const currentSession = useAppSelector(
@@ -90,26 +85,7 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
         // Start typing indicator
         dispatch(setTyping(true));
 
-        // TODO: Replace with real API call
-        // let response;
-        // if (images && images.length > 0) {
-        //   response = await MockChatbotService.sendMessageWithImage(content, images[0]);
-        // } else {
-        //   response = await MockChatbotService.sendMessage(content);
-        // }
-
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Placeholder response
-        const response: ChatbotResponse = {
-          intent: 'placeholder',
-          layout: 'notice',
-          message:
-            'This is a placeholder response. Backend integration needed.',
-          actions: [],
-          status: 'info',
-        };
+        const response = await runChat({ prompt: content }).unwrap();
 
         // Stop typing indicator
         dispatch(setTyping(false));
@@ -157,7 +133,7 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
         dispatch(setError('Failed to send message. Please try again.'));
       }
     },
-    [dispatch]
+    [dispatch, runChat]
   );
 
   const handleExecuteCommand = useCallback(
@@ -176,14 +152,12 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
           case 'NAVIGATE':
             if (command.payload?.route) {
               navigate(command.payload.route as string);
-              toast.success(`Navigating to ${command.payload.route}`);
             }
             break;
 
           case 'OPEN_URL':
             if (command.payload?.href) {
               window.open(command.payload.href as string, '_blank');
-              toast.success('Opening link...');
             }
             break;
 
@@ -192,7 +166,6 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
             const args = command.payload?.args as Record<string, unknown>;
 
             if (tool === 'download_material') {
-              toast.success('Download started!');
               dispatch(
                 addMessage({
                   type: 'assistant',
@@ -201,7 +174,6 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
                 })
               );
             } else if (tool === 'schedule_exam') {
-              toast.success('Exam scheduled successfully!');
               dispatch(
                 addMessage({
                   type: 'assistant',
@@ -210,7 +182,6 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
                 })
               );
             } else if (tool === 'book_lesson') {
-              toast.success('Lesson booking requested!');
               dispatch(
                 addMessage({
                   type: 'assistant',
@@ -230,7 +201,6 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
           case 'navigate':
             if (command.navigate) {
               navigate(command.navigate);
-              toast.success(`Navigating to ${command.navigate}`);
             }
             break;
 
@@ -241,7 +211,6 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
                   paymentData: command.payload,
                 },
               });
-              toast.success('Redirecting to payment...');
             }
             break;
 

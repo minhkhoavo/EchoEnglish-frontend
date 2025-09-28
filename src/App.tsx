@@ -178,7 +178,7 @@ function App() {
         {/* ================================================================== */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <Toaster />
+      <Toaster position="top-right" />
 
       {/* AI Chatbot - Available on all pages */}
       <ChatbotContainer className="bottom-4 right-4" />
