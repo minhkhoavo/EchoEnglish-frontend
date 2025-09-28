@@ -50,6 +50,7 @@ export const api = createApi({
     'WritingTest',
     'SpeakingWritingTest',
     'Payment',
+    'Chatbot',
     'Notification',
     'Resource',
     'Dashboard',

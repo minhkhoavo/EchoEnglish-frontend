@@ -1,61 +1,70 @@
-export interface ChatbotAction {
-  type: 'OPEN_URL' | 'NAVIGATE' | 'RUN_TOOL';
-  label: string;
-  href?: string;
-  route?: string;
-  tool?: string;
-  args?: Record<string, unknown>;
-  confirm?: boolean;
-}
+export type ChatbotAction =
+  | { type: 'OPEN_URL'; label: string; href: string; confirm?: boolean }
+  | { type: 'NAVIGATE'; label: string; route: string; confirm?: boolean }
+  | {
+      type: 'RUN_TOOL';
+      label: string;
+      tool: string;
+      args?: Record<string, unknown>;
+      confirm?: boolean;
+    };
 
 export interface ChatbotResponse {
   intent: string;
   layout: 'notice' | 'list' | 'detail' | 'result' | 'html_embed';
   message: string;
   actions?: ChatbotAction[];
+  payload?:
+    | NoticePayload
+    | ListPayload
+    | DetailPayload
+    | ResultPayload
+    | HtmlEmbedPayload;
+}
 
-  // Layout-specific payloads
-  // Notice layout
-  status?: 'info' | 'success' | 'warning' | 'error';
+export interface NoticePayload {
+  status: 'info' | 'success' | 'warning' | 'error';
   title?: string;
   subtitle?: string;
+}
+export interface ListPayload {
+  title?: string;
+  items: Array<ListItem>;
+}
+export interface ListItem {
+  title: string;
+  description?: string;
+  right_label?: string;
+  tags?: string[];
+  thumbnail?: string;
+  item_actions?: ChatbotAction[];
+  kind?: 'flashcard' | 'article' | 'generic';
+  meta?: Record<string, unknown>;
+}
 
-  // List layout
-  items?: Array<{
-    title: string;
-    description?: string;
-    right_label?: string;
-    tags?: string[];
-    thumbnail?: string;
-    item_actions?: ChatbotAction[];
-  }>;
-
-  // Detail layout
-  properties?: Array<{
-    label: string;
-    value: string;
-  }>;
+export interface DetailPayload {
+  headline?: string;
+  properties: Array<{ label: string; value: string }>;
   badge?: {
     text: string;
     type: 'success' | 'warning' | 'info' | 'error' | 'neutral';
   };
   note?: string;
-
-  // Result layout
-  headline?: string;
-  summary_points?: string[];
-  next_steps?: string[];
-
-  // HTML Embed layout
-  html?: string;
-  height_hint?: number;
-  fallback_text?: string;
-
-  // Attachments (optional additional content)
-  attachments?: ChatbotResponse[];
 }
 
-// Legacy types for backward compatibility
+export interface ResultPayload {
+  status: 'success' | 'warning' | 'error';
+  headline: string;
+  summary_points?: string[];
+  next_steps?: string[];
+}
+export interface HtmlEmbedPayload {
+  title?: string;
+  html: string;
+  height_hint?: number;
+  fallback_text?: string;
+}
+
 export interface ChatbotCommand {
   action: string;
   payload?: Record<string, unknown>;
@@ -77,7 +86,6 @@ export interface ChatMessage {
   content: string;
   html?: string;
   commands?: ChatbotCommand[];
-  // New contract response
   response?: ChatbotResponse;
   timestamp: string;
   status: 'sending' | 'sent' | 'failed';
