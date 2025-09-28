@@ -164,43 +164,7 @@ export const notificationApi = api.injectEndpoints({
         url: `/notifications/read/${notificationId}`,
         method: 'PUT' as const,
       }),
-      async onQueryStarted(notificationId, { dispatch, queryFulfilled }) {
-        // Optimistic update for notifications list
-        const patchResult = dispatch(
-          notificationApi.util.updateQueryData(
-            'getUserNotifications',
-            {},
-            (draft) => {
-              const notification = draft.data.notifications.find(
-                (n) => n.id === notificationId
-              );
-              if (notification) {
-                notification.isRead = true;
-              }
-            }
-          )
-        );
-
-        // Optimistic update for unread count
-        const patchUnreadCount = dispatch(
-          notificationApi.util.updateQueryData(
-            'getUnreadCount',
-            undefined,
-            (draft) => {
-              if (draft.data.count > 0) {
-                draft.data.count -= 1;
-              }
-            }
-          )
-        );
-
-        try {
-          await queryFulfilled;
-        } catch {
-          patchResult.undo();
-          patchUnreadCount.undo();
-        }
-      },
+      invalidatesTags: ['Notification'],
     }),
 
     // Mark all notifications as read

@@ -72,8 +72,11 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
     notifications.length > 0
       ? notifications
       : notificationsResponse?.data?.notifications || [];
+  // Always use Redux unreadCount if notifications are loaded from Redux, otherwise use API data
   const displayUnreadCount =
-    unreadCount > 0 ? unreadCount : unreadCountResponse?.data?.count || 0;
+    notifications.length > 0
+      ? unreadCount
+      : unreadCountResponse?.data?.count || 0;
   const pagination = notificationsResponse?.data?.pagination;
 
   const setIsDropdownOpen = (open: boolean) => {
@@ -100,7 +103,11 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
         dispatch(addRealTimeNotification(notification));
       });
     }
-    if (unreadCountResponse?.data?.count !== undefined && unreadCount === 0) {
+    // Only sync unread count if Redux state is not initialized yet
+    if (
+      unreadCountResponse?.data?.count !== undefined &&
+      notifications.length === 0
+    ) {
       dispatch(updateUnreadCount(unreadCountResponse.data.count));
     }
   }, [

@@ -7,6 +7,7 @@ import {
   markNotificationAsRead,
   removeNotification,
 } from '../slices/notificationSlice';
+import { useMarkAsReadMutation } from '../services/notificationApi';
 import type { Notification } from '../types/notification.type';
 
 interface NotificationItemProps {
@@ -25,6 +26,7 @@ export const NotificationItem = ({
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const [markAsReadMutation] = useMarkAsReadMutation();
 
   // Removed handleCardClick - only View button should navigate
 
@@ -84,9 +86,25 @@ export const NotificationItem = ({
           createdAt={notification.createdAt}
           compact={compact}
           deepLink={notification.deepLink}
-          onViewClick={() => {
+          onViewClick={async () => {
+            console.log('View clicked, notification:', notification);
             if (!notification.isRead) {
+              // Cập nhật Redux state ngay lập tức để UI responsive
               dispatch(markNotificationAsRead(notification.id));
+
+              // Gọi API để sync với database (background)
+              try {
+                console.log('Marking notification as read:', notification.id);
+                await markAsReadMutation(notification.id).unwrap();
+                console.log('Successfully marked as read');
+              } catch (error) {
+                console.error('Failed to mark notification as read:', error);
+                console.error('Error details:', JSON.stringify(error, null, 2));
+                // Revert Redux state nếu API thất bại
+                // TODO: Có thể thêm logic revert tại đây nếu cần
+              }
+            } else {
+              console.log('Notification already read, skipping API call');
             }
             if (notification.deepLink) {
               navigate(notification.deepLink);
