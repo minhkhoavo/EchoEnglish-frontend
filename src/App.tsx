@@ -24,6 +24,7 @@ import PaymentCallbackPage from './pages/PaymentCallbackPage';
 import PaymentPage from './features/payment/pages/PaymentPage';
 import { PaymentHistoryPage } from './pages/PaymentHistoryPage';
 import NotFound from './pages/NotFound';
+import AdminNotificationPage from './pages/admin/AdminNotificationPage';
 
 const QuizRouteWrapper = () => {
   const location = useLocation();
@@ -74,6 +75,9 @@ function App() {
         {/* Support review mode without testId in path */}
         <Route path="/test-exam" element={<TestExam />} />
         <Route path="/speaking-result" element={<SpeakingResultPage />} />
+
+        <Route path="/ad-notification" element={<AdminNotificationPage />} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />

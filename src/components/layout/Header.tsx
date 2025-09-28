@@ -1,4 +1,3 @@
-// src/components/layout/Header.tsx
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -27,8 +26,19 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
 import { logout } from '@/features/auth/slices/authSlice';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGetUserBalanceQuery } from '@/features/payment/services/paymentApi';
+import {
+  useGetUserNotificationsQuery,
+  useGetUnreadCountQuery,
+} from '@/features/notification/services/notificationApi';
+import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown';
+import { useNotificationSocket } from '@/features/notification/hooks/useNotificationSocket';
+import {
+  setDropdownOpen,
+  addRealTimeNotification,
+  updateUnreadCount,
+} from '@/features/notification/slices/notificationSlice';
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -39,18 +49,74 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { isDropdownOpen, notifications, unreadCount } = useAppSelector(
+    (state) => state.notification
+  );
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Initialize WebSocket connection for real-time notifications
+  useNotificationSocket();
+
   const { data: userBalanceResponse } = useGetUserBalanceQuery();
+  // Still get notifications from API on initial load
+  const { data: notificationsResponse, isFetching } =
+    useGetUserNotificationsQuery({
+      page: currentPage,
+      limit: 9999,
+    });
+  const { data: unreadCountResponse } = useGetUnreadCountQuery();
+
   const userBalance = userBalanceResponse?.data;
+  // Use Redux state for notifications and unread count, fallback to API data
+  const displayNotifications =
+    notifications.length > 0
+      ? notifications
+      : notificationsResponse?.data?.notifications || [];
+  const displayUnreadCount =
+    unreadCount > 0 ? unreadCount : unreadCountResponse?.data?.count || 0;
+  const pagination = notificationsResponse?.data?.pagination;
+
+  const setIsDropdownOpen = (open: boolean) => {
+    dispatch(setDropdownOpen(open));
+    if (open) {
+      setCurrentPage(1); // Reset to first page when opening
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (pagination?.hasNext) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
 
   useEffect(() => {
-    // User balance is fetched automatically by the query
-  }, [user]);
+    // Sync API data to Redux state when component loads
+    if (
+      notificationsResponse?.data?.notifications &&
+      notifications.length === 0
+    ) {
+      // If Redux state is empty but we have API data, sync it
+      notificationsResponse.data.notifications.forEach((notification) => {
+        dispatch(addRealTimeNotification(notification));
+      });
+    }
+    if (unreadCountResponse?.data?.count !== undefined && unreadCount === 0) {
+      dispatch(updateUnreadCount(unreadCountResponse.data.count));
+    }
+  }, [
+    notificationsResponse,
+    unreadCountResponse,
+    notifications.length,
+    unreadCount,
+    dispatch,
+  ]);
 
   const handleLogout = () => {
     dispatch(logout());
     toast.success('Logged out successfully!');
     navigate('/login');
   };
+
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -117,14 +183,31 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
             </Badge>
 
             {/* Notifications */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="relative hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <Bell className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </Button>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="relative hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <Bell className="h-4 w-4" />
+                {displayUnreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                    {displayUnreadCount > 99 ? '99+' : displayUnreadCount}
+                  </span>
+                )}
+              </Button>
+
+              <NotificationDropdown
+                isOpen={isDropdownOpen}
+                onClose={() => setIsDropdownOpen(false)}
+                notifications={displayNotifications}
+                onLoadMore={handleLoadMore}
+                hasMore={pagination?.hasNext}
+                isLoading={isFetching && currentPage === 1}
+                isLoadingMore={isFetching && currentPage > 1}
+              />
+            </div>
 
             {/* Settings */}
             <Button
