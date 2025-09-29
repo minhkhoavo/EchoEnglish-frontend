@@ -8,14 +8,27 @@ export const recordingsApiRTK = api.injectEndpoints({
   endpoints: (builder) => ({
     getRecordings: builder.query<RecordingsListResponse, void>({
       query: () => ({ url: '/speech/recordings', method: 'GET' }),
-      transformResponse: (response: RecordingsListResponse) => response,
-      providesTags: ['Profile'],
+      transformResponse: (response: RecordingsListResponse) => {
+        // Thêm fallback overallScore = 0 cho các recordings không có trường này
+        const transformedData = {
+          ...response,
+          data: {
+            ...response.data,
+            items: response.data.items.map((recording) => ({
+              ...recording,
+              overallScore: recording.overallScore ?? 0,
+            })),
+          },
+        };
+        return transformedData;
+      },
     }),
     getRecordingById: builder.query<Recording, string>({
       query: (id) => ({ url: `/speech/recordings/${id}`, method: 'GET' }),
-      transformResponse: (response: { message: string; data: Recording }) =>
-        response.data,
-      providesTags: (result, error, id) => [{ type: 'Profile', id }],
+      transformResponse: (response: { message: string; data: Recording }) => ({
+        ...response.data,
+        overallScore: response.data.overallScore ?? 0,
+      }),
     }),
   }),
 });

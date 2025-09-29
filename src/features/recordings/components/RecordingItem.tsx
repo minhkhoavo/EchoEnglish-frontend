@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import {
@@ -8,6 +9,8 @@ import {
   TrendingUp,
   Download,
   AudioLines,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import type { Recording } from '../types/recordings.types';
 
@@ -87,10 +90,119 @@ export function RecordingItem({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + sizes[i];
   };
 
-  const overallScore =
-    recording.overallScore || Math.floor(Math.random() * 31) + 70;
+  const getStatusBadge = () => {
+    switch (recording.analysisStatus) {
+      case 'done':
+        return (
+          <Badge
+            className={`${getScoreColor(recording.overallScore || 0)} border font-bold px-3 py-1`}
+          >
+            <TrendingUp className="w-4 h-4 mr-1" />
+            {recording.overallScore || 0}%
+          </Badge>
+        );
+      case 'processing':
+        return (
+          <Badge className="bg-blue-100 text-blue-800 border-blue-200 border font-bold px-3 py-1">
+            <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            Processing
+          </Badge>
+        );
+      case 'failed':
+        return (
+          <Badge className="bg-red-100 text-red-800 border-red-200 border font-bold px-3 py-1">
+            <AlertCircle className="w-4 h-4 mr-1" />
+            Failed
+          </Badge>
+        );
+      default:
+        return (
+          <Badge className="bg-gray-100 text-gray-800 border-gray-200 border font-bold px-3 py-1">
+            Unknown
+          </Badge>
+        );
+    }
+  };
+
+  const getActionButton = () => {
+    switch (recording.analysisStatus) {
+      case 'done':
+        return (
+          <Button
+            onClick={() => onAnalyze(recording._id)}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
+          >
+            <PlayCircle className="w-4 h-4 mr-2" />
+            View Analysis
+          </Button>
+        );
+      case 'processing':
+        return (
+          <Button
+            disabled
+            className="bg-gradient-to-r from-gray-400 to-gray-500 text-white font-medium"
+          >
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Processing...
+          </Button>
+        );
+      case 'failed':
+        return (
+          <Button
+            variant="outline"
+            className="border-red-200 text-red-700 hover:bg-red-50 font-medium"
+          >
+            <AlertCircle className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        );
+      default:
+        return (
+          <Button
+            onClick={() => onAnalyze(recording._id)}
+            variant="outline"
+            className="font-medium"
+          >
+            <PlayCircle className="w-4 h-4 mr-2" />
+            Analyze
+          </Button>
+        );
+    }
+  };
   const fileType = getFileTypeIcon(recording.name);
   const FileIcon = fileType.icon;
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!recording.url) {
+      alert('Download URL not available');
+      return;
+    }
+
+    try {
+      setIsDownloading(true);
+      const res = await fetch(recording.url, { method: 'GET' });
+      if (!res.ok) throw new Error('Network response was not ok');
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = recording.name || 'recording';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn(
+        'Blob download failed, falling back to open in new tab',
+        err
+      );
+      window.open(recording.url, '_blank', 'noopener');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <div className="group bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all duration-200">
@@ -164,28 +276,20 @@ export function RecordingItem({
 
         {/* Right Section: Score & Actions */}
         <div className="flex items-center space-x-4">
-          <Badge
-            className={`${getScoreColor(overallScore)} border font-bold px-3 py-1`}
-          >
-            <TrendingUp className="w-4 h-4 mr-1" />
-            {overallScore}%
-          </Badge>
+          {getStatusBadge()}
 
           <div className="flex items-center space-x-2">
-            <Button
-              onClick={() => onAnalyze(recording._id)}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
-            >
-              <PlayCircle className="w-4 h-4 mr-2" />
-              Analyze
-            </Button>
+            {getActionButton()}
 
             <Button
               variant="ghost"
               size="sm"
+              onClick={handleDownload}
+              disabled={isDownloading}
               className="text-gray-500 hover:text-blue-600"
             >
               <Download className="w-4 h-4" />
+              {isDownloading ? 'Downloading...' : ''}
             </Button>
           </div>
         </div>

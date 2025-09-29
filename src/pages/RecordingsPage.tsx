@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { RecordingsList } from '../features/recordings/components/RecordingsList';
 import { FileUploadDialog } from '../features/recordings/components/FileUploadDialog';
 import { Button } from '../components/ui/button';
-import { ArrowLeft, RefreshCw, Upload } from 'lucide-react';
+import { ArrowLeft, Upload } from 'lucide-react';
 
 export default function RecordingsPage() {
   const navigate = useNavigate();
@@ -27,6 +27,13 @@ export default function RecordingsPage() {
     console.log('File uploaded successfully:', fileName);
     // Refresh the recordings list
     handleRefresh();
+    // Also do a soft/hard reload to ensure any background processing is visible.
+    // Soft: refetch is triggered by changing key; but some systems may require
+    // a full reload to pick up newly processed items — do a gentle approach:
+    // wait a short moment so backend can start processing, then refetch again.
+    setTimeout(() => {
+      handleRefresh();
+    }, 1500);
   };
 
   return (
@@ -56,16 +63,6 @@ export default function RecordingsPage() {
 
             {/* Right Section */}
             <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                className="text-slate-600 hover:text-slate-900 border-slate-200 hover:bg-slate-50 transition-colors duration-200"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh
-              </Button>
-
               <FileUploadDialog onUploadComplete={handleUploadComplete}>
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm hover:shadow-md transition-all duration-200">
                   <Upload className="w-4 h-4 mr-2" />
