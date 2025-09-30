@@ -28,10 +28,28 @@ export const recordingsApiRTK = api.injectEndpoints({
       transformResponse: (response: { message: string; data: Recording }) => ({
         ...response.data,
         overallScore: response.data.overallScore ?? 0,
+        duration: response.data.duration ?? 0,
+        speakingTime: response.data.speakingTime ?? 0,
+      }),
+    }),
+    updateRecording: builder.mutation<Recording, { id: string; name: string }>({
+      query: ({ id, name }) => ({
+        url: `/speech/recordings/${id}`,
+        method: 'PUT',
+        data: { name },
+      }),
+      transformResponse: (response: { message: string; data: Recording }) => ({
+        ...response.data,
+        overallScore: response.data.overallScore ?? 0,
+        duration: response.data.duration ?? 0,
+        speakingTime: response.data.speakingTime ?? 0,
       }),
     }),
   }),
 });
 
-export const { useGetRecordingsQuery, useGetRecordingByIdQuery } =
-  recordingsApiRTK;
+export const {
+  useGetRecordingsQuery,
+  useGetRecordingByIdQuery,
+  useUpdateRecordingMutation,
+} = recordingsApiRTK;

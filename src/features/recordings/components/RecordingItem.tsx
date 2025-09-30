@@ -79,6 +79,13 @@ export function RecordingItem({
   };
 
   const getSpeakingTimePercentage = () => {
+    if (
+      recording.duration === 0 ||
+      isNaN(recording.duration) ||
+      isNaN(recording.speakingTime)
+    ) {
+      return 0;
+    }
     return Math.round((recording.speakingTime / recording.duration) * 100);
   };
 

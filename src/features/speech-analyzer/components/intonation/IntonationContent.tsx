@@ -47,14 +47,19 @@ const IntonationContent = ({ recording }: IntonationContentProps) => {
           : 'Beginner';
 
   // Sample pitch data - in real app this would come from analysis
-  const pitchData = [
-    { time: 0, frequency: 250 },
-    { time: 5, frequency: 120 },
-    { time: 10, frequency: 180 },
-    { time: 15, frequency: 160 },
-    { time: 20, frequency: 140 },
-    { time: 25, frequency: 200 },
+  const defaultPitchData = [
+    { time: 0, value: 250 },
+    { time: 5, value: 120 },
+    { time: 10, value: 180 },
+    { time: 15, value: 160 },
+    { time: 20, value: 140 },
+    { time: 25, value: 200 },
   ];
+  const raw = analysis?.analyses?.prosody?.pitch_points || defaultPitchData;
+  const pitchData = raw.map((p) => ({
+    time: p.time,
+    frequency: p.value,
+  }));
 
   // Transcript features for intonation - only show stress marking
   const intonationTranscriptFeatures = {
