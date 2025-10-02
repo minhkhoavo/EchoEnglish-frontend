@@ -138,7 +138,7 @@ export default function ResourceDetailPage() {
             <p className="text-gray-600 mb-6">
               The resource you're looking for doesn't exist or has been removed.
             </p>
-            <Button onClick={() => navigate('/resources')}>
+            <Button onClick={() => navigate(-1)}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Resources
             </Button>
@@ -160,7 +160,7 @@ export default function ResourceDetailPage() {
         <div className="mb-8">
           <Button
             variant="ghost"
-            onClick={() => navigate('/resources')}
+            onClick={() => navigate(-1)}
             className="mb-4 hover:bg-gray-100"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
