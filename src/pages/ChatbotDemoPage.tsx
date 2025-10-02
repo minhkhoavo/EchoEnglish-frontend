@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageCircle, Zap, Bot, Command, Palette, Globe } from 'lucide-react';
 import { useAppDispatch } from '@/core/store/store';
 import { openChatbot } from '@/features/chatbot/slices/chatbotSlice';
+import ChatbotContainer from '@/features/chatbot/components/ChatbotContainer';
 
 const ChatbotDemoPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -226,6 +227,68 @@ const ChatbotDemoPage: React.FC = () => {
           </div>
         </Card>
 
+        {/* Image Upload Demo */}
+        <Card className="p-8 mt-8 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+          <div className="text-center mb-6">
+            <div className="bg-gradient-to-r from-green-600 to-blue-600 p-3 rounded-2xl inline-flex mb-4">
+              <Globe className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Image Upload Feature
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Send images to get visual assistance with your TOEIC learning
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="text-center p-4 bg-white rounded-lg">
+              <div className="bg-green-100 p-3 rounded-full inline-flex mb-3">
+                <MessageCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">
+                Paste (Ctrl+V)
+              </h3>
+              <p className="text-sm text-gray-600">
+                Copy any image and paste directly into the chat input
+              </p>
+            </div>
+
+            <div className="text-center p-4 bg-white rounded-lg">
+              <div className="bg-blue-100 p-3 rounded-full inline-flex mb-3">
+                <Bot className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Drag & Drop</h3>
+              <p className="text-sm text-gray-600">
+                Drag image files directly into the chat area
+              </p>
+            </div>
+
+            <div className="text-center p-4 bg-white rounded-lg">
+              <div className="bg-purple-100 p-3 rounded-full inline-flex mb-3">
+                <Command className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">File Upload</h3>
+              <p className="text-sm text-gray-600">
+                Click the paperclip icon to select image files
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Button
+              onClick={() => dispatch(openChatbot())}
+              className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-2xl px-8 py-3"
+            >
+              <Globe className="mr-2 h-4 w-4" />
+              Try Image Upload Now
+            </Button>
+            <p className="text-sm text-gray-500 mt-3">
+              Support: JPG, PNG, GIF up to 5MB each
+            </p>
+          </div>
+        </Card>
+
         {/* Technical Details */}
         <div className="mt-12 bg-white rounded-lg p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -293,6 +356,9 @@ const ChatbotDemoPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Chatbot Container */}
+      <ChatbotContainer />
     </div>
   );
 };

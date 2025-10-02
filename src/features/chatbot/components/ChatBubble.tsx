@@ -137,19 +137,25 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
     const imageFiles = items.filter((item) => item.type.startsWith('image/'));
 
     if (imageFiles.length > 0) {
-      const imagePromises = imageFiles.map((item) => {
-        return new Promise<string>((resolve) => {
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      const validImagePromises = imageFiles
+        .map((item) => {
           const file = item.getAsFile();
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target?.result as string);
-            reader.readAsDataURL(file);
+          if (file && file.size <= maxSize) {
+            return new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (e) => resolve(e.target?.result as string);
+              reader.readAsDataURL(file);
+            });
           }
-        });
-      });
+          return null;
+        })
+        .filter((promise): promise is Promise<string> => promise !== null);
 
-      const images = await Promise.all(imagePromises);
-      setPendingImages((prev) => [...prev, ...images]);
+      if (validImagePromises.length > 0) {
+        const images = await Promise.all(validImagePromises);
+        setPendingImages((prev) => [...prev, ...images]);
+      }
     }
   };
 
@@ -170,17 +176,23 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
     const files = Array.from(e.dataTransfer.files).filter((file) =>
       file.type.startsWith('image/')
     );
-    if (files.length > 0) {
-      const imagePromises = files.map((file) => {
-        return new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.readAsDataURL(file);
-        });
-      });
 
-      const images = await Promise.all(imagePromises);
-      setPendingImages((prev) => [...prev, ...images]);
+    if (files.length > 0) {
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      const validFiles = files.filter((file) => file.size <= maxSize);
+
+      if (validFiles.length > 0) {
+        const imagePromises = validFiles.map((file) => {
+          return new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.readAsDataURL(file);
+          });
+        });
+
+        const images = await Promise.all(imagePromises);
+        setPendingImages((prev) => [...prev, ...images]);
+      }
     }
   };
 
@@ -416,16 +428,32 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
               onChange={async (e) => {
                 if (e.target.files) {
                   const files = Array.from(e.target.files);
-                  const imagePromises = files.map((file) => {
-                    return new Promise<string>((resolve) => {
-                      const reader = new FileReader();
-                      reader.onload = (e) =>
-                        resolve(e.target?.result as string);
-                      reader.readAsDataURL(file);
-                    });
+
+                  // Validate file size (max 5MB per file)
+                  const maxSize = 5 * 1024 * 1024; // 5MB
+                  const validFiles = files.filter((file) => {
+                    if (file.size > maxSize) {
+                      console.warn(
+                        `File ${file.name} is too large. Max size is 5MB.`
+                      );
+                      // You could show a toast notification here
+                      return false;
+                    }
+                    return true;
                   });
-                  const images = await Promise.all(imagePromises);
-                  setPendingImages((prev) => [...prev, ...images]);
+
+                  if (validFiles.length > 0) {
+                    const imagePromises = validFiles.map((file) => {
+                      return new Promise<string>((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) =>
+                          resolve(e.target?.result as string);
+                        reader.readAsDataURL(file);
+                      });
+                    });
+                    const images = await Promise.all(imagePromises);
+                    setPendingImages((prev) => [...prev, ...images]);
+                  }
                 }
                 e.target.value = '';
               }}

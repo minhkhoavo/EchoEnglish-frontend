@@ -90,6 +90,18 @@ export interface ChatMessage {
   timestamp: string;
   status: 'sending' | 'sent' | 'failed';
   images?: string[];
+  attachments?: MessageAttachment[];
+}
+
+export interface MessageAttachment {
+  id: string;
+  type: 'image' | 'file';
+  name: string;
+  url?: string;
+  file?: File;
+  size?: number;
+  mimeType?: string;
+  preview?: string; // base64 or blob URL for preview
 }
 
 export interface ChatSession {
