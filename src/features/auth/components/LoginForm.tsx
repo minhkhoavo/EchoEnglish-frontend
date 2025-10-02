@@ -54,8 +54,8 @@ const LoginForm: React.FC = () => {
     if (!formData.password) {
       newErrors.password = 'Please enter password';
       isValid = false;
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
       isValid = false;
     }
 

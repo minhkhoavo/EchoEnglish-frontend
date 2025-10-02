@@ -31,14 +31,14 @@ export const useNotificationSocket = () => {
 
     // Join user room khi kết nối thành công
     socket.on('connect', () => {
-      console.log('Socket connected:', socket.id);
-      console.log('Joining room for user:', user._id);
+      // console.log('Socket connected:', socket.id);
+      // console.log('Joining room for user:', user._id);
       socket.emit('join', { userId: user._id });
     });
 
     // Log disconnect
     socket.on('disconnect', () => {
-      console.log('Socket disconnected');
+      // console.log('Socket disconnected');
     });
 
     // Listen for new notifications
@@ -53,9 +53,9 @@ export const useNotificationSocket = () => {
         createdAt: string;
         createdBy?: string;
       }) => {
-        console.log('Received notification:', notification);
-        console.log('Current user ID:', user._id);
-        console.log('Notification created by:', notification.createdBy);
+        // console.log('Received notification:', notification);
+        // console.log('Current user ID:', user._id);
+        // console.log('Notification created by:', notification.createdBy);
 
         // map incoming string type to the app's NotificationType (best-effort)
 
@@ -77,14 +77,14 @@ export const useNotificationSocket = () => {
         // Show toast notification (không hiển thị cho người gửi)
         // Kiểm tra xem user hiện tại có phải là người gửi không
         const isNotificationSender = notification.createdBy === user._id;
-        console.log('Is notification sender:', isNotificationSender);
+        // console.log('Is notification sender:', isNotificationSender);
 
         if (!isNotificationSender) {
           // Chỉ hiển thị toast cho người không phải là người gửi
-          console.log('Showing toast notification');
+          // console.log('Showing toast notification');
           toast.info('🔔 New notification', { icon: null });
         } else {
-          console.log('Not showing toast - user is sender');
+          // console.log('Not showing toast - user is sender');
         }
       }
     );

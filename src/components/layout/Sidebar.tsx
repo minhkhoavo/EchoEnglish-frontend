@@ -12,7 +12,13 @@ type NavItem = {
   description: string;
 };
 
-type ActiveTab = 'dashboard' | 'content' | 'flashcards' | 'analytics' | 'tests';
+type ActiveTab =
+  | 'dashboard'
+  | 'content'
+  | 'resources'
+  | 'flashcards'
+  | 'analytics'
+  | 'tests';
 
 interface SidebarProps {
   sidebarOpen: boolean;

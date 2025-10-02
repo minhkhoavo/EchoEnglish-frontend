@@ -125,6 +125,32 @@ export const flashcardApi = api.injectEndpoints({
       ) => response.data,
       providesTags: [{ type: 'Flashcard' }],
     }),
+    // Get flashcards by source
+    getFlashcardsBySource: builder.query<Flashcard[], string>({
+      query: (source) => ({
+        url: '/flashcards/by-source',
+        method: 'POST',
+        data: { source },
+      }),
+      transformResponse: (response: ApiResponse<Flashcard[]>) => response.data,
+      providesTags: [{ type: 'Flashcard' }],
+    }),
+    // Translate text
+    translateText: builder.mutation<
+      {
+        data?: {
+          destinationText: string;
+        };
+        message?: string;
+      },
+      { sourceText: string; destinationLanguage: string }
+    >({
+      query: (body) => ({
+        url: '/translate',
+        method: 'POST',
+        data: body,
+      }),
+    }),
   }),
 });
 
@@ -138,4 +164,6 @@ export const {
   useUpdateFlashcardMutation,
   useDeleteFlashcardMutation,
   useGetFlashcardsByCategoryQuery,
+  useGetFlashcardsBySourceQuery,
+  useTranslateTextMutation,
 } = flashcardApi;

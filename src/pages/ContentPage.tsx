@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Home, Upload, BookOpen, BarChart3, FileText } from 'lucide-react';
+import {
+  Home,
+  Upload,
+  BookOpen,
+  BarChart3,
+  FileText,
+  Library,
+} from 'lucide-react';
 
 import { type RootState, type AppDispatch } from '@/core/store/store';
 import {
@@ -17,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { ContentManager } from '@/features/content-manager/ContentManager';
 import FlashcardPage from './FlashcardPage';
 import AllTestsPage from './test/AllTestsPage';
+import NewResourcePage from './resource/ResourcePage';
 import { ToeicTestDetail } from '@/features/tests/components/lis-read/TOEICTestDetail';
 
 const ContentPage = () => {
@@ -41,6 +49,12 @@ const ContentPage = () => {
       name: 'Content Manager',
       icon: Upload,
       description: 'Upload & AI Analysis',
+    },
+    {
+      id: 'resources',
+      name: 'DocumentHub',
+      icon: Library,
+      description: 'Learning Resources',
     },
     {
       id: 'flashcards',
@@ -86,6 +100,8 @@ const ContentPage = () => {
         return <ContentManager />;
       case 'content':
         return <ContentManager />;
+      case 'resources':
+        return <NewResourcePage />;
       case 'flashcards':
         return <FlashcardPage />;
       case 'tests':
