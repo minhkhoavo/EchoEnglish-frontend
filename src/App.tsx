@@ -26,6 +26,11 @@ import { PaymentHistoryPage } from './pages/PaymentHistoryPage';
 import NotFound from './pages/NotFound';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import AdminNotificationPage from './pages/admin/AdminNotificationPage';
+import AdminResourcePage from './pages/admin/AdminResourcePage';
+
+// Resource Pages
+import ResourcePage from './pages/resource/ResourcePage';
+import ResourceDetailPage from './pages/resource/ResourceDetailPage';
 
 const QuizRouteWrapper = () => {
   const location = useLocation();
@@ -77,11 +82,16 @@ function App() {
         <Route path="/test-exam" element={<TestExam />} />
         <Route path="/speaking-result" element={<SpeakingResultPage />} />
 
-        <Route path="/ad-notification" element={<AdminNotificationPage />} />
-
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/notification" element={<AdminNotificationPage />} />
+        <Route path="/admin/resources" element={<AdminResourcePage />} />
 
+        {/* Resource Routes */}
+        <Route path="/resources" element={<ResourcePage />} />
+        <Route path="/resources/:id" element={<ResourceDetailPage />} />
+
+        {/* Catch-all route for 404 Not Found */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
