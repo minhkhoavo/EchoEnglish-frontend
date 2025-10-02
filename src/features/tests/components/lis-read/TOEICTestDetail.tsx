@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Clock, ArrowLeft } from 'lucide-react';
 import { TestHistory } from './TestHistory';
@@ -12,7 +13,12 @@ interface ToeicTestDetailProps {
   onBack?: () => void;
 }
 
-export const ToeicTestDetail = ({ testId, onBack }: ToeicTestDetailProps) => {
+export const ToeicTestDetail = ({
+  testId: propTestId,
+  onBack,
+}: ToeicTestDetailProps) => {
+  const { testId: paramTestId } = useParams();
+  const testId = propTestId || paramTestId;
   const [isCustomMode, setIsCustomMode] = useState(false);
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const [customTime, setCustomTime] = useState('30');

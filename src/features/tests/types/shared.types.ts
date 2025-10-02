@@ -2,7 +2,7 @@
 
 // Base test interface that all test types extend
 export interface BaseTest {
-  testId: number;
+  testId: string;
   testTitle: string;
   duration: number;
   number_of_questions: number;
@@ -96,7 +96,7 @@ export interface BasePartProps<P extends BasePart> {
 // Test session and results types
 
 export interface TestSession {
-  testId: string | number;
+  testId: string;
   testType: 'speaking' | 'writing' | 'listening-reading';
   startTime: number;
   currentQuestionIndex: number;
@@ -107,7 +107,7 @@ export interface TestSession {
 }
 
 export interface TestResult {
-  testId: string | number;
+  testId: string;
   testType: 'speaking' | 'writing' | 'listening-reading';
   score: number;
   totalQuestions: number;

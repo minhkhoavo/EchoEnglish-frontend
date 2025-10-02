@@ -75,8 +75,7 @@ const AllTestsPage = ({
       ...toeicTests.map((test) => ({
         ...test,
         type: 'listening-reading' as const,
-        testId:
-          typeof test.testId === 'string' ? Number(test.testId) : test.testId,
+        testId: test.testId,
       })),
       ...speakingTests.map((test) => ({
         ...test,

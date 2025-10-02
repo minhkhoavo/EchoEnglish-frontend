@@ -84,10 +84,7 @@ const SpeakingExam = () => {
   // Check for recovery data on mount
   useEffect(() => {
     const storedRecovery = loadRecoveryData();
-    if (
-      storedRecovery &&
-      storedRecovery.recoveryInfo.testId === Number(testId)
-    ) {
+    if (storedRecovery && storedRecovery.recoveryInfo.testId === testId) {
       setRecoveryData(storedRecovery);
       setShowRecoveryDialog(true);
     } else if (!testAttemptId) {
@@ -101,7 +98,7 @@ const SpeakingExam = () => {
     data: testData,
     error,
     isLoading,
-  } = useGetSpeakingTestByIdQuery(Number(testId!));
+  } = useGetSpeakingTestByIdQuery(testId!);
 
   const [submitSpeakingQuestion] = useSubmitSpeakingQuestionMutation();
   const [finishAttempt, { isLoading: isFinishing }] =
@@ -164,7 +161,7 @@ const SpeakingExam = () => {
 
       dispatch(
         startExam({
-          testId: Number(testId!),
+          testId: testId!,
           totalDuration,
           questions,
         })
@@ -173,7 +170,7 @@ const SpeakingExam = () => {
       if (testData.testEndTime) {
         dispatch(
           setRecoveryInfo({
-            testId: Number(testId!),
+            testId: testId!,
             testEndTime: testData.testEndTime,
             startedAt: new Date().toISOString(),
             totalDuration,

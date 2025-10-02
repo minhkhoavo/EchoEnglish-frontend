@@ -32,6 +32,9 @@ import AdminResourcePage from './pages/admin/AdminResourcePage';
 import ResourcePage from './pages/resource/ResourcePage';
 import ResourceDetailPage from './pages/resource/ResourceDetailPage';
 
+// Test Detail Component
+import { ToeicTestDetail } from './features/tests/components/lis-read/TOEICTestDetail';
+
 const QuizRouteWrapper = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -77,6 +80,7 @@ function App() {
         />
         <Route path="/test/speaking/:testId/exam" element={<SpeakingExam />} />
         <Route path="/writing-exam/:testId" element={<WritingExam />} />
+        <Route path="/test-detail/:testId" element={<ToeicTestDetail />} />
         <Route path="/test-exam/:testId" element={<TestExam />} />
         {/* Support review mode without testId in path */}
         <Route path="/test-exam" element={<TestExam />} />

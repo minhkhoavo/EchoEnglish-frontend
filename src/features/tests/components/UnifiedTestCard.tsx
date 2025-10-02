@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Clock, FileText, BookOpen, Mic, PenTool } from 'lucide-react';
 
 interface UnifiedTest {
-  testId: number;
+  testId: string;
   testTitle: string;
   type: 'listening-reading' | 'speaking' | 'writing';
   duration?: number;
@@ -30,7 +30,7 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
     'listening-reading': {
       icon: BookOpen,
       color: 'bg-blue-500',
-      route: `/test-exam/${test.testId}`,
+      route: `/test-detail/${test.testId}`,
       description: 'Listening & Reading',
       duration: test.duration || 0,
       numberOfQuestions: test.number_of_questions || 0,
@@ -62,7 +62,7 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
   const handleStartTest = () => {
     if (test.type === 'listening-reading' && onTestSelect) {
       // For listening-reading tests, use onTestSelect to show detail in ContentPage
-      onTestSelect(test.testId.toString());
+      onTestSelect(test.testId);
     } else {
       // For other test types, navigate directly
       navigate(config.route);
