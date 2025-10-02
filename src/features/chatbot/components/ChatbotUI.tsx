@@ -150,17 +150,31 @@ export const MessageContent: React.FC<MessageContentProps> = ({
 
       {/* Images */}
       {images && images.length > 0 && (
-        <div className="space-y-2">
+        <div
+          className={cn(
+            'space-y-2',
+            images.length > 1 && 'grid grid-cols-2 gap-2 space-y-0'
+          )}
+        >
           {images.map((image, index) => (
             <div
               key={index}
-              className="rounded-lg overflow-hidden border border-gray-200 bg-gray-50"
+              className="rounded-lg overflow-hidden border border-gray-200 bg-gray-50 hover:border-gray-300 transition-colors"
             >
               <img
                 src={image}
                 alt={`Image ${index + 1}`}
-                className="w-full max-w-sm mx-auto block"
+                className={cn(
+                  'w-full mx-auto block cursor-pointer hover:opacity-90 transition-opacity',
+                  images.length === 1
+                    ? 'max-w-sm'
+                    : 'max-w-full aspect-square object-cover'
+                )}
                 loading="lazy"
+                onClick={() => {
+                  // Open image in new tab for full view
+                  window.open(image, '_blank');
+                }}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src =

@@ -5,6 +5,7 @@ import type {
   ChatMessage,
   ChatSession,
   ChatbotCommand,
+  MessageAttachment,
 } from '../types';
 
 // Simple UUID generator since uuid package might not be available
@@ -185,6 +186,42 @@ const chatbotSlice = createSlice({
         }
       }
     },
+
+    addAttachmentToMessage: (
+      state,
+      action: PayloadAction<{
+        messageId: string;
+        attachment: MessageAttachment;
+      }>
+    ) => {
+      const currentSession = state.sessions[state.currentSessionId];
+      if (currentSession) {
+        const message = currentSession.messages.find(
+          (m) => m.id === action.payload.messageId
+        );
+        if (message) {
+          message.attachments = message.attachments || [];
+          message.attachments.push(action.payload.attachment);
+        }
+      }
+    },
+
+    removeAttachmentFromMessage: (
+      state,
+      action: PayloadAction<{ messageId: string; attachmentId: string }>
+    ) => {
+      const currentSession = state.sessions[state.currentSessionId];
+      if (currentSession) {
+        const message = currentSession.messages.find(
+          (m) => m.id === action.payload.messageId
+        );
+        if (message && message.attachments) {
+          message.attachments = message.attachments.filter(
+            (att) => att.id !== action.payload.attachmentId
+          );
+        }
+      }
+    },
   },
 });
 
@@ -206,6 +243,8 @@ export const {
   deleteSession,
   clearAllSessions,
   addImageToMessage,
+  addAttachmentToMessage,
+  removeAttachmentFromMessage,
 } = chatbotSlice.actions;
 
 export default chatbotSlice.reducer;

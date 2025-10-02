@@ -17,7 +17,10 @@ import {
   setError,
   clearError,
 } from '../slices/chatbotSlice';
-import { useRunChatMutation } from '../services/chatbotApi';
+import {
+  useRunChatMutation,
+  useRunChatWithImageMutation,
+} from '../services/chatbotApi';
 import type { ChatbotCommand, ChatMessage } from '../types';
 
 interface ChatbotContainerProps {
@@ -32,6 +35,7 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [runChat] = useRunChatMutation();
+  const [runChatWithImage] = useRunChatWithImageMutation();
 
   const isOpen = useAppSelector((state: RootState) => state.chatbot.isOpen);
   const currentSession = useAppSelector(
@@ -85,7 +89,35 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
         // Start typing indicator
         dispatch(setTyping(true));
 
-        const response = await runChat({ prompt: content }).unwrap();
+        let response;
+
+        // Check if we have images to send
+        if (images && images.length > 0) {
+          // Convert base64 to File object for the first image
+          const base64Image = images[0]; // For now, we'll send only the first image
+          const base64Data = base64Image.split(',')[1];
+          const mimeType = base64Image.split(';')[0].split(':')[1];
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+
+          const byteArray = new Uint8Array(byteNumbers);
+          const imageFile = new File([byteArray], 'image.png', {
+            type: mimeType,
+          });
+
+          // Use the image API endpoint
+          response = await runChatWithImage({
+            prompt: content,
+            image: imageFile,
+          }).unwrap();
+        } else {
+          // Use the regular text-only API endpoint
+          response = await runChat({ prompt: content }).unwrap();
+        }
 
         // Stop typing indicator
         dispatch(setTyping(false));
@@ -133,7 +165,7 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
         dispatch(setError('Failed to send message. Please try again.'));
       }
     },
-    [dispatch, runChat]
+    [dispatch, runChat, runChatWithImage]
   );
 
   const handleExecuteCommand = useCallback(
