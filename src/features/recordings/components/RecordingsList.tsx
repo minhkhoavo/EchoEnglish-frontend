@@ -1,15 +1,7 @@
 import { useMemo, useState } from 'react';
 import { RecordingItem } from './RecordingItem';
 import { useGetRecordingsQuery } from '../services/recordingsApi';
-import type { Recording } from '../types/recordings.types';
-import {
-  Loader2,
-  AlertCircle,
-  FileAudio,
-  Filter,
-  Search,
-  SortAsc,
-} from 'lucide-react';
+import { AlertCircle, FileAudio, Search, SortAsc } from 'lucide-react';
 import { Alert, AlertDescription } from '../../../components/ui/alert';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';

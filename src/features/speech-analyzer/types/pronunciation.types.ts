@@ -77,32 +77,16 @@ export interface AudioPlayerState {
 
 export type AccuracyLevel = 'excellent' | 'good' | 'fair' | 'poor';
 
-export interface AdvancedFeatures {
-  rhythm?: {
-    score: number;
-    pattern: number[];
-  };
-  intonation?: {
-    score: number;
-    contour: number[];
-  };
-  fluency?: {
-    score: number;
-    pauseLocations: number[];
-    speechRate: number;
-  };
-}
-
 export interface TranscriptData {
   audioUrl: string;
   segments: TranscriptSegment[];
   metadata: {
     duration: number;
+    speakingTime: number;
     language: string;
     assessmentType: 'pronunciation' | 'fluency' | 'comprehensive';
     createdAt: string;
   };
-  advancedFeatures?: AdvancedFeatures;
 }
 
 export interface SkillResource {
@@ -144,7 +128,68 @@ export interface RecordingAnalysis extends TranscriptData {
       chartData: Array<{ sound: string; errorRate: number }>;
       topMistakes: TopMistake[];
     };
-    // optional sections, omitted for now
+    prosody: {
+      pitch_range_max: number;
+      pitch_range_min: number;
+      energy_range_max: number;
+      energy_range_min: number;
+      pitch_points: Array<{ time: number; value: number }>;
+      energy_points: Array<{ time: number; value: number }>;
+    };
+    fluency: {
+      words_per_minute: number;
+      pausing_score: number;
+      pausing_decision: string;
+      points: Array<{ time: number; value: number }>;
+      feedbacks: Array<{
+        start_time: number;
+        duration: number;
+        start_index: number;
+        end_index: number;
+        correctness: string;
+      }>;
+    };
+    vocabulary: {
+      paraphraseSuggestions: Array<{
+        original: string;
+        paraphrase: string;
+        technique: string;
+      }>;
+      topPerformances: Array<{
+        category: string;
+        description: string;
+        score: number;
+        level: string;
+      }>;
+      suggestedWords: Array<{
+        word: string;
+        cefrLevel: string;
+        definition: string;
+        example: string;
+        category: string;
+      }>;
+      vocabularyUpgrades: Array<{
+        basic: string;
+        advanced: string;
+        context: string;
+        example: string;
+      }>;
+      stats: {
+        totalWords: number;
+        uniqueWords: number;
+        knownWords: number;
+        unknownWords: number;
+        distribution: {
+          A1: number;
+          A2: number;
+          B1: number;
+          B2: number;
+          C1: number;
+          C2: number;
+        };
+        topAdvanced: Array<unknown>;
+      };
+    };
     [key: string]: unknown;
   };
 }

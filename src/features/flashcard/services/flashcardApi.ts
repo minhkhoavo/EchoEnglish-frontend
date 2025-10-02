@@ -81,7 +81,7 @@ export const flashcardApi = api.injectEndpoints({
         data: body,
       }),
       transformResponse: (response: ApiResponse<Flashcard>) => response.data,
-      invalidatesTags: [{ type: 'Flashcard' }],
+      invalidatesTags: [{ type: 'Category' }, { type: 'Flashcard' }],
     }),
     updateFlashcard: builder.mutation<
       Flashcard,
@@ -101,7 +101,7 @@ export const flashcardApi = api.injectEndpoints({
         data: body,
       }),
       transformResponse: (response: ApiResponse<Flashcard>) => response.data,
-      invalidatesTags: [{ type: 'Flashcard' }],
+      invalidatesTags: [{ type: 'Category' }, { type: 'Flashcard' }],
     }),
     deleteFlashcard: builder.mutation<{ message: string }, string>({
       query: (id) => ({
@@ -110,7 +110,7 @@ export const flashcardApi = api.injectEndpoints({
       }),
       transformResponse: (response: ApiResponse<{ message: string }>) =>
         response.data,
-      invalidatesTags: [{ type: 'Flashcard' }],
+      invalidatesTags: [{ type: 'Category' }, { type: 'Flashcard' }],
     }),
     getFlashcardsByCategory: builder.query<
       FlashcardsByCategoryResponse,

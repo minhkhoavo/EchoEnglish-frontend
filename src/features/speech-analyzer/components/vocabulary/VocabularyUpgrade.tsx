@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, ArrowRight, Crown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, ArrowRight, Crown, Plus, Check } from 'lucide-react';
+import { useCreateFlashcardMutation } from '../../../flashcard/services/flashcardApi';
+import { toast } from 'sonner';
 
 interface UpgradeWord {
   basic: string;
@@ -19,6 +22,34 @@ interface VocabularyUpgradeProps {
 const VocabularyUpgrade: React.FC<VocabularyUpgradeProps> = ({
   upgradeSuggestions = [],
 }) => {
+  const [createFlashcard] = useCreateFlashcardMutation();
+  const [createdFlashcards, setCreatedFlashcards] = useState<Set<string>>(
+    new Set()
+  );
+
+  const handleCreateFlashcard = async (
+    word: string,
+    advanced: string,
+    context: string,
+    improvement: string
+  ) => {
+    try {
+      await createFlashcard({
+        front: word,
+        back: `Advanced: ${advanced}\nContext: ${context}\nImprovement: ${improvement}`,
+        category: 'vocabulary-upgrade',
+        difficulty: 'Medium' as const,
+        tags: ['vocabulary', 'speech-analysis', 'upgrade'],
+        source: 'speech-analyzer',
+        isAIGenerated: true,
+      }).unwrap();
+
+      setCreatedFlashcards((prev) => new Set(prev).add(word));
+      toast.success(`Flashcard created for "${word}" → "${advanced}"`);
+    } catch (error) {
+      toast.error('Failed to create flashcard');
+    }
+  };
   const defaultSuggestions: UpgradeWord[] = [
     {
       basic: 'good',
@@ -103,7 +134,29 @@ const VocabularyUpgrade: React.FC<VocabularyUpgradeProps> = ({
                 </Badge>
               </div>
 
-              <TrendingUp className="w-4 h-4 text-green-600 ml-auto" />
+              <div className="flex items-center gap-1 ml-auto">
+                <TrendingUp className="w-4 h-4 text-green-600" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 hover:bg-amber-100"
+                  onClick={() =>
+                    handleCreateFlashcard(
+                      suggestion.basic,
+                      suggestion.advanced,
+                      suggestion.context,
+                      suggestion.improvement
+                    )
+                  }
+                  disabled={createdFlashcards.has(suggestion.basic)}
+                >
+                  {createdFlashcards.has(suggestion.basic) ? (
+                    <Check className="h-3 w-3 text-green-600" />
+                  ) : (
+                    <Plus className="h-3 w-3" />
+                  )}
+                </Button>
+              </div>
             </div>
 
             <div className="text-xs text-gray-600 mb-1">

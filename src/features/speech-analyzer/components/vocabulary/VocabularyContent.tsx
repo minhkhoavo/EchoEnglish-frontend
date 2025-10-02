@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   HelpCircle,
   BookOpen,
@@ -11,30 +12,217 @@ import {
   TrendingUp,
   RefreshCw,
   FileText,
+  Plus,
+  Check,
 } from 'lucide-react';
-import type {
-  VocabularyDistribution,
-  VocabularyScore,
-  TopPerformance,
-  SuggestedWord,
-} from '../../types/vocabulary.types';
+import type { RecordingAnalysis } from '../../types/pronunciation.types';
+import type { Recording } from '../../../recordings/types/recordings.types';
+import { useCreateFlashcardMutation } from '../../../flashcard/services/flashcardApi';
+import { toast } from 'sonner';
 
-interface VocabularyContentProps {
-  analysis: {
-    distribution: VocabularyDistribution;
-    scores: VocabularyScore;
-    topPerformances: TopPerformance[];
-    suggestedWords?: SuggestedWord[];
+interface VocabularyStats {
+  totalWords?: number;
+  uniqueWords?: number;
+  knownWords?: number;
+  distribution?: {
+    A1?: number;
+    A2?: number;
+    B1?: number;
+    B2?: number;
+    C1?: number;
+    C2?: number;
   };
 }
 
-const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
-  const {
-    distribution,
-    scores,
-    topPerformances,
-    suggestedWords = [],
-  } = analysis;
+interface VocabularyContentProps {
+  recording?: Recording | null;
+}
+
+const VocabularyContent: React.FC<VocabularyContentProps> = ({ recording }) => {
+  const analysis = (recording?.analysis as RecordingAnalysis) || undefined;
+  const vocabulary = analysis?.analyses?.vocabulary;
+  const [createFlashcard] = useCreateFlashcardMutation();
+  const [createdFlashcards, setCreatedFlashcards] = useState<Set<string>>(
+    new Set()
+  );
+
+  const handleCreateFlashcard = async (
+    word: string,
+    definition?: string,
+    example?: string,
+    category?: string
+  ) => {
+    try {
+      await createFlashcard({
+        front: word,
+        back: definition || '',
+        category: '',
+        difficulty: 'Medium' as const,
+        tags: ['vocabulary', 'speech-analysis'],
+        source: 'speech-analyzer',
+        isAIGenerated: true,
+      }).unwrap();
+
+      setCreatedFlashcards((prev) => new Set(prev).add(word));
+      toast.success(`Flashcard created for "${word}"`);
+    } catch (error) {
+      toast.error('Failed to create flashcard');
+    }
+  };
+
+  const topPerformances = vocabulary?.topPerformances || [];
+  const suggestedWords = vocabulary?.suggestedWords || [];
+  const vocabularyUpgrades = vocabulary?.vocabularyUpgrades || [];
+
+  // Get stats safely
+  const vocabularyStats = vocabulary?.stats as
+    | VocabularyStats
+    | null
+    | undefined;
+
+  // Use real stats from API or fallback defaults
+  const distribution = vocabularyStats
+    ? {
+        totalWords: vocabularyStats.totalWords || 0,
+        uniqueWords: vocabularyStats.uniqueWords || 0,
+        advancedVocabularyPercentage:
+          vocabularyStats.knownWords &&
+          vocabularyStats.totalWords &&
+          vocabularyStats.totalWords > 0
+            ? Math.round(
+                (vocabularyStats.knownWords / vocabularyStats.totalWords) * 100
+              )
+            : 0,
+        cefrLevels: [
+          {
+            level: 'A1',
+            name: 'Beginner',
+            percentage:
+              vocabularyStats.distribution?.A1 &&
+              vocabularyStats.totalWords &&
+              vocabularyStats.totalWords > 0
+                ? Math.round(
+                    (vocabularyStats.distribution.A1 /
+                      vocabularyStats.totalWords) *
+                      100
+                  )
+                : 0,
+            count: vocabularyStats.distribution?.A1 || 0,
+            description: 'Basic vocabulary',
+          },
+          {
+            level: 'A2',
+            name: 'Elementary',
+            percentage:
+              vocabularyStats.distribution?.A2 &&
+              vocabularyStats.totalWords &&
+              vocabularyStats.totalWords > 0
+                ? Math.round(
+                    (vocabularyStats.distribution.A2 /
+                      vocabularyStats.totalWords) *
+                      100
+                  )
+                : 0,
+            count: vocabularyStats.distribution?.A2 || 0,
+            description: 'Elementary vocabulary',
+          },
+          {
+            level: 'B1',
+            name: 'Intermediate',
+            percentage:
+              vocabularyStats.distribution?.B1 &&
+              vocabularyStats.totalWords &&
+              vocabularyStats.totalWords > 0
+                ? Math.round(
+                    (vocabularyStats.distribution.B1 /
+                      vocabularyStats.totalWords) *
+                      100
+                  )
+                : 0,
+            count: vocabularyStats.distribution?.B1 || 0,
+            description: 'Intermediate vocabulary',
+          },
+          {
+            level: 'B2',
+            name: 'Upper Intermediate',
+            percentage: 0,
+            count: 0,
+            description: 'Upper intermediate vocabulary',
+          },
+          {
+            level: 'C1',
+            name: 'Advanced',
+            percentage: 0,
+            count: 0,
+            description: 'Advanced vocabulary',
+          },
+          {
+            level: 'C2',
+            name: 'Proficient',
+            percentage: 0,
+            count: 0,
+            description: 'Proficient vocabulary',
+          },
+        ],
+      }
+    : {
+        totalWords: recording ? recording.transcript.split(' ').length : 0,
+        uniqueWords: 0, // TODO: calculate unique words
+        advancedVocabularyPercentage: 0,
+        cefrLevels: [
+          {
+            level: 'A1',
+            name: 'Beginner',
+            percentage: 20,
+            count: 10,
+            description: 'Basic vocabulary',
+          },
+          {
+            level: 'A2',
+            name: 'Elementary',
+            percentage: 25,
+            count: 12,
+            description: 'Elementary vocabulary',
+          },
+          {
+            level: 'B1',
+            name: 'Intermediate',
+            percentage: 30,
+            count: 15,
+            description: 'Intermediate vocabulary',
+          },
+          {
+            level: 'B2',
+            name: 'Upper Intermediate',
+            percentage: 15,
+            count: 8,
+            description: 'Upper intermediate vocabulary',
+          },
+          {
+            level: 'C1',
+            name: 'Advanced',
+            percentage: 8,
+            count: 4,
+            description: 'Advanced vocabulary',
+          },
+          {
+            level: 'C2',
+            name: 'Proficient',
+            percentage: 2,
+            count: 1,
+            description: 'Proficient vocabulary',
+          },
+        ],
+      };
+
+  // Default scores
+  const scores = {
+    overall: analysis?.overall?.AccuracyScore || 0,
+    complexity: 0,
+    variety: 0,
+    accuracy: 0,
+    appropriateness: 0,
+  };
 
   // Color mapping cho CEFR levels
   const levelColors = {
@@ -55,48 +243,7 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
     C2: 'bg-purple-100 text-purple-800',
   };
 
-  // Vocabulary Upgrade suggestions với chi tiết hơn
-  const vocabularyUpgrades = [
-    {
-      basic: 'good',
-      advanced: 'exceptional',
-      basicLevel: 'A1',
-      advancedLevel: 'C1',
-      context: 'Quality description',
-      example: "This meal is exceptional (not just 'good')",
-      impact: '+25 points',
-    },
-    {
-      basic: 'big',
-      advanced: 'substantial',
-      basicLevel: 'A1',
-      advancedLevel: 'B2',
-      context: 'Size/amount',
-      example: 'A substantial improvement in performance',
-      impact: '+15 points',
-    },
-    {
-      basic: 'important',
-      advanced: 'paramount',
-      basicLevel: 'A2',
-      advancedLevel: 'C1',
-      context: 'Significance',
-      example: 'This issue is paramount to our success',
-      impact: '+20 points',
-    },
-    {
-      basic: 'very',
-      advanced: 'remarkably',
-      basicLevel: 'A1',
-      advancedLevel: 'B2',
-      context: 'Intensifier',
-      example: 'The results were remarkably consistent',
-      impact: '+10 points',
-    },
-  ];
-
-  // Paraphrase suggestions
-  const paraphraseSuggestions = [
+  const paraphraseSuggestions = vocabulary?.paraphraseSuggestions || [
     {
       original: 'I think this is important',
       paraphrase: 'In my opinion, this holds significant value',
@@ -194,7 +341,7 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
                 {distribution.cefrLevels.map((level) => (
                   <div key={level.level} className="flex items-center gap-2">
                     <Badge
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white ${levelColors[level.level]}`}
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white ${levelColors[level.level as keyof typeof levelColors]}`}
                     >
                       {level.level}
                     </Badge>
@@ -202,7 +349,7 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
                     <div className="flex-1">
                       <div className="w-full bg-gray-200 rounded-full h-4 relative overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all duration-500 ${levelColors[level.level]}`}
+                          className={`h-full rounded-full transition-all duration-500 ${levelColors[level.level as keyof typeof levelColors]}`}
                           style={{ width: `${level.percentage}%` }}
                         />
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -229,7 +376,7 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
               {distribution.cefrLevels.map((level) => (
                 <div key={level.level} className="flex items-center gap-2">
                   <Badge
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${levelBadgeColors[level.level]}`}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${levelBadgeColors[level.level as keyof typeof levelBadgeColors]}`}
                   >
                     {level.level}
                   </Badge>
@@ -302,6 +449,26 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
                     <span className="px-2 py-1 bg-amber-100 rounded text-xs font-semibold text-amber-800">
                       {upgrade.advanced}
                     </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0 hover:bg-amber-200 ml-auto"
+                      onClick={() =>
+                        handleCreateFlashcard(
+                          upgrade.advanced,
+                          upgrade.context,
+                          upgrade.example || '',
+                          'vocabulary-upgrade'
+                        )
+                      }
+                      disabled={createdFlashcards.has(upgrade.basic)}
+                    >
+                      {createdFlashcards.has(upgrade.basic) ? (
+                        <Check className="h-2 w-2 text-green-600" />
+                      ) : (
+                        <Plus className="h-2 w-2" />
+                      )}
+                    </Button>
                   </div>
                   <div className="text-xs text-gray-600 mb-1">
                     <span className="font-medium">Context:</span>{' '}
@@ -384,14 +551,36 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ analysis }) => {
                           {word.word}
                         </span>
                         <Badge
-                          className={`text-xs ${levelBadgeColors[word.cefrLevel]}`}
+                          className={`text-xs ${levelBadgeColors[word.cefrLevel as keyof typeof levelBadgeColors]}`}
                         >
                           {word.cefrLevel}
                         </Badge>
                       </div>
-                      <span className="text-xs text-yellow-600">
-                        {word.category}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-yellow-600">
+                          {word.category}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-yellow-100"
+                          onClick={() =>
+                            handleCreateFlashcard(
+                              word.word,
+                              word.definition,
+                              word.example,
+                              word.category
+                            )
+                          }
+                          disabled={createdFlashcards.has(word.word)}
+                        >
+                          {createdFlashcards.has(word.word) ? (
+                            <Check className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <Plus className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                     <p className="text-xs text-yellow-700 mb-1">
                       {word.definition}

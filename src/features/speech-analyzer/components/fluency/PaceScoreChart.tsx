@@ -31,13 +31,13 @@ const PaceScoreChart: React.FC<PaceScoreChartProps> = ({ score = 0 }) => {
 
   const getScoreLevel = (wpm: number): string => {
     if (wpm < 100) return 'Slow';
-    if (wpm <= 140) return 'Natural';
+    if (wpm <= 180) return 'Natural';
     if (wpm <= 200) return 'Optimal';
     return 'Very Fast';
   };
 
   const getScoreData = (wpm: number) => {
-    if (wpm >= 140 && wpm <= 180) {
+    if (wpm >= 120 && wpm <= 180) {
       return {
         color: '#10b981',
         gradient: 'from-emerald-400 to-emerald-600',
@@ -315,7 +315,7 @@ const PaceScoreChart: React.FC<PaceScoreChartProps> = ({ score = 0 }) => {
             {level}
           </div>
           <p className="text-xs text-gray-600 mt-2">
-            {score >= 140 && score <= 180
+            {score >= 120 && score <= 180
               ? 'Perfect speaking pace'
               : score < 120
                 ? 'Try speaking a bit faster'

@@ -41,7 +41,7 @@ const SpeechAnalyzePage = () => {
         );
       case 'vocabulary':
         // TODO: Create VocabularyContent component
-        return <VocabularyPage></VocabularyPage>;
+        return <VocabularyPage recording={recording} />;
       case 'pronunciation':
       default:
         return <PronunciationContent recording={recording} />;

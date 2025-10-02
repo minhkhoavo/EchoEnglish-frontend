@@ -1,3 +1,5 @@
+export type AnalysisStatus = 'done' | 'processing' | 'failed';
+
 export interface Recording {
   _id: string;
   userId: string;
@@ -9,9 +11,10 @@ export interface Recording {
   size: number;
   transcript: string;
   createdAt: string;
+  analysisStatus: AnalysisStatus;
+  __v?: number;
   overallScore?: number;
   analysis?: unknown;
-  analysisStatus?: string;
 }
 
 export interface RecordingsListResponse {
