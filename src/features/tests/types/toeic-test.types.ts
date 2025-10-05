@@ -2,7 +2,7 @@
 
 // Basic TOEIC test interface
 export interface TOEICTest {
-  testId: string; // TOEIC uses string IDs
+  _id: string; // MongoDB ObjectId as string
   testTitle: string;
   type: 'listening-reading';
   duration?: number;
@@ -75,7 +75,6 @@ export interface TestPart {
 
 export interface TOEICTestDetail {
   _id: string;
-  testId: string;
   testTitle: string;
   type: 'listening-reading';
   parts: TestPart[];
@@ -84,7 +83,6 @@ export interface TOEICTestDetail {
 // Response type for getting test by part (contains only one part)
 export interface TOEICTestPartDetail {
   _id: string;
-  testId: string;
   testTitle: string;
   type: 'listening-reading';
   parts: [TestPart]; // Only one part in the array

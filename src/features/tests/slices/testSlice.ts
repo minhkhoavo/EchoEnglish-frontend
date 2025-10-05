@@ -40,7 +40,7 @@ const testSlice = createSlice({
       state.activeTest = action.payload.test;
       const now = Date.now();
       state.currentSession = {
-        testId: action.payload.test.testId,
+        testId: action.payload.test._id,
         testTitle: action.payload.test.testTitle,
         startTime: new Date(now).toISOString(),
         timeLimit: new Date(now + action.payload.timeLimit).toISOString(),
