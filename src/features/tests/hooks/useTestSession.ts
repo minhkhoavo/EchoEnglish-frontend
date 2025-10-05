@@ -90,7 +90,7 @@ export const useTestSession = (isReviewMode?: boolean) => {
         // Check if there's an existing session for this test configuration
         const existingSession = await testStorageService.getTestSession(
           userId,
-          test.testId,
+          test._id,
           testMode,
           Array.isArray(selectedParts)
             ? selectedParts
@@ -132,7 +132,7 @@ export const useTestSession = (isReviewMode?: boolean) => {
               try {
                 await testStorageService.deleteTestSession(
                   userId,
-                  test.testId,
+                  test._id,
                   testMode,
                   Array.isArray(selectedParts)
                     ? selectedParts
@@ -217,7 +217,7 @@ export const useTestSession = (isReviewMode?: boolean) => {
         try {
           await testStorageService.deleteTestSession(
             userId,
-            test.testId,
+            test._id,
             testMode,
             Array.isArray(selectedParts)
               ? selectedParts

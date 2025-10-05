@@ -75,15 +75,22 @@ const AllTestsPage = ({
       ...toeicTests.map((test) => ({
         ...test,
         type: 'listening-reading' as const,
-        testId: test.testId,
       })),
       ...speakingTests.map((test) => ({
-        ...test,
+        _id: test.testId, // Map testId to _id for consistency
+        testTitle: test.testTitle,
         type: 'speaking' as const,
+        duration: test.duration,
+        number_of_questions: test.number_of_questions,
+        number_of_parts: test.number_of_parts,
       })),
       ...writingTests.map((test) => ({
-        ...test,
+        _id: test.testId, // Map testId to _id for consistency
+        testTitle: test.testTitle,
         type: 'writing' as const,
+        duration: test.duration,
+        number_of_questions: test.number_of_questions,
+        number_of_parts: test.number_of_parts,
       })),
     ];
   }, [toeicTests, speakingTests, writingTests]);
@@ -97,7 +104,7 @@ const AllTestsPage = ({
       filtered = filtered.filter(
         (test) =>
           test.testTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          test.testId.toString().includes(searchTerm)
+          test._id.toString().includes(searchTerm)
       );
     }
 
@@ -234,7 +241,7 @@ const AllTestsPage = ({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {currentTests.map((test) => (
                   <UnifiedTestCard
-                    key={`${test.type}-${test.testId}`}
+                    key={`${test.type}-${test._id}`}
                     test={test}
                     onTestSelect={onTestSelect}
                   />
