@@ -154,7 +154,7 @@ const LoginForm: React.FC = () => {
                 type="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                placeholder="example@email.com"
+                placeholder="example@gmail.com"
                 className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
