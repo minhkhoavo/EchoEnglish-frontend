@@ -20,7 +20,7 @@ export const speakingTestApi = api.injectEndpoints({
     }),
 
     // Get test by ID
-    getSpeakingTestById: builder.query<SpeakingTestDetail, number>({
+    getSpeakingTestById: builder.query<SpeakingTestDetail, string>({
       query: (testId) => ({
         url: `/sw-tests/${testId}`,
         method: 'GET',
@@ -35,7 +35,7 @@ export const speakingTestApi = api.injectEndpoints({
     // Get test by part
     getSpeakingTestByPart: builder.query<
       SpeakingTestDetail,
-      { testId: number; partNumber: number }
+      { testId: string; partNumber: number }
     >({
       query: ({ testId, partNumber }) => ({
         url: `/sw-tests/${testId}/part/${partNumber}`,

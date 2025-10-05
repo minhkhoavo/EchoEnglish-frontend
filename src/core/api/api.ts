@@ -51,6 +51,7 @@ export const api = createApi({
     'SpeakingWritingTest',
     'Payment',
     'Notification',
+    'Resource',
   ], // tag types for cache management
   endpoints: () => ({}), // specific endpoints will be added in other files
 });

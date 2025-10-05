@@ -19,7 +19,7 @@ export const writingTestApi = api.injectEndpoints({
     }),
 
     // Get test by ID
-    getWritingTestById: builder.query<WritingTestDetail, number>({
+    getWritingTestById: builder.query<WritingTestDetail, string>({
       query: (testId) => ({
         url: `/sw-tests/${testId}`,
         method: 'GET',
@@ -34,7 +34,7 @@ export const writingTestApi = api.injectEndpoints({
     // Get test by part
     getWritingTestByPart: builder.query<
       WritingTestDetail,
-      { testId: number; partNumber: number }
+      { testId: string; partNumber: number }
     >({
       query: ({ testId, partNumber }) => ({
         url: `/sw-tests/${testId}/part/${partNumber}`,

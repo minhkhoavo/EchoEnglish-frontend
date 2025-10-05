@@ -32,7 +32,7 @@ const WritingExam = () => {
     data: testData,
     error,
     isLoading,
-  } = useGetWritingTestByIdQuery(Number(testId!));
+  } = useGetWritingTestByIdQuery(testId!);
 
   useEffect(() => {
     const timer = setInterval(() => {

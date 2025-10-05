@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { formatMs } from '@/features/tests/utils/formatMs';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Play, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';

@@ -19,7 +19,7 @@ export interface QuestionState {
 }
 
 export interface ExamRecoveryInfo {
-  testId: number;
+  testId: string;
   testEndTime?: string; // ISO string from backend
   startedAt: string;
   totalDuration: number; // minutes
@@ -90,7 +90,7 @@ const speakingExamSlice = createSlice({
     startExam: (
       state,
       action: PayloadAction<{
-        testId: number;
+        testId: string;
         totalDuration: number;
         questions: Array<{
           id: number;

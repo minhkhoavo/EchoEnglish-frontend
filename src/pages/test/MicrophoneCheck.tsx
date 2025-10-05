@@ -57,7 +57,7 @@ const MicrophoneCheck: React.FC = () => {
     data: testData,
     error: testError,
     isLoading: isLoadingTest,
-  } = useGetSpeakingTestByIdQuery(Number(testId!));
+  } = useGetSpeakingTestByIdQuery(testId!);
 
   const [startAttempt] = useStartSpeakingAttemptMutation();
 

@@ -26,6 +26,14 @@ import { PaymentHistoryPage } from './pages/PaymentHistoryPage';
 import NotFound from './pages/NotFound';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import AdminNotificationPage from './pages/admin/AdminNotificationPage';
+import AdminResourcePage from './pages/admin/AdminResourcePage';
+
+// Resource Pages
+import ResourcePage from './pages/resource/ResourcePage';
+import ResourceDetailPage from './pages/resource/ResourceDetailPage';
+
+// Test Detail Component
+import { ToeicTestDetail } from './features/tests/components/lis-read/TOEICTestDetail';
 
 const QuizRouteWrapper = () => {
   const location = useLocation();
@@ -72,16 +80,22 @@ function App() {
         />
         <Route path="/test/speaking/:testId/exam" element={<SpeakingExam />} />
         <Route path="/writing-exam/:testId" element={<WritingExam />} />
+        <Route path="/test-detail/:testId" element={<ToeicTestDetail />} />
         <Route path="/test-exam/:testId" element={<TestExam />} />
         {/* Support review mode without testId in path */}
         <Route path="/test-exam" element={<TestExam />} />
         <Route path="/speaking-result" element={<SpeakingResultPage />} />
 
-        <Route path="/ad-notification" element={<AdminNotificationPage />} />
-
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/notification" element={<AdminNotificationPage />} />
+        <Route path="/admin/resources" element={<AdminResourcePage />} />
 
+        {/* Resource Routes */}
+        <Route path="/resources" element={<ResourcePage />} />
+        <Route path="/resources/:id" element={<ResourceDetailPage />} />
+
+        {/* Catch-all route for 404 Not Found */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
