@@ -14,7 +14,22 @@ export const writingTestApi = api.injectEndpoints({
         url: '/sw-tests/?type=writing',
         method: 'GET',
       }),
-      transformResponse: (response: WritingTestsApiResponse) => response.data,
+      transformResponse: (response: WritingTestsApiResponse) => {
+        // Map _id to testId and ensure it's always a string
+        return response.data.map((test) => {
+          const testWithId = test as unknown as {
+            _id?: string | { $oid: string };
+          };
+          const id =
+            typeof testWithId._id === 'string'
+              ? testWithId._id
+              : String(testWithId._id);
+          return {
+            ...test,
+            testId: id,
+          };
+        });
+      },
       providesTags: ['WritingTest'],
     }),
 
