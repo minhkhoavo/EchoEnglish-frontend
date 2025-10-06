@@ -97,6 +97,14 @@ export interface TestSession {
   timeLimit: string;
   timeRemaining: number; // milliseconds remaining
   answers: { [questionNumber: number]: string };
+  answerTimeline?: {
+    [questionNumber: number]: Array<{
+      answer: string;
+      timestamp: number; // ms from test start
+      duration?: number; // ms since previous timeline entry for this question
+    }>;
+  };
+  lastAnswerTimestamp?: number;
   testMode?: 'full' | 'custom';
   selectedParts?: string;
   partsKey?: string; // Combined key of selected parts for IndexedDB key

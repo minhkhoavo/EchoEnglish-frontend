@@ -5,9 +5,15 @@ export interface SubmitTestResultRequest {
   testTitle: string;
   testType: string;
   duration: number; // in milliseconds
+  startedAt?: number;
   userAnswers: Array<{
     questionNumber: number;
     selectedAnswer: string;
+    answerTimeline?: Array<{
+      answer: string;
+      timestamp: number; // milliseconds from test start
+      duration?: number;
+    }>;
   }>;
   parts: string[];
 }
