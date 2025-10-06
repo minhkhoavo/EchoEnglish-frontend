@@ -100,18 +100,28 @@ export const testResultApi = api.injectEndpoints({
           method: 'GET',
         };
       },
-      transformResponse: (response: {
-        data: TestHistoryItem[];
-        pagination: {
-          page: number;
-          limit: number;
-          total: number;
-          totalPages: number;
+      transformResponse: (
+        response: {
+          data: {
+            results: TestHistoryItem[];
+            total: number;
+          };
+        },
+        _meta,
+        arg
+      ) => {
+        const { page = 1, limit = 10 } = arg;
+        const totalPages = Math.ceil(response.data.total / limit);
+        return {
+          data: response.data.results,
+          pagination: {
+            page,
+            limit,
+            total: response.data.total,
+            totalPages,
+          },
         };
-      }) => ({
-        data: response.data,
-        pagination: response.pagination,
-      }),
+      },
       providesTags: ['TestResult'],
     }),
 
