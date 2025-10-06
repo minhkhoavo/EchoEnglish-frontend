@@ -64,13 +64,39 @@ const testSlice = createSlice({
       state.isShowResults = false;
     },
 
+    // Save an answer and optionally record a timeline entry (ms since test start)
     saveAnswerByNumber: (
       state,
-      action: PayloadAction<{ questionNumber: number; answer: string }>
+      action: PayloadAction<{
+        questionNumber: number;
+        answer: string;
+        timestamp?: number;
+      }>
     ) => {
       if (state.currentSession) {
-        state.currentSession.answers[action.payload.questionNumber] =
-          action.payload.answer;
+        const { questionNumber, answer, timestamp } = action.payload;
+        state.currentSession.answers[questionNumber] = answer;
+
+        if (typeof timestamp === 'number') {
+          if (!state.currentSession.answerTimeline) {
+            state.currentSession.answerTimeline = {};
+          }
+          if (!state.currentSession.answerTimeline[questionNumber]) {
+            state.currentSession.answerTimeline[questionNumber] = [];
+          }
+          const timeline = state.currentSession.answerTimeline[questionNumber];
+          const globalLastTimestamp =
+            state.currentSession.lastAnswerTimestamp || 0;
+          const duration =
+            globalLastTimestamp > 0
+              ? timestamp > globalLastTimestamp
+                ? timestamp - globalLastTimestamp
+                : 0
+              : timestamp;
+
+          timeline.push({ answer, timestamp, duration });
+          state.currentSession.lastAnswerTimestamp = timestamp;
+        }
       }
     },
 

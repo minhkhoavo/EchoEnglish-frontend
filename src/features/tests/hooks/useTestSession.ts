@@ -258,9 +258,26 @@ export const useTestSession = (isReviewMode?: boolean) => {
 
   const saveAnswer = useCallback(
     (questionNumber: number, answer: string) => {
-      dispatch(saveAnswerByNumber({ questionNumber, answer }));
+      if (!currentSession) {
+        dispatch(saveAnswerByNumber({ questionNumber, answer }));
+        return;
+      }
+
+      // Calculate timestamp in milliseconds from test start
+      let timestamp: number | undefined = undefined;
+      try {
+        const start = new Date(currentSession.startTime).getTime();
+        timestamp = Date.now() - start;
+        if (Number.isNaN(timestamp) || timestamp < 0) {
+          timestamp = 0;
+        }
+      } catch (err) {
+        timestamp = undefined;
+      }
+
+      dispatch(saveAnswerByNumber({ questionNumber, answer, timestamp }));
     },
-    [dispatch]
+    [dispatch, currentSession]
   );
 
   const getAnswer = useCallback(

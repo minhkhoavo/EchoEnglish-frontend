@@ -100,11 +100,14 @@ const TestExam = () => {
         const endTime = Date.now();
         const duration = endTime - startTime;
 
-        // Convert answers from currentSession to API format
+        // Convert answers from currentSession to API format, including timeline if available
         const userAnswers = Object.entries(currentSession.answers).map(
           ([questionNumber, selectedAnswer]) => ({
             questionNumber: parseInt(questionNumber, 10),
             selectedAnswer: selectedAnswer as string,
+            answerTimeline: currentSession.answerTimeline
+              ? currentSession.answerTimeline[parseInt(questionNumber, 10)]
+              : undefined,
           })
         );
 
@@ -114,6 +117,7 @@ const TestExam = () => {
           testTitle: currentSession.testTitle || 'TOEIC Practice Test',
           testType: 'listening-reading',
           duration,
+          startedAt: new Date(currentSession.startTime).getTime(),
           userAnswers,
           parts: Array.isArray(currentSession.selectedParts)
             ? currentSession.selectedParts
