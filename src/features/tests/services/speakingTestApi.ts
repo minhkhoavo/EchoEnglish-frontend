@@ -15,7 +15,22 @@ export const speakingTestApi = api.injectEndpoints({
         url: '/sw-tests?type=speaking',
         method: 'GET',
       }),
-      transformResponse: (response: SpeakingTestsApiResponse) => response.data,
+      transformResponse: (response: SpeakingTestsApiResponse) => {
+        // Map _id to testId and ensure it's always a string
+        return response.data.map((test) => {
+          const testWithId = test as unknown as {
+            _id?: string | { $oid: string };
+          };
+          const id =
+            typeof testWithId._id === 'string'
+              ? testWithId._id
+              : String(testWithId._id);
+          return {
+            ...test,
+            testId: id,
+          };
+        });
+      },
       providesTags: ['SpeakingTest'],
     }),
 

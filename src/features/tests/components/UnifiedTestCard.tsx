@@ -25,12 +25,15 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  // Convert _id to string to handle MongoDB ObjectId properly
+  const testId = typeof test._id === 'string' ? test._id : String(test._id);
+
   // Map test type to config
   const typeConfig = {
     'listening-reading': {
       icon: BookOpen,
       color: 'bg-blue-500',
-      route: `/test-detail/${test._id}`,
+      route: `/test-detail/${testId}`,
       description: 'Listening & Reading',
       duration: test.duration || 0,
       numberOfQuestions: test.number_of_questions || 0,
@@ -39,7 +42,7 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
     speaking: {
       icon: Mic,
       color: 'bg-green-500',
-      route: `/speaking-exam/${test._id}`,
+      route: `/speaking-exam/${testId}`,
       description: 'Speaking Test',
       duration: test.duration || 0,
       numberOfQuestions: test.number_of_questions || 0,
@@ -48,7 +51,7 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
     writing: {
       icon: PenTool,
       color: 'bg-purple-500',
-      route: `/writing-exam/${test._id}`,
+      route: `/writing-exam/${testId}`,
       description: 'Writing Test',
       duration: test.duration || 0,
       numberOfQuestions: test.number_of_questions || 0,
@@ -62,7 +65,7 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
   const handleStartTest = () => {
     if (test.type === 'listening-reading' && onTestSelect) {
       // For listening-reading tests, use onTestSelect to show detail in ContentPage
-      onTestSelect(test._id);
+      onTestSelect(testId);
     } else {
       // For other test types, navigate directly
       navigate(config.route);

@@ -63,11 +63,11 @@ export const WritingQuestion: React.FC<WritingQuestionPropsFixed> = ({
     setAnswer(value);
   };
 
-  const isEssayQuestion = partTitle.toLowerCase().includes('essay');
+  const partTitleLower = (partTitle || '').toLowerCase();
+  const isEssayQuestion = partTitleLower.includes('essay');
   const isEmailQuestion =
-    partTitle.toLowerCase().includes('email') ||
-    partTitle.toLowerCase().includes('request');
-  const isPictureQuestion = partTitle.toLowerCase().includes('picture');
+    partTitleLower.includes('email') || partTitleLower.includes('request');
+  const isPictureQuestion = partTitleLower.includes('picture');
 
   return (
     <Card className="w-full border-l-4 border-cyan-500">

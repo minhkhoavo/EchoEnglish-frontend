@@ -220,7 +220,7 @@ const WritingExam = () => {
                       {testData.parts[currentPartIndex].questions.map(
                         (question, qIndex) => (
                           <WritingQuestion
-                            key={question.id}
+                            key={qIndex}
                             question={question}
                             part={testData.parts[currentPartIndex]}
                             partTitle={testData.parts[currentPartIndex].title}
