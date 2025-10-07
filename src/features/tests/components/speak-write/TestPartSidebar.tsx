@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface TestPartSidebarProps {
-  parts: Array<{ id: number | string; title: string }>;
+  parts: Array<{ id: number | string; title: string; offset: number }>;
   currentPartIndex: number;
   setCurrentPartIndex: (index: number) => void;
 }
@@ -20,7 +20,7 @@ export const TestPartSidebar: React.FC<TestPartSidebarProps> = ({
       <div className="flex xl:flex-col gap-2 overflow-x-auto xl:overflow-x-visible pb-2 xl:pb-0">
         {parts.map((part, index) => (
           <button
-            key={part.id}
+            key={part.offset}
             onClick={() => setCurrentPartIndex(index)}
             className={`flex-shrink-0 xl:flex-shrink xl:w-full text-left p-2 xl:p-3 rounded-lg border transition-colors min-w-[120px] xl:min-w-0 ${
               currentPartIndex === index
