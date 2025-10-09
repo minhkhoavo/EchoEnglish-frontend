@@ -2,6 +2,9 @@ export type ExamType = 'listening-reading' | 'speaking' | 'writing';
 
 export type ExamStatus = 'completed' | 'in-progress' | 'not-started';
 
+// Re-export analysis types
+export * from '../../lr-analyze/types/analysis';
+
 export interface ExamAttempt {
   id: string;
   type: ExamType;
