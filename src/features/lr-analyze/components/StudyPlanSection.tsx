@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,8 +33,10 @@ interface StudyPlanSectionProps {
 }
 
 export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
+  const navigate = useNavigate();
+  const { attemptId } = useParams<{ attemptId: string }>();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(
-    new Set(['sp1'])
+    new Set([studyPlan[0]?._id || studyPlan[0]?.id || 'sp1'])
   );
 
   const toggleItem = (itemId: string) => {
@@ -118,14 +121,22 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
       {/* Study Plan Items */}
       <div className="space-y-4">
         {studyPlan.map((item) => {
-          const isExpanded = expandedItems.has(item.id);
+          const itemId = item._id || item.id || '';
+          const isExpanded = expandedItems.has(itemId);
           const config = getPriorityConfig(item.priority);
+
+          const targetWeaknessText =
+            typeof item.targetWeakness === 'string'
+              ? item.targetWeakness
+              : `${item.targetWeakness.skillName} (${item.targetWeakness.severity})`;
+
+          const drills = item.practiceDrills || item.drills || [];
 
           return (
             <Collapsible
-              key={item.id}
+              key={itemId}
               open={isExpanded}
-              onOpenChange={() => toggleItem(item.id)}
+              onOpenChange={() => toggleItem(itemId)}
             >
               <Card
                 className={`${config.bgColor} border-2 ${config.borderColor}`}
@@ -193,7 +204,7 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
                         </h4>
                       </div>
                       <p className="text-sm text-[#475569] mb-2">
-                        {item.targetWeakness}
+                        {targetWeaknessText}
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {item.skillsToImprove.map((skill) => (
@@ -215,13 +226,14 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
                         Learning Resources
                       </h4>
                       <div className="space-y-3">
-                        {item.resources.map((resource) => {
+                        {item.resources.map((resource, idx) => {
                           const Icon = getResourceIcon(resource.type);
                           const bgColor = getResourceColor(resource.type);
+                          const resourceId = resource._id || `resource-${idx}`;
 
                           return (
                             <div
-                              key={resource.id}
+                              key={resourceId}
                               className="flex items-start gap-3 p-4 bg-white rounded-lg border border-[#e5e7eb] hover:border-[#bfdbfe] transition-colors group"
                             >
                               <div
@@ -275,41 +287,45 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
                         Targeted Practice Drills
                       </h4>
                       <div className="space-y-3">
-                        {item.drills.map((drill) => (
-                          <div
-                            key={drill.id}
-                            className="flex items-start gap-3 p-4 bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] rounded-lg border border-[#bbf7d0] hover:shadow-md transition-all group"
-                          >
-                            <div className="p-2 bg-[#10b981] rounded-lg flex-shrink-0">
-                              <Zap className="w-5 h-5 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between gap-3 mb-2">
-                                <div className="flex-1">
-                                  <h5 className="text-sm font-bold text-[#0f172a] mb-1">
-                                    {drill.title}
-                                  </h5>
-                                  <p className="text-xs text-[#475569] mb-2">
-                                    {drill.description}
-                                  </p>
+                        {drills.map((drill, idx) => {
+                          const drillId =
+                            drill._id || drill.id || `drill-${idx}`;
+                          return (
+                            <div
+                              key={drillId}
+                              className="flex items-start gap-3 p-4 bg-gradient-to-r from-[#f0fdf4] to-[#dcfce7] rounded-lg border border-[#bbf7d0] hover:shadow-md transition-all group"
+                            >
+                              <div className="p-2 bg-[#10b981] rounded-lg flex-shrink-0">
+                                <Zap className="w-5 h-5 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                  <div className="flex-1">
+                                    <h5 className="text-sm font-bold text-[#0f172a] mb-1">
+                                      {drill.title}
+                                    </h5>
+                                    <p className="text-xs text-[#475569] mb-2">
+                                      {drill.description}
+                                    </p>
+                                  </div>
+                                  <Badge className="bg-[#10b981] text-white border-0 flex-shrink-0">
+                                    {drill.difficulty}
+                                  </Badge>
+                                  <Button
+                                    className="bg-[#0f172a] hover:bg-[#1e293b] text-white h-8"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      // Start drill
+                                    }}
+                                  >
+                                    Start
+                                    <Play className="w-4 h-4 ml-2" />
+                                  </Button>
                                 </div>
-                                <Badge className="bg-[#10b981] text-white border-0 flex-shrink-0">
-                                  {drill.difficulty}
-                                </Badge>
-                                <Button
-                                  className="bg-[#0f172a] hover:bg-[#1e293b] text-white h-8"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    // Start drill
-                                  }}
-                                >
-                                  Start
-                                  <Play className="w-4 h-4 ml-2" />
-                                </Button>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -360,9 +376,14 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
               the most significant impact on your overall score. Complete the
               learning resources first, then practice with the targeted drills.
             </p>
-            <Button className="bg-[#10b981] hover:bg-[#059669] text-white">
+            <Button
+              className="bg-[#10b981] hover:bg-[#059669] text-white"
+              onClick={() =>
+                navigate(`/test-exam?mode=review&resultId=${attemptId}`)
+              }
+            >
               <Play className="w-4 h-4 mr-2" />
-              Start Priority 1 Now
+              View Detailed Analysis
             </Button>
           </div>
         </div>

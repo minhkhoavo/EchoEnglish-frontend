@@ -155,31 +155,83 @@ export interface UserAnswer {
   timeTaken: number; // seconds
 }
 
-// Question attempt detail for pattern analysis
-export interface QuestionAttemptDetail {
-  questionId: string;
-  questionNumber: number;
-  partNumber: PartNumber;
-  skillTested: string;
-  isCorrect: boolean;
-  timeSpent?: number; // seconds
-  changes?: number; // number of answer changes
-  skipped?: boolean;
+// ============================================================================
+// TIME ANALYSIS TYPES (Based on Backend Response)
+// ============================================================================
+
+/**
+ * Metrics for each part's time usage
+ */
+export interface PartTimeMetrics {
+  partName: string; // "part1", "part2", etc.
+  questionsCount: number;
+  totalTime: number; // milliseconds
+  averageTimePerQuestion: number; // milliseconds
+  answerChangeRate: number; // percentage (0-100)
+  slowestQuestions: number[]; // question numbers
 }
 
-// Time-based answer patterns
-export type AnswerPattern =
-  | 'quick_correct' // Fast + Correct (mastered)
-  | 'slow_correct' // Slow + Correct (not familiar)
-  | 'quick_incorrect' // Fast + Wrong (misunderstanding)
-  | 'slow_incorrect'; // Slow + Wrong (confused)
+/**
+ * Overall time distribution and metrics
+ */
+export interface OverallTimeMetrics {
+  totalActiveTime: number; // milliseconds - total time spent answering
+  averageTimePerQuestion: number; // milliseconds
+  totalAnswerChanges: number; // total number of answer changes across all questions
+  confidenceScore: number; // 0-100, calculated from change patterns
+  timeDistribution: Record<string, number>; // part1: 0.56%, part2: 1.19%, etc. (percentage of total time)
+}
 
-export interface TimeBasedAnalysis {
-  pattern: AnswerPattern;
-  count: number;
-  percentage: number;
-  avgTime: number;
-  description: string;
+/**
+ * Question with hesitation/change history
+ */
+export interface HesitationQuestion {
+  questionNumber: number;
+  answerChanges: number; // number of times answer was changed
+  timeToFirstAnswer: number; // milliseconds - time until first answer selected
+  totalTimeSpent: number; // milliseconds - total time spent on this question
+  finalAnswer: string; // A, B, C, D
+  isCorrect: boolean;
+  changeHistory: string[]; // ["C", "B", "A", "B", "C", "B"] - sequence of answers
+}
+
+/**
+ * Analysis of hesitation patterns
+ */
+export interface HesitationAnalysis {
+  topHesitationQuestions: HesitationQuestion[]; // sorted by hesitation severity
+  averageChangesPerQuestion: number;
+  questionsWithMultipleChanges: number; // count of questions with 2+ changes
+}
+
+/**
+ * Patterns of answer changes between correct/incorrect
+ */
+export interface AnswerChangePatterns {
+  correctToIncorrect: number; // changed from correct to incorrect
+  incorrectToCorrect: number; // changed from incorrect to correct
+  incorrectToIncorrect: number; // changed from one incorrect to another
+}
+
+/**
+ * Complete time analysis structure from backend
+ */
+export interface TimeAnalysis {
+  partMetrics: PartTimeMetrics[];
+  overallMetrics: OverallTimeMetrics;
+  hesitationAnalysis: HesitationAnalysis;
+  answerChangePatterns: AnswerChangePatterns;
+}
+
+/**
+ * Skipped questions tracking (for future implementation)
+ * Currently empty but kept for frontend tracking
+ */
+export interface SkippedQuestionsAnalysis {
+  // To be implemented when backend provides this data
+  skippedQuestions?: number[]; // question numbers that were skipped
+  skippedThenAnswered?: number[]; // questions skipped initially but answered later
+  neverAnswered?: number[]; // questions never answered
 }
 
 // Aggregated performance by skill
@@ -207,93 +259,175 @@ export interface PartAnalysis {
 }
 
 // Overall skill dimensions for radar chart
+// Maps skill keys to accuracy percentages
 export interface OverallSkillDimensions {
   GIST: number; // percentage
   DETAIL: number;
   INFERENCE: number;
+  SPECIFIC_ACTION: number;
   GRAMMAR: number;
   VOCABULARY: number;
   COHESION: number;
+  OTHERS: number;
 }
 
 // Weakness severity levels
 export type SeverityLevel = 'critical' | 'high' | 'medium' | 'low';
 
-// Diagnosis insight
+// Diagnosis insight (weakness)
 export interface DiagnosisInsight {
   id: string;
   severity: SeverityLevel;
   category: string;
   title: string;
   description: string;
-  affectedParts: PartNumber[];
+  affectedParts: PartNumber[]; // May be empty if not specified by backend
   userAccuracy: number;
+  benchmarkAccuracy?: number; // Backend provides this
   impactScore: number; // 0-100, how much this affects overall score
-  relatedPattern?: AnswerPattern; // Related time-based pattern
+  relatedPattern?: string; // Optional pattern identifier for additional context
 }
 
 // Learning resource
 export interface LearningResource {
-  id: string;
-  type: 'video' | 'article' | 'flashcard' | 'drill';
+  _id?: string; // Backend ID
+  type:
+    | 'video'
+    | 'article'
+    | 'flashcard'
+    | 'drill'
+    | 'vocabulary_set'
+    | 'personalized_guide';
   title: string;
   description: string;
   url?: string;
+  estimatedTime?: number; // minutes
+  resourceId?: string; // Backend resource ID
+  completed?: boolean;
+  generatedContent?: {
+    // For vocabulary_set and personalized_guide
+    words?: Array<{
+      word: string;
+      partOfSpeech: string;
+      definition: string;
+      example: string;
+      usageNote?: string;
+    }>;
+    sections?: Array<{
+      heading: string;
+      content: string;
+    }>;
+    quickTips?: string[];
+  };
 }
 
-// Weakness drill
+// Weakness drill (practice drill)
 export interface WeaknessDrill {
-  id: string;
+  _id?: string; // Backend ID
+  skillTags?: {
+    skillCategory: string;
+    specificSkills: string[];
+  };
   title: string;
   description: string;
-  targetSkill: string;
   totalQuestions: number;
+  estimatedTime?: number; // minutes
+  partNumbers?: PartNumber[];
   difficulty: 'beginner' | 'intermediate' | 'advanced';
+  completed?: boolean;
+  attempts?: number;
+  // Legacy fields (kept for backward compatibility)
+  id?: string;
+  targetSkill?: string;
 }
 
 // Study plan item
 export interface StudyPlanItem {
-  id: string;
+  _id?: string; // Backend ID
+  targetWeakness: {
+    skillKey: string;
+    skillName: string;
+    severity: SeverityLevel;
+  };
   priority: number; // 1, 2, 3
   title: string;
   description: string;
-  targetWeakness: string;
   skillsToImprove: string[];
   resources: LearningResource[];
-  drills: WeaknessDrill[];
+  practiceDrills: WeaknessDrill[]; // Backend uses "practiceDrills"
   progress: number; // 0-100
+  estimatedWeeks?: number; // Backend provides this
+  // Legacy fields (kept for backward compatibility)
+  id?: string;
+  drills?: WeaknessDrill[];
+}
+
+// Study plan (from backend)
+export interface StudyPlan {
+  _id: string;
+  userId: string;
+  analysisResultId: string;
+  planItems: StudyPlanItem[];
+  overallProgress: number; // 0-100
+  status: 'active' | 'completed' | 'archived';
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Analysis data structure (nested in ExamAnalysisResult)
+export interface AnalysisData {
+  overallSkills?: OverallSkillDimensions;
+  partAnalyses?: PartAnalysis[]; // Optional - may not always be present
+  weaknesses?: DiagnosisInsight[]; // Optional - may not always be present
+  strengths?: string[]; // Optional - list of strong skills
+
+  // Time analysis from backend
+  timeAnalysis?: TimeAnalysis;
+
+  // Backend actual structure (nested)
+  // Backend returns: { examAnalysis: {...}, timeAnalysis: {...} }
+  examAnalysis?: {
+    overallSkills: OverallSkillDimensions;
+    partAnalyses: PartAnalysis[];
+    weaknesses: DiagnosisInsight[];
+    strengths: string[];
+  };
 }
 
 // Complete exam analysis result
 export interface ExamAnalysisResult {
-  examAttemptId: string;
+  testResultId: string; // Backend uses testResultId
   userId: string;
-  examDate: Date;
+  testId?: string; // Backend provides this
+  examDate: string | Date; // Backend returns ISO string
 
   // Overall scores
   listeningScore: number;
   readingScore: number;
   totalScore: number;
 
-  // All user answers
-  answers: UserAnswer[];
+  // Nested analysis data
+  analysis: AnalysisData;
 
-  // Aggregated analysis
-  overallSkills: OverallSkillDimensions;
-  partAnalyses: PartAnalysis[];
+  // Study plan (nested object from backend, optional)
+  studyPlanId?: StudyPlan;
 
-  // Time-based patterns
-  timeAnalysis: TimeBasedAnalysis[];
+  // Timestamps (optional)
+  createdAt?: string;
+  updatedAt?: string;
 
-  // Diagnosis
-  weaknesses: DiagnosisInsight[];
-  strengths: string[]; // List of strong skills
+  // Legacy fields (kept for backward compatibility)
+  _id?: string;
+  examAttemptId?: string;
+  answers?: UserAnswer[];
+  studyPlan?: StudyPlanItem[];
 
-  // Study plan
-  studyPlan: StudyPlanItem[];
-
-  // Question attempt details for pattern analysis
-  questionAttempts: QuestionAttemptDetail[];
+  // For direct access (backward compatibility)
+  overallSkills?: OverallSkillDimensions;
+  partAnalyses?: PartAnalysis[];
+  weaknesses?: DiagnosisInsight[];
+  strengths?: string[];
+  timeAnalysis?: TimeAnalysis;
 }
 
 // Mock data generator helpers
@@ -301,4 +435,10 @@ export interface MockAnalysisOptions {
   includeWeaknesses?: boolean;
   weaknessAreas?: string[];
   overallLevel?: 'low' | 'medium' | 'high';
+}
+
+// API Response wrapper
+export interface AnalysisApiResponse {
+  success: boolean;
+  data: ExamAnalysisResult;
 }

@@ -24,36 +24,45 @@ interface SkillRadarChartProps {
 }
 
 export function SkillRadarChart({ skills, strengths }: SkillRadarChartProps) {
-  // Main skill radar data - loại bỏ so sánh average
   const mainRadarData = [
     {
       skill: 'GIST',
-      Score: skills.GIST,
+      Score: skills.GIST || 0,
       fullMark: 100,
     },
     {
       skill: 'DETAIL',
-      Score: skills.DETAIL,
+      Score: skills.DETAIL || 0,
       fullMark: 100,
     },
     {
       skill: 'INFERENCE',
-      Score: skills.INFERENCE,
+      Score: skills.INFERENCE || 0,
+      fullMark: 100,
+    },
+    {
+      skill: 'SPECIFIC_ACTION',
+      Score: skills.SPECIFIC_ACTION || 0,
       fullMark: 100,
     },
     {
       skill: 'GRAMMAR',
-      Score: skills.GRAMMAR,
+      Score: skills.GRAMMAR || 0,
       fullMark: 100,
     },
     {
       skill: 'VOCABULARY',
-      Score: skills.VOCABULARY,
+      Score: skills.VOCABULARY || 0,
       fullMark: 100,
     },
     {
       skill: 'COHESION',
-      Score: skills.COHESION,
+      Score: skills.COHESION || 0,
+      fullMark: 100,
+    },
+    {
+      skill: 'OTHERS',
+      Score: skills.OTHERS || 0,
       fullMark: 100,
     },
   ];

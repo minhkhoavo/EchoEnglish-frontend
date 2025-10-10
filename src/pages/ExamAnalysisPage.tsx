@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -17,26 +18,30 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import type { ExamAnalysisResult } from '@/features/lr-analyze/types/analysis';
-import { generateMockAnalysisData } from '@/features/lr-analyze/services/mockAnalysisData';
+import { useGetAnalysisResultQuery } from '@/features/lr-analyze/services';
 import { SkillRadarChart } from '@/features/lr-analyze/components/SkillRadarChart';
 import { PartAnalysisSection } from '@/features/lr-analyze/components/PartAnalysisSection';
 import { DiagnosisSection } from '@/features/lr-analyze/components/DiagnosisSection';
 import { StudyPlanSection } from '@/features/lr-analyze/components/StudyPlanSection';
-import { QuestionPatternsSection } from '@/features/lr-analyze/components/QuestionPatternsSection';
+import { TimeAnalysisSection } from '@/features/lr-analyze/components/TimeAnalysisSection';
 
 export function ExamAnalysisPage() {
-  const [analysisData, setAnalysisData] = useState<ExamAnalysisResult | null>(
-    null
-  );
+  const { attemptId } = useParams<{ attemptId: string }>();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    // In production, fetch from API
-    const data = generateMockAnalysisData();
-    setAnalysisData(data);
-  }, []);
+  const {
+    data: apiData,
+    isLoading,
+    error,
+  } = useGetAnalysisResultQuery(attemptId || '', {
+    skip: !attemptId,
+  });
 
-  if (!analysisData) {
+  const analysisData = apiData;
+
+  // Show loading state
+  if (attemptId && isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#fafafa]">
         <div className="text-center">
@@ -47,10 +52,78 @@ export function ExamAnalysisPage() {
     );
   }
 
-  const criticalWeaknesses = analysisData.weaknesses.filter(
+  // Show error state
+  if (attemptId && error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#fafafa]">
+        <div className="text-center max-w-md">
+          <div className="p-4 bg-red-50 rounded-lg mb-4">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-2" />
+            <h2 className="text-xl font-bold text-red-900 mb-2">
+              Failed to Load Analysis
+            </h2>
+            <p className="text-red-700 text-sm">
+              {error && 'data' in error
+                ? JSON.stringify(error.data)
+                : 'Unable to fetch analysis data. Please try again later.'}
+            </p>
+          </div>
+          <Button
+            onClick={() => window.location.reload()}
+            className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analysisData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#fafafa]">
+        <div className="text-center">
+          <Info className="w-12 h-12 text-[#64748b] mx-auto mb-2" />
+          <p className="text-[#64748b]">No analysis data available</p>
+        </div>
+      </div>
+    );
+  }
+  console.log('Analysis Data:', analysisData);
+  // Helper to convert examDate to Date object if it's a string
+  const examDate =
+    typeof analysisData.examDate === 'string'
+      ? new Date(analysisData.examDate)
+      : analysisData.examDate;
+
+  // Get analysis data (handle backend structure: analysis.examAnalysis and analysis.timeAnalysis)
+  // Backend returns: { analysis: { examAnalysis: {...}, timeAnalysis: {...} } }
+  const examAnalysis =
+    analysisData.analysis?.examAnalysis || analysisData.analysis;
+  const timeAnalysisData =
+    analysisData.analysis?.timeAnalysis || analysisData.timeAnalysis;
+
+  const analysis = {
+    overallSkills: examAnalysis?.overallSkills || analysisData.overallSkills,
+    partAnalyses: examAnalysis?.partAnalyses || analysisData.partAnalyses || [],
+    weaknesses: examAnalysis?.weaknesses || analysisData.weaknesses || [],
+    strengths: examAnalysis?.strengths || analysisData.strengths || [],
+    timeAnalysis: timeAnalysisData,
+  };
+
+  // Get study plan items (handle both studyPlanId and studyPlan formats)
+  const studyPlanItems =
+    analysisData.studyPlanId?.planItems || analysisData.studyPlan || [];
+
+  console.log('Processed Analysis:', analysis);
+  console.log('Time Analysis Data:', analysis.timeAnalysis);
+
+  // Safely filter weaknesses with default empty array
+  const criticalWeaknesses = (analysis.weaknesses || []).filter(
     (w) => w.severity === 'critical'
   );
-  const highWeaknesses = analysisData.weaknesses.filter(
+  const highWeaknesses = (analysis.weaknesses || []).filter(
     (w) => w.severity === 'high'
   );
 
@@ -66,16 +139,21 @@ export function ExamAnalysisPage() {
               </h1>
               <p className="text-[#64748b] text-sm">
                 Exam taken on{' '}
-                {analysisData.examDate.toLocaleDateString('en-US', {
+                {examDate.toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
                 })}
               </p>
             </div>
-            <Button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white">
+            <Button
+              className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
+              onClick={() =>
+                navigate(`/test-exam?mode=review&resultId=${attemptId}`)
+              }
+            >
               <BookOpen className="w-4 h-4 mr-2" />
-              Start Learning
+              View Detailed Analysis
             </Button>
           </div>
 
@@ -162,7 +240,7 @@ export function ExamAnalysisPage() {
               className="data-[state=active]:bg-[#2563eb] data-[state=active]:text-white"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              Question Patterns
+              Time Analysis
             </TabsTrigger>
             <TabsTrigger
               value="parts"
@@ -185,28 +263,47 @@ export function ExamAnalysisPage() {
           </TabsList>
 
           <TabsContent value="overview" className="mt-4">
-            <SkillRadarChart
-              skills={analysisData.overallSkills}
-              strengths={analysisData.strengths}
-            />
+            {analysis.overallSkills ? (
+              <SkillRadarChart
+                skills={analysis.overallSkills}
+                strengths={analysis.strengths || []}
+              />
+            ) : (
+              <Card className="p-6">
+                <div className="text-center text-[#64748b]">
+                  <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>Skill analysis data not available for this exam.</p>
+                </div>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="patterns" className="mt-4">
-            <QuestionPatternsSection
-              questions={analysisData.questionAttempts}
-            />
+            {analysis.timeAnalysis ? (
+              <TimeAnalysisSection
+                timeAnalysis={analysis.timeAnalysis}
+                resultId={attemptId}
+              />
+            ) : (
+              <Card className="p-6">
+                <div className="text-center text-[#64748b]">
+                  <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>Time analysis data not available for this exam.</p>
+                </div>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="parts" className="mt-4">
-            <PartAnalysisSection partAnalyses={analysisData.partAnalyses} />
+            <PartAnalysisSection partAnalyses={analysis.partAnalyses || []} />
           </TabsContent>
 
           <TabsContent value="diagnosis" className="mt-4">
-            <DiagnosisSection weaknesses={analysisData.weaknesses} />
+            <DiagnosisSection weaknesses={analysis.weaknesses || []} />
           </TabsContent>
 
           <TabsContent value="studyplan" className="mt-4">
-            <StudyPlanSection studyPlan={analysisData.studyPlan} />
+            <StudyPlanSection studyPlan={studyPlanItems} />
           </TabsContent>
         </Tabs>
       </div>

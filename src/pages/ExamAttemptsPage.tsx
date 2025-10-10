@@ -139,7 +139,7 @@ const ExamAttemptsPage: React.FC = () => {
     if (activeTab === 'speaking') {
       navigate(`/speaking-result?id=${id}`);
     } else {
-      console.log('View details for:', id);
+      navigate(`/me/tests/${id}/analysis`);
     }
   };
 
