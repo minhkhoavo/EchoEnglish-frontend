@@ -75,7 +75,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     return 'bg-red-50 border-red-100';
   };
 
-  if (!score || !maxScore) return null;
+  if (score == null || maxScore == null) return null;
 
   return (
     <div

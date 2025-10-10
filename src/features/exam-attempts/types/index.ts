@@ -1,10 +1,6 @@
 export type ExamType = 'listening-reading' | 'speaking' | 'writing';
 
 export type ExamStatus = 'completed' | 'in-progress' | 'not-started';
-
-// Re-export analysis types
-export * from '../../lr-analyze/types/analysis';
-
 export interface ExamAttempt {
   id: string;
   type: ExamType;
@@ -13,14 +9,11 @@ export interface ExamAttempt {
   description?: string;
   startedAt: string;
   duration?: number;
-
+  listeningScore?: number;
+  readingScore?: number;
   score?: number;
   maxScore?: number;
   percentage?: number;
-  sections?: {
-    listening?: { score: number; maxScore: number };
-    reading?: { score: number; maxScore: number };
-  };
 }
 
 export interface ExamAttemptsState {
@@ -49,7 +42,8 @@ export interface ListeningReadingResult {
   id: string;
   testTitle: string;
   completedAt: string;
-  score: number;
+  listeningScore: number;
+  readingScore: number;
   totalQuestions: number;
   duration: number;
   percentage: number;

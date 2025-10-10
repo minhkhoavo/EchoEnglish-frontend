@@ -159,11 +159,8 @@ export interface UserAnswer {
 // TIME ANALYSIS TYPES (Based on Backend Response)
 // ============================================================================
 
-/**
- * Metrics for each part's time usage
- */
 export interface PartTimeMetrics {
-  partName: string; // "part1", "part2", etc.
+  partName: string;
   questionsCount: number;
   totalTime: number; // milliseconds
   averageTimePerQuestion: number; // milliseconds
@@ -171,51 +168,36 @@ export interface PartTimeMetrics {
   slowestQuestions: number[]; // question numbers
 }
 
-/**
- * Overall time distribution and metrics
- */
 export interface OverallTimeMetrics {
-  totalActiveTime: number; // milliseconds - total time spent answering
+  totalActiveTime: number; // milliseconds
   averageTimePerQuestion: number; // milliseconds
-  totalAnswerChanges: number; // total number of answer changes across all questions
-  confidenceScore: number; // 0-100, calculated from change patterns
-  timeDistribution: Record<string, number>; // part1: 0.56%, part2: 1.19%, etc. (percentage of total time)
+  totalAnswerChanges: number;
+  confidenceScore: number; // 0-100
+  timeDistribution: Record<string, number>; // part percentages
 }
 
-/**
- * Question with hesitation/change history
- */
 export interface HesitationQuestion {
   questionNumber: number;
-  answerChanges: number; // number of times answer was changed
-  timeToFirstAnswer: number; // milliseconds - time until first answer selected
-  totalTimeSpent: number; // milliseconds - total time spent on this question
+  answerChanges: number;
+  timeToFirstAnswer: number; // milliseconds
+  totalTimeSpent: number; // milliseconds
   finalAnswer: string; // A, B, C, D
   isCorrect: boolean;
-  changeHistory: string[]; // ["C", "B", "A", "B", "C", "B"] - sequence of answers
+  changeHistory: string[]; // answer sequence
 }
 
-/**
- * Analysis of hesitation patterns
- */
 export interface HesitationAnalysis {
-  topHesitationQuestions: HesitationQuestion[]; // sorted by hesitation severity
+  topHesitationQuestions: HesitationQuestion[];
   averageChangesPerQuestion: number;
-  questionsWithMultipleChanges: number; // count of questions with 2+ changes
+  questionsWithMultipleChanges: number;
 }
 
-/**
- * Patterns of answer changes between correct/incorrect
- */
 export interface AnswerChangePatterns {
-  correctToIncorrect: number; // changed from correct to incorrect
-  incorrectToCorrect: number; // changed from incorrect to correct
-  incorrectToIncorrect: number; // changed from one incorrect to another
+  correctToIncorrect: number;
+  incorrectToCorrect: number;
+  incorrectToIncorrect: number;
 }
 
-/**
- * Complete time analysis structure from backend
- */
 export interface TimeAnalysis {
   partMetrics: PartTimeMetrics[];
   overallMetrics: OverallTimeMetrics;
@@ -223,15 +205,10 @@ export interface TimeAnalysis {
   answerChangePatterns: AnswerChangePatterns;
 }
 
-/**
- * Skipped questions tracking (for future implementation)
- * Currently empty but kept for frontend tracking
- */
 export interface SkippedQuestionsAnalysis {
-  // To be implemented when backend provides this data
-  skippedQuestions?: number[]; // question numbers that were skipped
-  skippedThenAnswered?: number[]; // questions skipped initially but answered later
-  neverAnswered?: number[]; // questions never answered
+  skippedQuestions?: number[];
+  skippedThenAnswered?: number[];
+  neverAnswered?: number[];
 }
 
 // Aggregated performance by skill
@@ -271,26 +248,44 @@ export interface OverallSkillDimensions {
   OTHERS: number;
 }
 
-// Weakness severity levels
-export type SeverityLevel = 'critical' | 'high' | 'medium' | 'low';
+// Domain performance tracking
+export interface DomainPerformance {
+  domain: string;
+  totalQuestions: number;
+  correctAnswers: number;
+  accuracy: number;
+  isWeak: boolean;
+}
 
-// Diagnosis insight (weakness)
+export type SeverityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface RepresentativeQuestion {
+  questionNumber: number;
+  userAnswer: string;
+  correctAnswer: string;
+  explanation: string;
+}
+
 export interface DiagnosisInsight {
   id: string;
   severity: SeverityLevel;
+  skillKey: string;
+  skillName: string;
   category: string;
   title: string;
   description: string;
-  affectedParts: PartNumber[]; // May be empty if not specified by backend
+  affectedParts: PartNumber[];
   userAccuracy: number;
-  benchmarkAccuracy?: number; // Backend provides this
-  impactScore: number; // 0-100, how much this affects overall score
-  relatedPattern?: string; // Optional pattern identifier for additional context
+  benchmarkAccuracy: number;
+  impactScore: number;
+  incorrectCount: number;
+  totalCount: number;
+  representativeQuestions: RepresentativeQuestion[];
+  relatedPattern?: string;
 }
 
-// Learning resource
 export interface LearningResource {
-  _id?: string; // Backend ID
+  _id?: string;
   type:
     | 'video'
     | 'article'
@@ -302,10 +297,9 @@ export interface LearningResource {
   description: string;
   url?: string;
   estimatedTime?: number; // minutes
-  resourceId?: string; // Backend resource ID
+  resourceId?: string;
   completed?: boolean;
   generatedContent?: {
-    // For vocabulary_set and personalized_guide
     words?: Array<{
       word: string;
       partOfSpeech: string;
@@ -321,9 +315,8 @@ export interface LearningResource {
   };
 }
 
-// Weakness drill (practice drill)
 export interface WeaknessDrill {
-  _id?: string; // Backend ID
+  _id?: string;
   skillTags?: {
     skillCategory: string;
     specificSkills: string[];
@@ -336,14 +329,12 @@ export interface WeaknessDrill {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   completed?: boolean;
   attempts?: number;
-  // Legacy fields (kept for backward compatibility)
   id?: string;
   targetSkill?: string;
 }
 
-// Study plan item
 export interface StudyPlanItem {
-  _id?: string; // Backend ID
+  _id?: string;
   targetWeakness: {
     skillKey: string;
     skillName: string;
@@ -377,67 +368,64 @@ export interface StudyPlan {
 // Analysis data structure (nested in ExamAnalysisResult)
 export interface AnalysisData {
   overallSkills?: OverallSkillDimensions;
-  partAnalyses?: PartAnalysis[]; // Optional - may not always be present
-  weaknesses?: DiagnosisInsight[]; // Optional - may not always be present
-  strengths?: string[]; // Optional - list of strong skills
+  partAnalyses?: PartAnalysis[];
+  weaknesses?: DiagnosisInsight[]; // Legacy, kept for backward compatibility
+  strengths?: string[];
 
   // Time analysis from backend
   timeAnalysis?: TimeAnalysis;
 
   // Backend actual structure (nested)
-  // Backend returns: { examAnalysis: {...}, timeAnalysis: {...} }
   examAnalysis?: {
     overallSkills: OverallSkillDimensions;
     partAnalyses: PartAnalysis[];
-    weaknesses: DiagnosisInsight[];
+    topWeaknesses: DiagnosisInsight[]; // New field from backend
+    weaknesses?: DiagnosisInsight[]; // Legacy, may still exist
     strengths: string[];
+    weakDomains: string[];
+    keyInsights: string[]; // New field: array of key insight strings
+    domainPerformance: DomainPerformance[]; // New field: domain-level performance
+    summary: string; // New field: overall summary text
+    generatedAt: {
+      $date: string;
+    };
   };
 }
 
 // Complete exam analysis result
 export interface ExamAnalysisResult {
-  testResultId: string; // Backend uses testResultId
+  testResultId: string;
   userId: string;
-  testId?: string; // Backend provides this
-  examDate: string | Date; // Backend returns ISO string
+  testId?: string;
+  examDate: string | Date;
 
-  // Overall scores
   listeningScore: number;
   readingScore: number;
   totalScore: number;
 
-  // Nested analysis data
   analysis: AnalysisData;
 
-  // Study plan (nested object from backend, optional)
   studyPlanId?: StudyPlan;
 
-  // Timestamps (optional)
   createdAt?: string;
   updatedAt?: string;
 
-  // Legacy fields (kept for backward compatibility)
   _id?: string;
   examAttemptId?: string;
   answers?: UserAnswer[];
   studyPlan?: StudyPlanItem[];
 
-  // For direct access (backward compatibility)
   overallSkills?: OverallSkillDimensions;
   partAnalyses?: PartAnalysis[];
   weaknesses?: DiagnosisInsight[];
+  topWeaknesses?: DiagnosisInsight[];
   strengths?: string[];
+  keyInsights?: string[];
+  domainPerformance?: DomainPerformance[];
+  summary?: string;
   timeAnalysis?: TimeAnalysis;
 }
 
-// Mock data generator helpers
-export interface MockAnalysisOptions {
-  includeWeaknesses?: boolean;
-  weaknessAreas?: string[];
-  overallLevel?: 'low' | 'medium' | 'high';
-}
-
-// API Response wrapper
 export interface AnalysisApiResponse {
   success: boolean;
   data: ExamAnalysisResult;

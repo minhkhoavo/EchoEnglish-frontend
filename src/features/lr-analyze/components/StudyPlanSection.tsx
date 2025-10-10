@@ -16,6 +16,7 @@ import {
   ChevronDown,
   ChevronRight,
   Calendar,
+  ExternalLink,
 } from 'lucide-react';
 import type {
   StudyPlanItem,
@@ -27,6 +28,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { ResourceContentModal } from './ResourceContentModal';
+import { DrillContentModal } from './DrillContentModal';
+import { toast } from '@/hooks/use-toast';
 
 interface StudyPlanSectionProps {
   studyPlan: StudyPlanItem[];
@@ -39,6 +43,15 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
     new Set([studyPlan[0]?._id || studyPlan[0]?.id || 'sp1'])
   );
 
+  // Modal states
+  const [selectedResource, setSelectedResource] =
+    useState<LearningResource | null>(null);
+  const [resourceModalOpen, setResourceModalOpen] = useState(false);
+  const [selectedDrill, setSelectedDrill] = useState<WeaknessDrill | null>(
+    null
+  );
+  const [drillModalOpen, setDrillModalOpen] = useState(false);
+
   const toggleItem = (itemId: string) => {
     const newExpanded = new Set(expandedItems);
     if (newExpanded.has(itemId)) {
@@ -47,6 +60,54 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
       newExpanded.add(itemId);
     }
     setExpandedItems(newExpanded);
+  };
+
+  // Handle resource click
+  const handleResourceClick = (resource: LearningResource) => {
+    if (resource.type === 'article' && resource.url) {
+      window.open(resource.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    if (resource.type === 'video' && resource.url) {
+      window.open(resource.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    if (
+      resource.type === 'vocabulary_set' ||
+      resource.type === 'personalized_guide'
+    ) {
+      setSelectedResource(resource);
+      setResourceModalOpen(true);
+      return;
+    }
+
+    if (resource.generatedContent) {
+      setSelectedResource(resource);
+      setResourceModalOpen(true);
+      return;
+    }
+
+    toast({
+      title: 'Resource not available',
+      description: 'This resource type is not yet supported.',
+      variant: 'destructive',
+    });
+  };
+
+  // Handle drill click
+  const handleDrillClick = (drill: WeaknessDrill) => {
+    setSelectedDrill(drill);
+    setDrillModalOpen(true);
+  };
+
+  // Handle start drill
+  const handleStartDrill = (drillId: string) => {
+    toast({
+      title: 'Starting drill...',
+      description: `Drill ID: ${drillId}`,
+    });
   };
 
   const getResourceIcon = (type: string) => {
@@ -266,11 +327,21 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
                                     className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white h-7 text-xs"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      // Navigate to resource
+                                      handleResourceClick(resource);
                                     }}
                                   >
-                                    Start
-                                    <Play className="w-3 h-3 ml-1" />
+                                    {resource.type === 'article' ||
+                                    resource.type === 'video' ? (
+                                      <>
+                                        View
+                                        <ExternalLink className="w-3 h-3 ml-1" />
+                                      </>
+                                    ) : (
+                                      <>
+                                        Start
+                                        <Play className="w-3 h-3 ml-1" />
+                                      </>
+                                    )}
                                   </Button>
                                 </div>
                               </div>
@@ -315,7 +386,7 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
                                     className="bg-[#0f172a] hover:bg-[#1e293b] text-white h-8"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      // Start drill
+                                      handleDrillClick(drill);
                                     }}
                                   >
                                     Start
@@ -329,7 +400,7 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
+                    {/* Action Buttons
                     <div className="flex gap-3 pt-4 border-t border-white/50">
                       <Button
                         className="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
@@ -351,7 +422,7 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
                           Completed
                         </Button>
                       )}
-                    </div>
+                    </div> */}
                   </div>
                 </CollapsibleContent>
               </Card>
@@ -388,6 +459,21 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
           </div>
         </div>
       </Card>
+
+      {/* Resource Content Modal */}
+      <ResourceContentModal
+        resource={selectedResource}
+        open={resourceModalOpen}
+        onOpenChange={setResourceModalOpen}
+      />
+
+      {/* Drill Content Modal */}
+      <DrillContentModal
+        drill={selectedDrill}
+        open={drillModalOpen}
+        onOpenChange={setDrillModalOpen}
+        onStartDrill={handleStartDrill}
+      />
     </div>
   );
 }

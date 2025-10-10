@@ -12,18 +12,21 @@ import {
   BookOpen,
   BarChart3,
   ArrowRight,
-  CheckCircle2,
   AlertCircle,
   Info,
   RefreshCw,
 } from 'lucide-react';
 import type { ExamAnalysisResult } from '@/features/lr-analyze/types/analysis';
 import { useGetAnalysisResultQuery } from '@/features/lr-analyze/services';
-import { SkillRadarChart } from '@/features/lr-analyze/components/SkillRadarChart';
-import { PartAnalysisSection } from '@/features/lr-analyze/components/PartAnalysisSection';
-import { DiagnosisSection } from '@/features/lr-analyze/components/DiagnosisSection';
-import { StudyPlanSection } from '@/features/lr-analyze/components/StudyPlanSection';
-import { TimeAnalysisSection } from '@/features/lr-analyze/components/TimeAnalysisSection';
+import {
+  SkillRadarChart,
+  PartAnalysisSection,
+  DiagnosisSection,
+  StudyPlanSection,
+  TimeAnalysisSection,
+  KeyInsightsSection,
+  DomainPerformanceSection,
+} from '@/features/lr-analyze/components';
 
 export function ExamAnalysisPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
@@ -97,19 +100,17 @@ export function ExamAnalysisPage() {
       ? new Date(analysisData.examDate)
       : analysisData.examDate;
 
-  // Get analysis data (handle backend structure: analysis.examAnalysis and analysis.timeAnalysis)
-  // Backend returns: { analysis: { examAnalysis: {...}, timeAnalysis: {...} } }
-  const examAnalysis =
-    analysisData.analysis?.examAnalysis || analysisData.analysis;
-  const timeAnalysisData =
-    analysisData.analysis?.timeAnalysis || analysisData.timeAnalysis;
-
+  // Get analysis data (handle backend structure)
+  // Data is already flattened by the API service transformResponse
   const analysis = {
-    overallSkills: examAnalysis?.overallSkills || analysisData.overallSkills,
-    partAnalyses: examAnalysis?.partAnalyses || analysisData.partAnalyses || [],
-    weaknesses: examAnalysis?.weaknesses || analysisData.weaknesses || [],
-    strengths: examAnalysis?.strengths || analysisData.strengths || [],
-    timeAnalysis: timeAnalysisData,
+    overallSkills: analysisData.overallSkills,
+    partAnalyses: analysisData.partAnalyses || [],
+    weaknesses: analysisData.topWeaknesses || analysisData.weaknesses || [],
+    strengths: analysisData.strengths || [],
+    keyInsights: analysisData.keyInsights || [],
+    summary: analysisData.summary,
+    domainPerformance: analysisData.domainPerformance || [],
+    timeAnalysis: analysisData.timeAnalysis,
   };
 
   // Get study plan items (handle both studyPlanId and studyPlan formats)
@@ -120,11 +121,11 @@ export function ExamAnalysisPage() {
   console.log('Time Analysis Data:', analysis.timeAnalysis);
 
   // Safely filter weaknesses with default empty array
-  const criticalWeaknesses = (analysis.weaknesses || []).filter(
-    (w) => w.severity === 'critical'
+  const criticalWeaknesses = analysis.weaknesses.filter(
+    (w) => w.severity === 'CRITICAL'
   );
-  const highWeaknesses = (analysis.weaknesses || []).filter(
-    (w) => w.severity === 'high'
+  const highWeaknesses = analysis.weaknesses.filter(
+    (w) => w.severity === 'HIGH'
   );
 
   return (
@@ -262,7 +263,17 @@ export function ExamAnalysisPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="mt-4">
+          <TabsContent value="overview" className="mt-4 space-y-4">
+            {/* Summary and Key Insights */}
+            {(analysis.summary ||
+              (analysis.keyInsights && analysis.keyInsights.length > 0)) && (
+              <KeyInsightsSection
+                insights={analysis.keyInsights}
+                summary={analysis.summary}
+              />
+            )}
+
+            {/* Skills Radar Chart */}
             {analysis.overallSkills ? (
               <SkillRadarChart
                 skills={analysis.overallSkills}
@@ -276,6 +287,30 @@ export function ExamAnalysisPage() {
                 </div>
               </Card>
             )}
+
+            {/* Domain Performance */}
+            {analysis.domainPerformance &&
+              analysis.domainPerformance.length > 0 && (
+                <Card className="p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 bg-[#3b82f6] rounded-lg">
+                      <Target className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-[#0f172a]">
+                        Domain Performance
+                      </h2>
+                      <p className="text-xs text-[#64748b]">
+                        Performance across business contexts
+                      </p>
+                    </div>
+                  </div>
+                  <DomainPerformanceSection
+                    domainPerformance={analysis.domainPerformance}
+                    compact={true}
+                  />
+                </Card>
+              )}
           </TabsContent>
 
           <TabsContent value="patterns" className="mt-4">

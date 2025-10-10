@@ -9,7 +9,6 @@ import {
   TrendingDown,
   ArrowRight,
   Lightbulb,
-  Target,
 } from 'lucide-react';
 import type { DiagnosisInsight, SeverityLevel } from '../types/analysis';
 
@@ -20,7 +19,7 @@ interface DiagnosisSectionProps {
 export function DiagnosisSection({ weaknesses }: DiagnosisSectionProps) {
   const getSeverityConfig = (severity: SeverityLevel) => {
     const configs = {
-      critical: {
+      CRITICAL: {
         bgColor: 'bg-[#fef2f2]',
         borderColor: 'border-[#fecaca]',
         textColor: 'text-[#dc2626]',
@@ -28,7 +27,7 @@ export function DiagnosisSection({ weaknesses }: DiagnosisSectionProps) {
         icon: AlertCircle,
         label: 'Critical',
       },
-      high: {
+      HIGH: {
         bgColor: 'bg-[#fef3c7]',
         borderColor: 'border-[#fde68a]',
         textColor: 'text-[#d97706]',
@@ -36,7 +35,7 @@ export function DiagnosisSection({ weaknesses }: DiagnosisSectionProps) {
         icon: AlertTriangle,
         label: 'High Priority',
       },
-      medium: {
+      MEDIUM: {
         bgColor: 'bg-[#dbeafe]',
         borderColor: 'border-[#bfdbfe]',
         textColor: 'text-[#1d4ed8]',
@@ -44,7 +43,7 @@ export function DiagnosisSection({ weaknesses }: DiagnosisSectionProps) {
         icon: Info,
         label: 'Medium',
       },
-      low: {
+      LOW: {
         bgColor: 'bg-[#f0fdf4]',
         borderColor: 'border-[#bbf7d0]',
         textColor: 'text-[#15803d]',
@@ -64,11 +63,11 @@ export function DiagnosisSection({ weaknesses }: DiagnosisSectionProps) {
   };
 
   const criticalWeaknesses = weaknesses.filter(
-    (w) => w.severity === 'critical'
+    (w) => w.severity === 'CRITICAL'
   );
-  const highWeaknesses = weaknesses.filter((w) => w.severity === 'high');
+  const highWeaknesses = weaknesses.filter((w) => w.severity === 'HIGH');
   const otherWeaknesses = weaknesses.filter(
-    (w) => !['critical', 'high'].includes(w.severity)
+    (w) => !['CRITICAL', 'HIGH'].includes(w.severity)
   );
 
   return (
@@ -163,6 +162,14 @@ export function DiagnosisSection({ weaknesses }: DiagnosisSectionProps) {
                             <Badge variant="outline" className="text-xs">
                               {weakness.category}
                             </Badge>
+                            {weakness.skillName && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-purple-50"
+                              >
+                                {weakness.skillName}
+                              </Badge>
+                            )}
                             <span className="text-xs text-[#64748b]">
                               Parts: {weakness.affectedParts.join(', ')}
                             </span>
@@ -175,27 +182,22 @@ export function DiagnosisSection({ weaknesses }: DiagnosisSectionProps) {
                       </p>
 
                       {/* Compact Performance Display */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="flex-1 p-2 bg-white/70 rounded">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-medium text-[#64748b]">
-                              Your Accuracy
-                            </span>
-                            <p className="text-base font-bold text-[#dc2626]">
-                              {weakness.userAccuracy}%
-                            </p>
-                          </div>
+                      <div className="p-2 bg-white/70 rounded mb-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-[#64748b]">
+                            Your Accuracy
+                          </span>
+                          <p className="text-base font-bold text-[#dc2626]">
+                            {weakness.userAccuracy}%
+                          </p>
                         </div>
-                        {weakness.relatedPattern && (
-                          <div className="flex-1 p-2 bg-white/70 rounded">
-                            <span className="text-xs font-medium text-[#64748b] block mb-1">
-                              Pattern
-                            </span>
-                            <p className="text-xs font-semibold text-[#475569] capitalize">
-                              {weakness.relatedPattern.replace('_', ' ')}
+                        {weakness.incorrectCount !== undefined &&
+                          weakness.totalCount !== undefined && (
+                            <p className="text-xs text-[#64748b] mt-1">
+                              {weakness.incorrectCount}/{weakness.totalCount}{' '}
+                              incorrect
                             </p>
-                          </div>
-                        )}
+                          )}
                       </div>
 
                       {/* Compact Impact Score */}

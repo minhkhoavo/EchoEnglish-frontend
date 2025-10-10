@@ -63,7 +63,6 @@ function App() {
           path="/me/tests/:attemptId/analysis"
           element={<ExamAnalysisPage />}
         />
-        <Route path="/exam-analysis-demo" element={<ExamAnalysisPage />} />
 
         {/* Payment Routes */}
         <Route path="/payment" element={<PaymentPage />} />

@@ -30,7 +30,7 @@ export const TestHistory: React.FC<TestHistoryProps> = ({ testId }) => {
 
   const handleViewDetails = (resultId: string) => {
     // Navigate to test exam page with review mode
-    navigate(`/test-exam?mode=review&resultId=${resultId}`);
+    navigate(`/me/tests/${resultId}/analysis`);
   };
 
   const formatDuration = (duration: number) => {

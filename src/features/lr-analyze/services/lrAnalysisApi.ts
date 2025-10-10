@@ -10,19 +10,31 @@ import type {
  */
 export const lrAnalysisApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    /**
-     * Get analysis result for a specific test result
-     * @param testResultId - The ID of the test result to analyze
-     * @returns Test result with embedded analysis data
-     */
     getAnalysisResult: builder.query<ExamAnalysisResult, string>({
       query: (testResultId) => ({
         url: `/test-results/${testResultId}/analysis`,
         method: 'GET',
       }),
       transformResponse: (response: AnalysisApiResponse) => {
-        // Extract data from the response wrapper
-        return response.data;
+        const result = response.data;
+
+        if (result.analysis?.examAnalysis) {
+          result.overallSkills = result.analysis.examAnalysis.overallSkills;
+          result.partAnalyses = result.analysis.examAnalysis.partAnalyses;
+          result.topWeaknesses = result.analysis.examAnalysis.topWeaknesses;
+          result.weaknesses = result.analysis.examAnalysis.topWeaknesses;
+          result.strengths = result.analysis.examAnalysis.strengths;
+          result.keyInsights = result.analysis.examAnalysis.keyInsights;
+          result.domainPerformance =
+            result.analysis.examAnalysis.domainPerformance;
+          result.summary = result.analysis.examAnalysis.summary;
+        }
+
+        if (result.analysis?.timeAnalysis) {
+          result.timeAnalysis = result.analysis.timeAnalysis;
+        }
+
+        return result;
       },
       providesTags: (result, error, testResultId) => [
         { type: 'TestResult', id: testResultId },
