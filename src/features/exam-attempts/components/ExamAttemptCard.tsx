@@ -80,11 +80,11 @@ export const ExamAttemptCard: React.FC<ExamAttemptCardProps> = ({
   const Icon = config.icon;
 
   const renderSectionScores = () => {
-    if (attempt.type !== 'listening-reading' || !attempt.sections) return null;
+    if (attempt.type !== 'listening-reading') return null;
 
     return (
       <div className="grid grid-cols-2 gap-2">
-        {attempt.sections.listening && (
+        {attempt.listeningScore != null && (
           <div className="bg-white/70 backdrop-blur-sm p-2 rounded-md border border-slate-200/50">
             <div className="flex items-center gap-1 mb-1">
               <Headphones className="h-3 w-3 text-purple-600" />
@@ -93,14 +93,11 @@ export const ExamAttemptCard: React.FC<ExamAttemptCardProps> = ({
               </span>
             </div>
             <div className="text-sm font-bold text-slate-800">
-              {attempt.sections.listening.score}
-              <span className="text-xs font-medium text-slate-500">
-                /{attempt.sections.listening.maxScore}
-              </span>
+              {attempt.listeningScore}
             </div>
           </div>
         )}
-        {attempt.sections.reading && (
+        {attempt.readingScore != null && (
           <div className="bg-white/70 backdrop-blur-sm p-2 rounded-md border border-slate-200/50">
             <div className="flex items-center gap-1 mb-1">
               <FileText className="h-3 w-3 text-indigo-600" />
@@ -109,10 +106,7 @@ export const ExamAttemptCard: React.FC<ExamAttemptCardProps> = ({
               </span>
             </div>
             <div className="text-sm font-bold text-slate-800">
-              {attempt.sections.reading.score || 0}
-              <span className="text-xs font-medium text-slate-500">
-                /{attempt.sections.reading.maxScore}
-              </span>
+              {attempt.readingScore}
             </div>
           </div>
         )}
@@ -191,11 +185,11 @@ export const ExamAttemptCard: React.FC<ExamAttemptCardProps> = ({
       <CardContent className="p-4 space-y-3 bg-white flex-1">
         {/* Score display */}
         {attempt.status === 'completed' &&
-          attempt.score &&
-          attempt.maxScore && (
+          attempt.score != null &&
+          attempt.maxScore != null && (
             <ScoreDisplay
               score={attempt.score}
-              maxScore={attempt.maxScore!}
+              maxScore={attempt.maxScore}
               percentage={attempt.percentage}
               label="Score"
             />

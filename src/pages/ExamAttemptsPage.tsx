@@ -161,7 +161,7 @@ const ExamAttemptsPage: React.FC = () => {
     } else if (activeTab === 'writing') {
       navigate(`/writing-result?id=${id}`);
     } else if (activeTab === 'listening-reading') {
-      navigate(`/test-exam?mode=review&resultId=${id}`);
+      navigate(`/me/tests/${id}/analysis`);
     }
   };
 

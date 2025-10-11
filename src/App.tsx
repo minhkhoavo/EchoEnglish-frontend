@@ -22,6 +22,7 @@ import SpeakingResultPage from './pages/SpeakingResultPage';
 import WritingResultPage from './pages/WritingResultPage';
 import WritingModeSelection from './pages/test/WritingModeSelection';
 import ExamAttemptsPage from './pages/ExamAttemptsPage';
+import { ExamAnalysisPage } from './pages/ExamAnalysisPage';
 import PaymentCallbackPage from './pages/PaymentCallbackPage';
 import PaymentPage from './features/payment/pages/PaymentPage';
 import { PaymentHistoryPage } from './pages/PaymentHistoryPage';
@@ -60,6 +61,10 @@ function App() {
         {/* Main App Routes */}
         <Route path="/" element={<ContentPage />} />
         <Route path="/me/tests" element={<ExamAttemptsPage />} />
+        <Route
+          path="/me/tests/:attemptId/analysis"
+          element={<ExamAnalysisPage />}
+        />
 
         {/* Payment Routes */}
         <Route path="/payment" element={<PaymentPage />} />

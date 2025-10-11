@@ -57,6 +57,7 @@ const TestExam = () => {
   // Get test mode and parameters from URL (moved before RTK Query hooks)
   const testMode = searchParams.get('mode') || 'full'; // 'full', 'custom', or 'review'
   const resultId = searchParams.get('resultId'); // for review mode
+  const questionParam = searchParams.get('question'); // question to scroll to
   const selectedParts = useMemo(
     () => searchParams.get('parts')?.split(',') || [],
     [searchParams]
@@ -252,6 +253,48 @@ const TestExam = () => {
       });
     }
   }, [isReviewMode, reviewResult]); // Initialize test session when test data is loaded and not in history view or review mode
+
+  // Set current question from URL parameter
+  useEffect(() => {
+    if (questionParam) {
+      const questionNumber = parseInt(questionParam, 10);
+      if (questionNumber >= 1 && questionNumber <= 200) {
+        setCurrentQuestion(questionNumber);
+        if (questionNumber >= 1 && questionNumber <= 6) {
+          setSelectedPart('part1');
+        } else if (questionNumber >= 7 && questionNumber <= 31) {
+          setSelectedPart('part2');
+        } else if (questionNumber >= 32 && questionNumber <= 70) {
+          setSelectedPart('part3');
+        } else if (questionNumber >= 71 && questionNumber <= 100) {
+          setSelectedPart('part4');
+        } else if (questionNumber >= 101 && questionNumber <= 130) {
+          setSelectedPart('part5');
+        } else if (questionNumber >= 131 && questionNumber <= 146) {
+          setSelectedPart('part6');
+        } else if (questionNumber >= 147 && questionNumber <= 200) {
+          setSelectedPart('part7');
+        }
+      }
+    }
+  }, [questionParam]);
+
+  useEffect(() => {
+    if (questionParam && testData) {
+      const questionNumber = parseInt(questionParam, 10);
+      setTimeout(() => {
+        const element = document.getElementById(`question-${questionNumber}`);
+        if (element) {
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest',
+          });
+        }
+      }, 500);
+    }
+  }, [questionParam, testData]);
+
   useEffect(() => {
     if (
       testData &&

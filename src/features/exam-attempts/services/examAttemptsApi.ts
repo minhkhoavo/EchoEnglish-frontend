@@ -21,7 +21,9 @@ const transformListeningReadingResult = (
     description: result.partsKey,
     startedAt: result.completedAt,
     duration: result.duration,
-    score: result.score,
+    listeningScore: result.listeningScore,
+    readingScore: result.readingScore,
+    score: result.listeningScore + result.readingScore,
     maxScore: 990,
     percentage: result.percentage,
   };
