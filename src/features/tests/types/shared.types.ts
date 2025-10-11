@@ -77,18 +77,15 @@ export interface BaseQuestionProps<Q extends BaseQuestion> {
     questionId: number,
     answer: string | Record<string, string>
   ) => void;
-  userAnswer?: string | Record<string, string>;
+  userAnswer?: string;
   isReviewMode?: boolean;
   absoluteQuestionNumber?: number;
 }
 
 export interface BasePartProps<P extends BasePart> {
   part: P;
-  onAnswer?: (
-    questionId: number,
-    answer: string | Record<string, string>
-  ) => void;
-  userAnswers?: Record<number, string | Record<string, string>>;
+  onAnswer?: (questionId: number, answer: string) => void;
+  userAnswers?: Record<number, string>;
   isReviewMode?: boolean;
   baseQuestionNumber?: number;
 }
@@ -100,7 +97,7 @@ export interface TestSession {
   testType: 'speaking' | 'writing' | 'listening-reading';
   startTime: number;
   currentQuestionIndex: number;
-  answers: Record<string | number, string | Record<string, string>>;
+  answers: Record<string | number, string>;
   timeRemaining: number;
   isPaused: boolean;
   savedAt?: string; // ISO string timestamp for when session was last saved

@@ -210,27 +210,32 @@ export const ExamAttemptCard: React.FC<ExamAttemptCardProps> = ({
 
       <CardFooter className="p-3 bg-slate-50/50 border-t border-slate-100">
         <div className="flex gap-2 w-full">
-          {attempt.status === 'in-progress' && onContinue && (
-            <Button
-              onClick={() => onContinue(attempt.id)}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md h-8 text-xs"
-              size="sm"
-            >
-              <PlayCircle className="h-3 w-3 mr-1" />
-              Continue
-            </Button>
-          )}
-          {attempt.status !== 'in-progress' && onViewDetails && (
-            <Button
-              onClick={() => onViewDetails(attempt.id)}
-              variant="outline"
-              className="w-full border-slate-200 hover:bg-slate-50 hover:border-slate-300 h-8 text-xs"
-              size="sm"
-            >
-              <Eye className="h-3 w-3 mr-1" />
-              Details
-            </Button>
-          )}
+          {/* Only Speaking tests have in-progress status with Continue button */}
+          {attempt.status === 'in-progress' &&
+            attempt.type === 'speaking' &&
+            onContinue && (
+              <Button
+                onClick={() => onContinue(attempt.id)}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md h-8 text-xs"
+                size="sm"
+              >
+                <PlayCircle className="h-3 w-3 mr-1" />
+                Continue
+              </Button>
+            )}
+          {/* Show View Details for completed tests or non-Speaking in-progress */}
+          {(attempt.status === 'completed' || attempt.type !== 'speaking') &&
+            onViewDetails && (
+              <Button
+                onClick={() => onViewDetails(attempt.id)}
+                variant="outline"
+                className="w-full border-slate-200 hover:bg-slate-50 hover:border-slate-300 h-8 text-xs"
+                size="sm"
+              >
+                <Eye className="h-3 w-3 mr-1" />
+                Details
+              </Button>
+            )}
         </div>
       </CardFooter>
     </Card>

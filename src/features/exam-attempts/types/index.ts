@@ -75,3 +75,20 @@ export interface SpeakingAttemptsResponse {
   message: string;
   data: SpeakingAttempt[];
 }
+
+export interface WritingAttempt {
+  _id: string;
+  userId: string;
+  toeicWritingTestId: string;
+  testIdNumeric: number;
+  submissionTimestamp: string;
+  status: 'in_progress' | 'completed';
+  createdAt: string;
+  overallScore?: number;
+  overallLevel?: string;
+}
+
+export interface WritingAttemptsResponse {
+  message: string;
+  data: WritingAttempt[];
+}

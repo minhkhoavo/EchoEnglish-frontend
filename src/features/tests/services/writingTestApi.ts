@@ -10,12 +10,14 @@ import type {
 interface ApiQuestion {
   _id: string;
   questionText: string;
+  offset: number; // Question number (1, 2, 3...)
   [key: string]: unknown;
 }
 
 interface ApiPart {
   _id: string;
   partName: string;
+  offset: number; // Part number (1, 2, 3)
   questions: ApiQuestion[];
   [key: string]: unknown;
 }
@@ -55,20 +57,20 @@ export const writingTestApi = api.injectEndpoints({
       }),
       transformResponse: (response: WritingTestDetailApiResponse) => {
         const data = response.data;
-        // Transform questionText to title and _id to id for questions and parts
+        // Transform using offset (question number) as ID instead of parsing ObjectId
         return {
           ...data,
           parts: data.parts.map((part) => {
             const apiPart = part as unknown as ApiPart;
             return {
               ...part,
-              id: parseInt(apiPart._id, 16),
+              id: apiPart.offset, // Use part offset (1, 2, 3) as ID
               title: apiPart.partName || part.title,
               questions: part.questions.map((question) => {
                 const apiQuestion = question as unknown as ApiQuestion;
                 return {
                   ...question,
-                  id: parseInt(apiQuestion._id, 16),
+                  id: apiQuestion.offset, // Use question offset (1, 2, 3...) as ID
                   title: apiQuestion.questionText || question.title,
                 };
               }),

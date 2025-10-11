@@ -1,8 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Save } from 'lucide-react';
 import type { WritingQuestionProps } from '@/features/tests/types/writing-test.types';
 
 // Import shared components
@@ -22,6 +19,7 @@ interface WritingQuestionPropsFixed extends WritingQuestionProps {
     // ...other fields as needed
   };
   absoluteQuestionNumber?: number;
+  examMode?: 'practice' | 'exam';
 }
 
 export const WritingQuestion: React.FC<WritingQuestionPropsFixed> = ({
@@ -34,6 +32,7 @@ export const WritingQuestion: React.FC<WritingQuestionPropsFixed> = ({
   userAnswer = '',
   isReviewMode = false,
   absoluteQuestionNumber,
+  examMode = 'practice',
 }) => {
   const [answer, setAnswer] = useState(userAnswer);
   const [showSampleAnswer, setShowSampleAnswer] = useState(false);
@@ -41,9 +40,11 @@ export const WritingQuestion: React.FC<WritingQuestionPropsFixed> = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [wordCount, setWordCount] = useState(0);
 
+  // Sync with userAnswer from Redux when it changes
   useEffect(() => {
-    setAnswer(userAnswer);
-  }, [userAnswer]);
+    const answerStr = typeof userAnswer === 'string' ? userAnswer : '';
+    setAnswer(answerStr);
+  }, [userAnswer, question.id]);
 
   useEffect(() => {
     // Count words in answer
@@ -55,12 +56,10 @@ export const WritingQuestion: React.FC<WritingQuestionPropsFixed> = ({
     setWordCount(words.length);
   }, [answer]);
 
-  const handleSave = useCallback(() => {
-    onAnswer?.(question.id, answer);
-  }, [onAnswer, question.id, answer]);
-
   const handleAnswerChange = (value: string) => {
     setAnswer(value);
+    // Auto-save to Redux immediately (so data is in state)
+    onAnswer?.(question.id, value);
   };
 
   const partTitleLower = (partTitle || '').toLowerCase();
@@ -93,40 +92,43 @@ export const WritingQuestion: React.FC<WritingQuestionPropsFixed> = ({
           wordCount={wordCount}
         />
 
-        {/* Action Buttons */}
-        <div className="flex justify-between items-center">
-          <HelperButtons
-            hasIdea={!!question.idea}
-            hasSampleAnswer={!!question.sample_answer}
-            hasSuggestions={!!question.suggestions}
-            showIdea={showIdea}
-            showSampleAnswer={showSampleAnswer}
-            showSuggestions={showSuggestions}
-            onToggleIdea={() => setShowIdea(!showIdea)}
-            onToggleSampleAnswer={() => setShowSampleAnswer(!showSampleAnswer)}
-            onToggleSuggestions={() => setShowSuggestions(!showSuggestions)}
-          />
+        {/* Helper Buttons - Only in practice mode */}
+        {!isReviewMode && examMode === 'practice' && (
+          <div className="flex justify-start items-center">
+            <HelperButtons
+              hasIdea={!!question.idea}
+              hasSampleAnswer={!!question.sample_answer}
+              hasSuggestions={!!question.suggestions}
+              showIdea={showIdea}
+              showSampleAnswer={showSampleAnswer}
+              showSuggestions={showSuggestions}
+              onToggleIdea={() => setShowIdea(!showIdea)}
+              onToggleSampleAnswer={() =>
+                setShowSampleAnswer(!showSampleAnswer)
+              }
+              onToggleSuggestions={() => setShowSuggestions(!showSuggestions)}
+            />
+          </div>
+        )}
 
-          <Button onClick={handleSave} className="ml-auto">
-            <Save className="h-4 w-4 mr-2" />
-            Save Answer
-          </Button>
-        </div>
+        {examMode === 'practice' && (
+          <>
+            <IdeasDisplay idea={question.idea || ''} show={showIdea} />
 
-        <IdeasDisplay idea={question.idea || ''} show={showIdea} />
+            <SuggestionsDisplay
+              suggestions={question.suggestions || []}
+              show={showSuggestions}
+            />
 
-        <SuggestionsDisplay
-          suggestions={question.suggestions || []}
-          show={showSuggestions}
-        />
-
-        <SampleAnswerDisplay
-          sampleAnswer={question.sample_answer || ''}
-          show={showSampleAnswer}
-          isEmail={isEmailQuestion}
-          isEssay={isEssayQuestion}
-          suggestions={question.suggestions}
-        />
+            <SampleAnswerDisplay
+              sampleAnswer={question.sample_answer || ''}
+              show={showSampleAnswer}
+              isEmail={isEmailQuestion}
+              isEssay={isEssayQuestion}
+              suggestions={question.suggestions}
+            />
+          </>
+        )}
 
         <style>{`
         .email-header strong {

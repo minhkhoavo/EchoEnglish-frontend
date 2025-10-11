@@ -2,9 +2,11 @@ import { api } from '@/core/api/api';
 import type {
   ListeningReadingResponse,
   SpeakingAttemptsResponse,
+  WritingAttemptsResponse,
   ExamAttempt,
   ListeningReadingResult,
   SpeakingAttempt,
+  WritingAttempt,
 } from '../types';
 
 // Data transformation functions
@@ -41,6 +43,22 @@ const transformSpeakingAttempt = (attempt: SpeakingAttempt): ExamAttempt => {
   };
 };
 
+const transformWritingAttempt = (attempt: WritingAttempt): ExamAttempt => {
+  return {
+    id: attempt._id,
+    type: 'writing',
+    status: attempt.status === 'completed' ? 'completed' : 'in-progress',
+    title: `TOEIC Writing Test ${attempt.testIdNumeric}`,
+    description: attempt.overallLevel,
+    startedAt: attempt.createdAt,
+    score: attempt.overallScore,
+    maxScore: 200,
+    percentage: attempt.overallScore
+      ? (attempt.overallScore / 200) * 100
+      : undefined,
+  };
+};
+
 // API endpoints
 export const examAttemptsApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -64,10 +82,21 @@ export const examAttemptsApi = api.injectEndpoints({
       },
       providesTags: ['SpeakingTest'],
     }),
+    getWritingAttempts: builder.query<ExamAttempt[], void>({
+      query: () => ({
+        url: '/writing-results',
+        method: 'GET',
+      }),
+      transformResponse: (response: WritingAttemptsResponse) => {
+        return response.data.map(transformWritingAttempt);
+      },
+      providesTags: ['WritingTest'],
+    }),
   }),
 });
 
 export const {
   useGetListeningReadingResultsQuery,
   useGetSpeakingAttemptsQuery,
+  useGetWritingAttemptsQuery,
 } = examAttemptsApi;

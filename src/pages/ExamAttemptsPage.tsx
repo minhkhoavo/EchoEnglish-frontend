@@ -11,6 +11,7 @@ import {
 import {
   useGetSpeakingAttemptsQuery,
   useGetListeningReadingResultsQuery,
+  useGetWritingAttemptsQuery,
 } from '@/features/exam-attempts/services/examAttemptsApi';
 import type { ExamAttempt, ExamType } from '@/features/exam-attempts/types';
 
@@ -41,6 +42,13 @@ const ExamAttemptsPage: React.FC = () => {
     refetch: refetchListeningReading,
   } = useGetListeningReadingResultsQuery();
 
+  const {
+    data: writingData,
+    isLoading: writingLoading,
+    error: writingError,
+    refetch: refetchWriting,
+  } = useGetWritingAttemptsQuery();
+
   // Update listeningReading in slice when API data loads
   useEffect(() => {
     if (listeningReadingData) {
@@ -49,6 +57,7 @@ const ExamAttemptsPage: React.FC = () => {
   }, [listeningReadingData, dispatch]);
 
   const speaking = useMemo(() => speakingData || [], [speakingData]);
+  const writingAttempts = useMemo(() => writingData || [], [writingData]);
   const effectiveListeningReading = useMemo(
     () => listeningReading,
     [listeningReading]
@@ -63,6 +72,17 @@ const ExamAttemptsPage: React.FC = () => {
     refetchListeningReading();
   };
 
+  const refreshWritingAttempts = () => {
+    refetchWriting();
+  };
+
+  const getCurrentRefreshFunction = () => {
+    if (activeTab === 'speaking') return refreshSpeakingAttempts;
+    if (activeTab === 'listening-reading') return refreshListeningReading;
+    if (activeTab === 'writing') return refreshWritingAttempts;
+    return refreshListeningReading;
+  };
+
   // Get current tab's data
   const currentTabData = useMemo(() => {
     switch (activeTab) {
@@ -71,11 +91,11 @@ const ExamAttemptsPage: React.FC = () => {
       case 'speaking':
         return speaking;
       case 'writing':
-        return writing;
+        return writingAttempts;
       default:
         return [];
     }
-  }, [activeTab, effectiveListeningReading, speaking, writing]);
+  }, [activeTab, effectiveListeningReading, speaking, writingAttempts]);
 
   // Filter and sort data
   const filteredData = useMemo(() => {
@@ -138,13 +158,15 @@ const ExamAttemptsPage: React.FC = () => {
   const handleViewDetails = (id: string) => {
     if (activeTab === 'speaking') {
       navigate(`/speaking-result?id=${id}`);
-    } else {
-      console.log('View details for:', id);
+    } else if (activeTab === 'writing') {
+      navigate(`/writing-result?id=${id}`);
+    } else if (activeTab === 'listening-reading') {
+      navigate(`/test-exam?mode=review&resultId=${id}`);
     }
   };
 
   const handleContinue = (id: string) => {
-    console.log('Continue exam:', id);
+    // TODO: Implement continue functionality
   };
 
   const handleNewTest = () => {
@@ -155,7 +177,7 @@ const ExamAttemptsPage: React.FC = () => {
     if (activeTab === 'speaking') return loading.speaking || speakingLoading;
     if (activeTab === 'listening-reading')
       return loading.listeningReading || listeningReadingLoading;
-    if (activeTab === 'writing') return loading.writing;
+    if (activeTab === 'writing') return loading.writing || writingLoading;
     return false;
   };
 
@@ -201,14 +223,14 @@ const ExamAttemptsPage: React.FC = () => {
         <ExamTabsSection
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          data={{ listeningReading, speaking, writing }}
+          data={{ listeningReading, speaking, writing: writingAttempts }}
           filteredData={filteredData}
           filters={filters}
           counts={counts}
           loading={isCurrentTabLoading()}
           error={getCurrentTabError()}
           onFiltersChange={handleFiltersChange}
-          onRefresh={refreshSpeakingAttempts}
+          onRefresh={getCurrentRefreshFunction()}
           onViewDetails={handleViewDetails}
           onContinue={handleContinue}
         />

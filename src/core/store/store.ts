@@ -5,6 +5,7 @@ import quizReducer from '../../features/quiz/slices/quizSlice';
 import flashcardReducer from '../../features/flashcard/slices/flashcardSlice';
 import testReducer from '../../features/tests/slices/testSlice';
 import speakingExamReducer from '../../features/tests/slices/speakingExamSlice';
+import writingExamReducer from '../../features/tests/slices/writingExamSlice';
 import authReducer from '../../features/auth/slices/authSlice';
 import speechAnalyzerReducer from '../../features/speech-analyzer/slices/speechAnalyzerSlice';
 import examAttemptsReducer from '../../features/exam-attempts/slices/examAttemptsSlice';
@@ -23,6 +24,7 @@ export const store = configureStore({
     flashcard: flashcardReducer,
     test: testReducer,
     speakingExam: speakingExamReducer,
+    writingExam: writingExamReducer,
     auth: authReducer,
     speechAnalyzer: speechAnalyzerReducer,
     examAttempts: examAttemptsReducer,

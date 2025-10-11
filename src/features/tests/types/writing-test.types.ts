@@ -63,7 +63,7 @@ export interface WritingTestDetail extends BaseTestDetail {
 
 // Extended types for UI components
 export interface WritingTestWithAnswers extends WritingTestDetail {
-  userAnswers?: Record<number, string | Record<string, string>>;
+  userAnswers?: Record<number, string>;
   completedAt?: string;
   score?: number;
 }
@@ -73,22 +73,16 @@ export interface WritingQuestionProps {
   partTitle: string;
   questionIndex: number;
   totalQuestions: number;
-  onAnswer?: (
-    questionId: number,
-    answer: string | Record<string, string>
-  ) => void;
-  userAnswer?: string | Record<string, string>;
+  onAnswer?: (questionId: number, answer: string) => void;
+  userAnswer?: string;
   isReviewMode?: boolean;
   absoluteQuestionNumber?: number;
 }
 
 export interface WritingPartProps {
   part: WritingPart;
-  onAnswer?: (
-    questionId: number,
-    answer: string | Record<string, string>
-  ) => void;
-  userAnswers?: Record<number, string | Record<string, string>>;
+  onAnswer?: (questionId: number, answer: string) => void;
+  userAnswers?: Record<number, string>;
   isReviewMode?: boolean;
   baseQuestionNumber?: number;
 }

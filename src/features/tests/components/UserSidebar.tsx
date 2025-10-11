@@ -1,9 +1,10 @@
-import { Calendar, Target, BarChart3 } from 'lucide-react';
+import { Calendar, Target, History } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAppSelector } from '@/core/store/store';
+import { useNavigate } from 'react-router-dom';
 
 import { useGetUserStatsQuery } from '../services/testResultAPI';
 import { daysToDate } from '@/features/tests/utils/date';
@@ -11,6 +12,7 @@ import { daysToDate } from '@/features/tests/utils/date';
 export const UserSidebar = () => {
   const { user } = useAppSelector((state) => state.auth);
   const { data: userStatsLR, isLoading } = useGetUserStatsQuery();
+  const navigate = useNavigate();
 
   // User data
   const userData = {
@@ -84,16 +86,14 @@ export const UserSidebar = () => {
             </div>
           </div>
 
-          {/* Statistics Button */}
+          {/* History Button */}
           <Button
             variant="outline"
             className="w-full mt-4"
-            onClick={() => {
-              console.log('View statistics');
-            }}
+            onClick={() => navigate('/me/tests')}
           >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            View Statistics
+            <History className="h-4 w-4 mr-2" />
+            View History
           </Button>
         </CardContent>
       </Card>
