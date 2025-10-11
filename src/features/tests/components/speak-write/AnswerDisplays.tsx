@@ -66,31 +66,12 @@ export const SampleAnswerDisplay: React.FC<SampleAnswerDisplayProps> = ({
             dangerouslySetInnerHTML={{ __html: sampleAnswer }}
           />
         </div>
-      ) : isEssay && suggestions ? (
+      ) : isEssay ? (
         <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-          <div className="essay-sample-content text-green-900">
-            {sampleAnswer
-              .split('\n')
-              .filter((p) => p.trim())
-              .map((paragraph, index) => {
-                const suggestionIndex = Math.floor(index / 2);
-                const suggestion = suggestions[suggestionIndex];
-
-                return (
-                  <div key={index} className="mb-4">
-                    {suggestion && index % 2 === 0 && (
-                      <div className="text-sm font-semibold text-green-600 mb-2 border-b border-green-200 pb-1">
-                        {suggestion.name}
-                      </div>
-                    )}
-                    <p
-                      className="leading-relaxed"
-                      dangerouslySetInnerHTML={{ __html: paragraph }}
-                    />
-                  </div>
-                );
-              })}
-          </div>
+          <div
+            className="essay-sample-content text-green-900 prose prose-base max-w-none leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: sampleAnswer }}
+          />
         </div>
       ) : (
         <div

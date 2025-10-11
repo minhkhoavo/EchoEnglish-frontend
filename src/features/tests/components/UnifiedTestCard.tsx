@@ -51,7 +51,7 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
     writing: {
       icon: PenTool,
       color: 'bg-purple-500',
-      route: `/writing-exam/${testId}`,
+      route: `/test/writing/${testId}/select`,
       description: 'Writing Test',
       duration: test.duration || 0,
       numberOfQuestions: test.number_of_questions || 0,

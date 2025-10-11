@@ -19,6 +19,8 @@ import TestExam from './pages/test/TestExam';
 import SpeechAnalyzePage from './pages/SpeechAnalyzePage';
 import SpeakingResultDemoPage from './pages/SpeakingResultDemoPage';
 import SpeakingResultPage from './pages/SpeakingResultPage';
+import WritingResultPage from './pages/WritingResultPage';
+import WritingModeSelection from './pages/test/WritingModeSelection';
 import ExamAttemptsPage from './pages/ExamAttemptsPage';
 import { ExamAnalysisPage } from './pages/ExamAnalysisPage';
 import PaymentCallbackPage from './pages/PaymentCallbackPage';
@@ -84,12 +86,18 @@ function App() {
           element={<MicrophoneCheck />}
         />
         <Route path="/test/speaking/:testId/exam" element={<SpeakingExam />} />
-        <Route path="/writing-exam/:testId" element={<WritingExam />} />
+        <Route
+          path="/test/writing/:testId/select"
+          element={<WritingModeSelection />}
+        />
+        <Route path="/test/writing/:testId/exam" element={<WritingExam />} />
+        {/* <Route path="/writing-exam/:testId" element={<WritingExam />} /> */}
         <Route path="/test-detail/:testId" element={<ToeicTestDetail />} />
         <Route path="/test-exam/:testId" element={<TestExam />} />
         {/* Support review mode without testId in path */}
         <Route path="/test-exam" element={<TestExam />} />
         <Route path="/speaking-result" element={<SpeakingResultPage />} />
+        <Route path="/writing-result" element={<WritingResultPage />} />
 
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />

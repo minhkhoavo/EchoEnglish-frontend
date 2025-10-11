@@ -3,33 +3,55 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
-  Trophy,
   Calendar,
   Clock,
-  Target,
-  TrendingUp,
-  Star,
-  Award,
   CheckCircle,
+  Award,
+  Star,
+  TrendingUp,
 } from 'lucide-react';
-import type { SpeakingOverallResult } from '../types/speaking-result.types';
-import { getProficiencyColor, getScoreColor } from '../utils/utils';
+import type { WritingOverallResult } from '../types/writing-result.types';
+import { getScoreColor } from '../utils/utils';
 
 interface OverallScoreHeaderProps {
-  result: SpeakingOverallResult;
+  result: WritingOverallResult;
 }
+
+const getProficiencyColor = (level: string): string => {
+  const colors: Record<string, string> = {
+    Beginner: 'text-gray-600 border-gray-300 bg-gray-50',
+    Intermediate: 'text-blue-600 border-blue-300 bg-blue-50',
+    Advanced: 'text-purple-600 border-purple-300 bg-purple-50',
+    Expert: 'text-emerald-600 border-emerald-300 bg-emerald-50',
+  };
+  return colors[level] || colors.Beginner;
+};
+
+const getScoreGrade = (
+  percentage: number
+): { grade: string; color: string; bgColor: string } => {
+  if (percentage >= 90)
+    return {
+      grade: 'A+',
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-50',
+    };
+  if (percentage >= 80)
+    return { grade: 'A', color: 'text-blue-600', bgColor: 'bg-blue-50' };
+  if (percentage >= 70)
+    return { grade: 'B', color: 'text-orange-600', bgColor: 'bg-orange-50' };
+  if (percentage >= 60)
+    return { grade: 'C', color: 'text-yellow-600', bgColor: 'bg-yellow-50' };
+  return { grade: 'D', color: 'text-red-600', bgColor: 'bg-red-50' };
+};
 
 export const OverallScoreHeader: React.FC<OverallScoreHeaderProps> = ({
   result,
 }) => {
-  const rawPercentage = (result.overallScore / result.maxOverallScore) * 100;
-
-  const roundTo10 = (n: number) => Math.round(n / 10) * 10;
-  const scaledScore = roundTo10((result.overallScore / 35) * 200);
-  const scaledMax = 200;
-  const overallPercentage = (scaledScore / scaledMax) * 100;
+  const overallPercentage = (result.overallScore / 200) * 100;
   const proficiencyColorClass = getProficiencyColor(result.proficiencyLevel);
-  const scoreColorClass = getScoreColor(scaledScore, scaledMax);
+  const scoreColorClass = getScoreColor(overallPercentage);
+  const gradeInfo = getScoreGrade(overallPercentage);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -38,24 +60,6 @@ export const OverallScoreHeader: React.FC<OverallScoreHeaderProps> = ({
       day: 'numeric',
     });
   };
-
-  const getScoreGrade = (percentage: number) => {
-    if (percentage >= 90)
-      return {
-        grade: 'A+',
-        color: 'text-emerald-600',
-        bgColor: 'bg-emerald-50',
-      };
-    if (percentage >= 80)
-      return { grade: 'A', color: 'text-blue-600', bgColor: 'bg-blue-50' };
-    if (percentage >= 70)
-      return { grade: 'B', color: 'text-orange-600', bgColor: 'bg-orange-50' };
-    if (percentage >= 60)
-      return { grade: 'C', color: 'text-yellow-600', bgColor: 'bg-yellow-50' };
-    return { grade: 'D', color: 'text-red-600', bgColor: 'bg-red-50' };
-  };
-
-  const gradeInfo = getScoreGrade(overallPercentage);
 
   return (
     <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -97,9 +101,11 @@ export const OverallScoreHeader: React.FC<OverallScoreHeaderProps> = ({
                 {/* Score text in center */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className={`text-3xl font-bold ${scoreColorClass}`}>
-                    {scaledScore}
+                    {result.overallScore}
                   </span>
-                  <span className="text-sm text-gray-500">/{scaledMax}</span>
+                  <span className="text-sm text-gray-500">
+                    /{result.maxOverallScore}
+                  </span>
                 </div>
               </div>
             </div>
@@ -119,7 +125,7 @@ export const OverallScoreHeader: React.FC<OverallScoreHeaderProps> = ({
           <div className="lg:col-span-1 space-y-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                TOEIC Speaking Test Result
+                TOEIC Writing Test Result
               </h1>
               <p className="text-lg text-gray-600">{result.testTitle}</p>
             </div>
