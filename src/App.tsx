@@ -36,6 +36,7 @@ import ResourceDetailPage from './pages/resource/ResourceDetailPage';
 // Test Detail Component
 import { ToeicTestDetail } from './features/tests/components/lis-read/TOEICTestDetail';
 import { UserDashboardPage } from './features/user-dashboard/pages/UserDashboardPage';
+import { PersonalizedLearningSetup } from './features/learning-plan-setup';
 
 const QuizRouteWrapper = () => {
   const location = useLocation();
@@ -57,6 +58,10 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/dashboard" element={<UserDashboardPage />} />
+        <Route
+          path="/learning-plan/setup"
+          element={<PersonalizedLearningSetup />}
+        />
         {/* Main App Routes */}
         <Route path="/" element={<ContentPage />} />
         <Route path="/me/tests" element={<ExamAttemptsPage />} />
