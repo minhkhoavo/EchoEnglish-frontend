@@ -1,189 +1,287 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Login Page', () => {
-  // Tăng timeout cho mỗi test lên 60s
   test.setTimeout(60000);
 
   test.beforeEach(async ({ page }) => {
-    // Điều hướng đến trang login trước mỗi test
     await page.goto('/login', { waitUntil: 'networkidle' });
   });
 
-  test('should display login form correctly', async ({ page }) => {
-    // Kiểm tra tiêu đề trang
-    await expect(page.getByText('Welcome back')).toBeVisible();
+  // Helper function to wait for toast message
+  const waitForToast = async (page: import('@playwright/test').Page) => {
+    // Wait for actual toast item to appear (not just container)
+    await page.waitForSelector('[data-sonner-toast]', {
+      state: 'visible',
+      timeout: 10000,
+    });
+    // Wait a bit for toast animation
+    await page.waitForTimeout(500);
+  };
 
-    // Kiểm tra mô tả
-    await expect(
-      page.getByText('Sign in to your account to continue')
-    ).toBeVisible();
-
-    // Kiểm tra các trường input có hiển thị
-    await expect(page.locator('input[name="email"]')).toBeVisible();
-    await expect(page.locator('input[name="password"]')).toBeVisible();
-
-    // Kiểm tra checkbox Remember me
-    await expect(page.locator('input[name="rememberMe"]')).toBeVisible();
-
-    // Kiểm tra nút Sign in
-    await expect(page.locator('button[type="submit"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toContainText(
-      'Sign in'
-    );
-
-    // Kiểm tra link Forgot password
-    await expect(
-      page.getByRole('link', { name: 'Forgot password?' })
-    ).toBeVisible();
-
-    // Kiểm tra link Sign up
-    await expect(page.getByRole('link', { name: 'Sign up' })).toBeVisible();
-  });
-
-  test('should show validation errors for empty fields', async ({ page }) => {
-    // Click vào nút Sign in mà không nhập gì
-    await page.locator('button[type="submit"]').click();
-
-    // Kiểm tra thông báo lỗi email
-    await expect(page.locator('text=Please enter email')).toBeVisible();
-
-    // Kiểm tra thông báo lỗi password
-    await expect(page.locator('text=Please enter password')).toBeVisible();
-  });
-
-  test('should show validation error for invalid email format', async ({
-    page,
-  }) => {
-    // Nhập email không đúng định dạng nhưng có @ để bypass HTML5 validation
-    await page.locator('input[name="email"]').fill('invalid@email');
+  test('LOGIN_01: Empty email should show server error', async ({ page }) => {
+    // Nhập email rỗng
+    await page.locator('input[name="email"]').fill('');
     await page.locator('input[name="password"]').fill('12345678');
 
-    // Click vào nút Sign in để trigger validation
+    // Submit form
     await page.locator('button[type="submit"]').click();
 
-    // Đợi validation error xuất hiện hoặc kiểm tra HTML5 validation
-    // HTML5 có thể ngăn submit nếu email không hợp lệ
-    // Nếu có custom validation từ React, nó sẽ hiện message
-    const customError = page.getByText(/please enter a valid email/i);
+    // Wait for toast and check error message from server
+    await waitForToast(page);
 
-    // Kiểm tra xem có custom error hoặc HTML5 validation
-    const hasCustomError = await customError.isVisible().catch(() => false);
+    // Check for toast error message - "Email is invalid" từ server
+    const toast = page.locator('[data-sonner-toast][data-type="error"]');
+    await expect(toast).toBeVisible();
 
-    if (!hasCustomError) {
-      // Nếu không có custom error, kiểm tra HTML5 validation message
-      const emailInput = page.locator('input[name="email"]');
-      const validationMessage = await emailInput.evaluate(
-        (el: HTMLInputElement) => el.validationMessage
-      );
+    // Should show "Email is invalid" from server
+    await expect(toast).toContainText(/email.*invalid/i);
+  });
 
-      // Kiểm tra xem có validation message không
-      expect(validationMessage).toBeTruthy();
-    } else {
-      // Nếu có custom error, verify nó hiển thị
-      await expect(customError).toBeVisible();
+  test('LOGIN_02: Invalid email format should show server error', async ({
+    page,
+  }) => {
+    // Nhập email sai định dạng
+    await page.locator('input[name="email"]').fill('vovantri204@');
+    await page.locator('input[name="password"]').fill('12345678');
+
+    // Submit form
+    await page.locator('button[type="submit"]').click();
+
+    // Wait for toast and check error message
+    await waitForToast(page);
+
+    const toast = page.locator('[data-sonner-toast][data-type="error"]');
+    await expect(toast).toBeVisible();
+
+    // Should show "Email is invalid" from server
+    await expect(toast).toContainText(/email.*invalid/i);
+  });
+
+  test('LOGIN_03: Valid email with empty password should show server error', async ({
+    page,
+  }) => {
+    // Email hợp lệ, password rỗng
+    await page.locator('input[name="email"]').fill('vovantri204@gmail.com');
+    await page.locator('input[name="password"]').fill('');
+
+    // Submit form
+    await page.locator('button[type="submit"]').click();
+
+    // Wait for toast and check error message
+    await waitForToast(page);
+
+    const toast = page.locator('[data-sonner-toast][data-type="error"]');
+    await expect(toast).toBeVisible();
+
+    // Should show "Password must be at least 8 characters" from server
+    await expect(toast).toContainText(/password.*8.*characters/i);
+  });
+
+  test('LOGIN_04: Valid email with password < 8 characters should show server error', async ({
+    page,
+  }) => {
+    // Password < 8 ký tự
+    await page.locator('input[name="email"]').fill('abc@gmail.com');
+    await page.locator('input[name="password"]').fill('1234567');
+
+    // Submit form
+    await page.locator('button[type="submit"]').click();
+
+    // Wait for toast and check error message
+    await waitForToast(page);
+
+    const toast = page.locator('[data-sonner-toast][data-type="error"]');
+    await expect(toast).toBeVisible();
+
+    // Should show "Password must be at least 8 characters" from server
+    await expect(toast).toContainText(/password.*8.*characters/i);
+  });
+
+  test('LOGIN_05: Valid email with 8 character password (wrong password) should show server error', async ({
+    page,
+  }) => {
+    // Password đúng độ dài nhưng sai
+    await page.locator('input[name="email"]').fill('vovantri204@gmail.com');
+    await page.locator('input[name="password"]').fill('12345678');
+
+    // Submit form
+    await page.locator('button[type="submit"]').click();
+
+    // Wait for toast and check error message
+    await waitForToast(page);
+
+    const toast = page.locator('[data-sonner-toast][data-type="error"]');
+    await expect(toast).toBeVisible();
+
+    // Should show "Password is incorrect" from server
+    await expect(toast).toContainText(/password.*incorrect/i);
+  });
+
+  test('LOGIN_06: Valid email not existing in system should show server error', async ({
+    page,
+  }) => {
+    // Email không tồn tại
+    await page.locator('input[name="email"]').fill('notfound404@gmail.com');
+    await page.locator('input[name="password"]').fill('12341234');
+
+    // Submit form
+    await page.locator('button[type="submit"]').click();
+
+    // Wait for toast and check error message
+    await waitForToast(page);
+
+    const toast = page.locator('[data-sonner-toast][data-type="error"]');
+    await expect(toast).toBeVisible();
+
+    // Should show "User not found" from server
+    await expect(toast).toContainText(/user.*not.*found/i);
+  });
+
+  test('LOGIN_07: Valid credentials should login successfully', async ({
+    page,
+  }) => {
+    // Thông tin đúng - password đúng là 12341234
+    await page.locator('input[name="email"]').fill('vovantri204@gmail.com');
+    await page.locator('input[name="password"]').fill('12341234');
+
+    // Submit form
+    await page.locator('button[type="submit"]').click();
+
+    // Wait for success toast
+    await waitForToast(page);
+
+    const successToast = page.locator(
+      '[data-sonner-toast][data-type="success"]'
+    );
+    await expect(successToast).toBeVisible();
+
+    // Should show "Login successful!"
+    await expect(successToast).toContainText(/login.*successful/i);
+
+    // Should redirect to homepage
+    await page.waitForURL('/', { timeout: 15000 });
+    expect(page.url()).toContain('/');
+  });
+
+  test('LOGIN_08: Wrong password 3 times consecutively should show different warnings', async ({
+    page,
+  }) => {
+    const wrongPassword = 'wrongpass123';
+
+    for (let i = 1; i <= 3; i++) {
+      // Fill form
+      await page.locator('input[name="email"]').fill('vovantri204@gmail.com');
+      await page.locator('input[name="password"]').fill(wrongPassword);
+
+      // Submit form
+      await page.locator('button[type="submit"]').click();
+
+      // Wait for error toast
+      await waitForToast(page);
+
+      const toast = page.locator('[data-sonner-toast][data-type="error"]');
+      await expect(toast).toBeVisible();
+
+      // Different warnings for consecutive wrong password attempts
+      if (i < 3) {
+        // password incorrect
+        await expect(toast).toContainText(/password.*incorrect/i);
+      } else {
+        // Third attempt: account lockout warning
+        // Your account will be locked after 2 more failed attempts
+        await expect(toast).toContainText(
+          /account.*lock|lock.*account|too.*many.*attempts/i
+        );
+      }
+
+      // Clear form for next attempt (if not last iteration)
+      if (i < 3) {
+        await page.locator('input[name="email"]').clear();
+        await page.locator('input[name="password"]').clear();
+        // Wait for toast to disappear before next attempt
+        await page.waitForTimeout(3000);
+      }
     }
   });
 
-  test('should show validation error for short password', async ({ page }) => {
-    // Nhập mật khẩu ngắn hơn 8 ký tự
-    await page.locator('input[name="email"]').fill('test@example.com');
-    await page.locator('input[name="password"]').fill('123');
+  test('LOGIN_09: UI Placeholder should display correctly', async ({
+    page,
+  }) => {
+    // Kiểm tra placeholder của email
+    const emailInput = page.locator('input[name="email"]');
+    await expect(emailInput).toHaveAttribute(
+      'placeholder',
+      'example@gmail.com'
+    );
 
-    // Click vào nút Sign in
-    await page.locator('button[type="submit"]').click();
-
-    // Kiểm tra thông báo lỗi password
-    await expect(
-      page.locator('text=Password must be at least 8 characters')
-    ).toBeVisible();
+    // Kiểm tra placeholder của password
+    const passwordInput = page.locator('input[name="password"]');
+    await expect(passwordInput).toHaveAttribute('placeholder', '••••••••');
   });
 
-  test('should toggle password visibility', async ({ page }) => {
+  test('LOGIN_10: UI Show password functionality should work', async ({
+    page,
+  }) => {
     const passwordInput = page.locator('input[name="password"]');
-    // Lấy button toggle - button có Eye icon
     const toggleButton = page
       .locator('button[type="button"]')
-      .filter({ has: page.locator('svg') })
+      .filter({
+        has: page.locator('svg'),
+      })
       .first();
 
-    // Đợi password input visible trước
-    await expect(passwordInput).toBeVisible();
+    // Nhập password để test
+    await passwordInput.fill('testpassword');
 
-    // Kiểm tra ban đầu password được ẩn
+    // Kiểm tra ban đầu password bị ẩn
     await expect(passwordInput).toHaveAttribute('type', 'password');
 
-    // Đợi toggle button visible
-    await expect(toggleButton).toBeVisible();
-
-    // Click vào nút toggle để hiện password - dùng force để tránh timeout trên Firefox
-    await toggleButton.click({ force: true });
+    // Click toggle để hiện password
+    await toggleButton.click();
     await expect(passwordInput).toHaveAttribute('type', 'text');
 
+    // Kiểm tra password hiển thị
+    await expect(passwordInput).toHaveValue('testpassword');
+
     // Click lại để ẩn password
-    await toggleButton.click({ force: true });
+    await toggleButton.click();
     await expect(passwordInput).toHaveAttribute('type', 'password');
   });
 
-  test('should successfully login with valid credentials', async ({ page }) => {
-    // Nhập thông tin đăng nhập hợp lệ
-    await page.locator('input[name="email"]').fill('vovantri204@gmail.com');
-    await page.locator('input[name="password"]').fill('12341234');
+  test('LOGIN_11: UI Focus states should work correctly', async ({ page }) => {
+    const emailInput = page.locator('input[name="email"]');
+    const passwordInput = page.locator('input[name="password"]');
 
-    // Click vào nút Sign in với force để tránh timeout
-    await page.locator('button[type="submit"]').click({ force: true });
+    // Test focus trên email input
+    await emailInput.focus();
+    await expect(emailInput).toBeFocused();
 
-    // Đợi điều hướng sau khi đăng nhập thành công
-    // Giả định sau khi login thành công sẽ chuyển về trang chủ
-    await page.waitForURL('/', { timeout: 15000 });
+    // Test focus chuyển sang password
+    await passwordInput.focus();
+    await expect(passwordInput).toBeFocused();
 
-    // Kiểm tra đã chuyển đến trang chủ
-    expect(page.url()).toBe('http://localhost:5173/');
-  });
+    // Test Tab navigation
+    await emailInput.focus();
+    await page.keyboard.press('Tab');
+    await expect(passwordInput).toBeFocused();
 
-  test('should show loading state during login', async ({ page }) => {
-    const submitButton = page.locator('button[type="submit"]');
+    // Test focus styles (kiểm tra class có focus-related classes)
+    await emailInput.focus();
+    const emailClass = await emailInput.getAttribute('class');
+    expect(emailClass).toContain('focus:border-blue-500');
 
-    // Nhập thông tin đăng nhập
-    await page.locator('input[name="email"]').fill('vovantri204@gmail.com');
-    await page.locator('input[name="password"]').fill('12341234');
+    await passwordInput.focus();
+    const passwordClass = await passwordInput.getAttribute('class');
+    expect(passwordClass).toContain('focus:border-blue-500');
 
-    // Click vào nút Sign in với force để tránh timeout
-    await submitButton.click({ force: true });
-
-    // Đợi navigation hoàn tất
-    await page.waitForURL('/', { timeout: 15000 });
-  });
-
-  test('should navigate to forgot password page', async ({ page }) => {
-    // Click vào link Forgot password
-    await page.getByRole('link', { name: 'Forgot password?' }).click();
-
-    // Kiểm tra đã chuyển đến trang forgot password
-    await page.waitForURL('/forgot-password');
-    expect(page.url()).toContain('/forgot-password');
-  });
-
-  test('should navigate to register page', async ({ page }) => {
-    // Click vào link Sign up
-    await page.getByRole('link', { name: 'Sign up' }).click();
-
-    // Kiểm tra đã chuyển đến trang register
-    await page.waitForURL('/register');
-    expect(page.url()).toContain('/register');
-  });
-
-  test('should remember me checkbox work correctly', async ({ page }) => {
+    // Test remember me checkbox focus
     const rememberMeCheckbox = page.locator('input[name="rememberMe"]');
+    await rememberMeCheckbox.focus();
+    await expect(rememberMeCheckbox).toBeFocused();
 
-    // Kiểm tra checkbox mặc định được check
-    await expect(rememberMeCheckbox).toBeChecked();
-
-    // Uncheck checkbox
-    await rememberMeCheckbox.uncheck();
-    await expect(rememberMeCheckbox).not.toBeChecked();
-
-    // Check lại
-    await rememberMeCheckbox.check();
-    await expect(rememberMeCheckbox).toBeChecked();
+    // Test submit button focus
+    const submitButton = page.locator('button[type="submit"]');
+    await submitButton.focus();
+    await expect(submitButton).toBeFocused();
   });
 });

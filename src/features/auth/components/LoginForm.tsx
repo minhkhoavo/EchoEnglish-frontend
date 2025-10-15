@@ -38,29 +38,32 @@ const LoginForm: React.FC = () => {
 
   // Validation function
   const validateForm = () => {
-    const newErrors = { email: '', password: '' };
-    let isValid = true;
+    // const newErrors = { email: '', password: '' };
+    // let isValid = true;
 
-    // Email validation
-    if (!formData.email) {
-      newErrors.email = 'Please enter email';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-      isValid = false;
-    }
+    // // Email validation
+    // if (!formData.email) {
+    //   newErrors.email = 'Please enter email';
+    //   isValid = false;
+    // } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    //   newErrors.email = 'Please enter a valid email address';
+    //   isValid = false;
+    // }
 
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = 'Please enter password';
-      isValid = false;
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-      isValid = false;
-    }
+    // // Password validation
+    // if (!formData.password) {
+    //   newErrors.password = 'Please enter password';
+    //   isValid = false;
+    // } else if (formData.password.length < 8) {
+    //   newErrors.password = 'Password must be at least 8 characters';
+    //   isValid = false;
+    // }
 
-    setErrors(newErrors);
-    return isValid;
+    // setErrors(newErrors);
+    // return isValid;
+
+    // Always return true to allow server-side validation
+    return true;
   };
 
   // Handle input change
@@ -151,7 +154,6 @@ const LoginForm: React.FC = () => {
               <Input
                 id="email"
                 name="email"
-                type="email"
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="example@gmail.com"
