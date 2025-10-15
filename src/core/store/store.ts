@@ -10,6 +10,7 @@ import speechAnalyzerReducer from '../../features/speech-analyzer/slices/speechA
 import examAttemptsReducer from '../../features/exam-attempts/slices/examAttemptsSlice';
 import notificationReducer from '../../features/notification/slices/notificationSlice';
 import resourceReducer from '../../features/resource/slices/resourceSlice';
+import dashboardReducer from '../../features/user-dashboard/slices/dashboardSlice';
 import { api } from '../api/api';
 import { quizApi } from '../../features/quiz/services/quizApi';
 import { useDispatch, useSelector } from 'react-redux';
@@ -28,6 +29,7 @@ export const store = configureStore({
     examAttempts: examAttemptsReducer,
     notification: notificationReducer,
     resource: resourceReducer,
+    dashboard: dashboardReducer,
     [api.reducerPath]: api.reducer,
     [quizApi.reducerPath]: quizApi.reducer,
   },
