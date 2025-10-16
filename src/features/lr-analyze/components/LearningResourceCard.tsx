@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   BookOpen,
   Video,
@@ -19,6 +19,7 @@ import { toast } from '@/hooks/use-toast';
 interface LearningResourceCardProps {
   resource: LearningResource;
   onComplete?: (resourceId: string) => void;
+  onTimeSpent?: (resourceId: string, timeSpent: number) => void;
   showCompletedState?: boolean;
   compact?: boolean;
 }
@@ -26,12 +27,47 @@ interface LearningResourceCardProps {
 export function LearningResourceCard({
   resource,
   onComplete,
+  onTimeSpent,
   showCompletedState = false,
   compact = false,
 }: LearningResourceCardProps) {
   const [resourceModalOpen, setResourceModalOpen] = useState(false);
   const [selectedResource, setSelectedResource] =
     useState<LearningResource | null>(null);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const totalTimeRef = useRef<number>(0);
+
+  // Track time when modal is open
+  useEffect(() => {
+    if (resourceModalOpen && !startTime) {
+      setStartTime(Date.now());
+      totalTimeRef.current = 0;
+      intervalRef.current = setInterval(() => {
+        if (startTime) {
+          const currentTime = Math.floor((Date.now() - startTime) / 1000);
+          totalTimeRef.current = currentTime;
+        }
+      }, 6000);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [resourceModalOpen, startTime]);
+
+  useEffect(() => {
+    if (!resourceModalOpen && startTime && onTimeSpent && resource._id) {
+      const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+      if (timeSpent > 5) {
+        onTimeSpent(resource._id, timeSpent);
+      }
+      setStartTime(null);
+      totalTimeRef.current = 0;
+    }
+  }, [resourceModalOpen, startTime, onTimeSpent, resource._id]);
 
   const getResourceIcon = (type: string) => {
     const icons: Record<string, React.ElementType> = {
@@ -128,7 +164,7 @@ export function LearningResourceCard({
                   e.stopPropagation();
                   handleResourceClick(resource);
                 }}
-                disabled={isCompleted && showCompletedState}
+                // disabled={isCompleted && showCompletedState}
               >
                 {resource.type === 'article' || resource.type === 'video' ? (
                   <>
@@ -137,7 +173,7 @@ export function LearningResourceCard({
                   </>
                 ) : (
                   <>
-                    Start
+                    Read
                     <Play className="w-3 h-3 ml-1" />
                   </>
                 )}

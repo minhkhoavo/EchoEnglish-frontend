@@ -99,11 +99,16 @@ export interface TransformedPhase {
   keyFocusAreas: string[];
 }
 
+export interface TransformedDailyLesson {
+  focus: string;
+  status: 'pending' | 'in-progress' | 'completed';
+}
+
 export interface TransformedWeeklyLesson {
   weekNumber: number;
   title: string;
   summary: string;
   status: 'upcoming' | 'in-progress' | 'completed';
-  dailyLessons: string[];
+  dailyLessons: TransformedDailyLesson[];
   hasDetailedPlan: boolean;
 }

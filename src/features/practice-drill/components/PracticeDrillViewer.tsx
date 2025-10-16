@@ -20,7 +20,10 @@ import { Part7Question } from '../../tests/components/lis-read/questions/Part7Qu
 interface PracticeDrillViewerProps {
   questionIds?: string[];
   data?: PracticeDrillData;
-  onSubmit?: (answers: Record<number, string>) => void;
+  onSubmit?: (
+    answers: Record<number, string>,
+    results: { correctAnswers: number; totalQuestions: number }
+  ) => void;
 }
 
 export const PracticeDrillViewer = ({
@@ -68,18 +71,25 @@ export const PracticeDrillViewer = ({
     totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
 
   // Mock functions for Part components that expect useTestSession
-  const saveAnswer = (questionNumber: number, answer: string) => {
-    if (!isSubmitted) {
-      setUserAnswers((prev) => ({
-        ...prev,
-        [questionNumber]: answer,
-      }));
-    }
-  };
+  const saveAnswer = useMemo(
+    () => (questionNumber: number, answer: string) => {
+      if (!isSubmitted) {
+        setUserAnswers((prev) => ({
+          ...prev,
+          [questionNumber]: answer,
+        }));
+      }
+    },
+    [isSubmitted]
+  );
 
-  const getAnswer = (questionNumber: number): string | null => {
-    return userAnswers[questionNumber] || null;
-  };
+  const getAnswer = useMemo(
+    () =>
+      (questionNumber: number): string | null => {
+        return userAnswers[questionNumber] || null;
+      },
+    [userAnswers]
+  );
 
   const contextValue = useMemo(
     () => ({
@@ -87,7 +97,7 @@ export const PracticeDrillViewer = ({
       getAnswer,
       isSubmitted,
     }),
-    [userAnswers, isSubmitted]
+    [saveAnswer, getAnswer, isSubmitted]
   );
 
   const nextPart = () => {
@@ -133,7 +143,10 @@ export const PracticeDrillViewer = ({
     });
 
     // Call parent callback if provided
-    onSubmit?.(userAnswers);
+    onSubmit?.(userAnswers, {
+      correctAnswers: correctCount,
+      totalQuestions: totalQuestions,
+    });
   };
 
   const handleReset = () => {

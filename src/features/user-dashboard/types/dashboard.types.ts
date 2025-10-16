@@ -120,6 +120,20 @@ export interface DailyLessonData {
   updatedAt: string;
 }
 
+export interface TrackResourceTimeRequest {
+  sessionId: string;
+  itemId: string;
+  resourceId: string;
+  timeSpent: number;
+}
+
+export interface CompletePracticeDrillRequest {
+  sessionId: string;
+  score?: number;
+  totalQuestions?: number;
+  correctAnswers?: number;
+}
+
 export interface WeeklySession {
   day: string;
   topic: string;

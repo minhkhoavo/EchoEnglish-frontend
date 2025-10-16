@@ -62,37 +62,34 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
 
   // Calculate progress percentage (mock calculation for now)
   const progressPercentage =
-    selectedWeek <= currentWeek ? (selectedWeek < currentWeek ? 100 : 71) : 0;
+    selectedWeek <= currentWeek ? (selectedWeek < currentWeek ? 100 : 71) : 0; // Keep mock for now, or calculate based on daily lesson statuses
 
-  const getDayStatus = (dayIndex: number) => {
-    if (selectedWeek < currentWeek) return 'completed';
-    if (selectedWeek === currentWeek) {
-      return dayIndex < 3
-        ? 'completed'
-        : dayIndex === 3
-          ? 'current'
-          : 'upcoming';
-    }
-    return 'upcoming';
+  const getDisplayStatus = (
+    status: 'pending' | 'in-progress' | 'completed'
+  ) => {
+    if (status === 'pending') return 'upcoming';
+    return status;
   };
 
-  const getDayIcon = (status: string) => {
+  const getDayIcon = (status: 'upcoming' | 'in-progress' | 'completed') => {
     switch (status) {
       case 'completed':
         return <CheckCircle className="h-5 w-5 text-white" />;
-      case 'current':
+      case 'in-progress':
         return <Play className="h-4 w-4 text-white" />;
+      case 'upcoming':
       default:
         return <div className="w-5 h-5 rounded-full bg-white/30" />;
     }
   };
 
-  const getDayColors = (status: string) => {
+  const getDayColors = (status: 'upcoming' | 'in-progress' | 'completed') => {
     switch (status) {
       case 'completed':
         return 'bg-green-500';
-      case 'current':
+      case 'in-progress':
         return 'bg-blue-500';
+      case 'upcoming':
       default:
         return 'bg-gray-300';
     }
@@ -198,9 +195,10 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                     {currentWeekData.dailyLessons
                       .slice(0, 6)
                       .map((lesson, index) => {
-                        const status = getDayStatus(index);
-                        const isToday = status === 'current';
-                        const isCompleted = status === 'completed';
+                        const displayStatus = getDisplayStatus(lesson.status);
+                        const isToday = displayStatus === 'in-progress';
+                        const isCompleted = displayStatus === 'completed';
+                        const isUpcoming = displayStatus === 'upcoming';
 
                         return (
                           <div
@@ -210,15 +208,9 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                             {/* Timeline Node */}
                             <div className="relative z-10 flex-shrink-0">
                               <div
-                                className={`w-12 h-12 rounded-full flex items-center justify-center border-4 border-white shadow-lg transition-all ${
-                                  isCompleted
-                                    ? 'bg-green-500 scale-110'
-                                    : isToday
-                                      ? 'bg-blue-500 scale-110 animate-pulse'
-                                      : 'bg-gray-300'
-                                }`}
+                                className={`w-12 h-12 rounded-full flex items-center justify-center border-4 border-white shadow-lg transition-all ${getDayColors(displayStatus)}`}
                               >
-                                {getDayIcon(status)}
+                                {getDayIcon(displayStatus)}
                               </div>
 
                               {/* Day Label */}
@@ -263,12 +255,17 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                                     </span>
                                     {isToday && (
                                       <Badge className="bg-blue-100 text-blue-700 text-xs animate-bounce">
-                                        Today
+                                        In Progress
                                       </Badge>
                                     )}
                                     {isCompleted && (
                                       <Badge className="bg-green-100 text-green-700 text-xs">
                                         Completed
+                                      </Badge>
+                                    )}
+                                    {isUpcoming && (
+                                      <Badge className="bg-gray-100 text-gray-600 text-xs">
+                                        Upcoming
                                       </Badge>
                                     )}
                                   </div>
@@ -294,7 +291,7 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                                         Start Now
                                       </Button>
                                     )}
-                                    {status === 'upcoming' && (
+                                    {isUpcoming && (
                                       <Button
                                         size="sm"
                                         variant="outline"
@@ -316,7 +313,7 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                                         : 'text-gray-600'
                                   }`}
                                 >
-                                  {lesson}
+                                  {lesson.focus}
                                 </p>
 
                                 <div className="flex items-center justify-between">
@@ -325,7 +322,7 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                                     30 minutes
                                   </div>
 
-                                  {/* Progress indicator for completed/current */}
+                                  {/* Progress indicator for completed/in-progress */}
                                   {(isCompleted || isToday) && (
                                     <div className="flex items-center space-x-1">
                                       <div
@@ -359,7 +356,9 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                         </div>
                         <div className="flex items-center space-x-2">
                           <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                          <span className="text-xs text-gray-600">Current</span>
+                          <span className="text-xs text-gray-600">
+                            In Progress
+                          </span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <div className="w-3 h-3 bg-gray-300 rounded-full"></div>

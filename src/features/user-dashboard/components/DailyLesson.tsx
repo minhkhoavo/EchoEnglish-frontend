@@ -26,6 +26,11 @@ interface DailyLessonProps {
   loading?: boolean;
   onItemComplete?: (itemId: string) => void;
   onResourceComplete?: (resourceId: string) => void;
+  onResourceTimeSpent?: (
+    itemId: string,
+    resourceId: string,
+    timeSpent: number
+  ) => void;
 }
 
 export function DailyLesson({
@@ -33,6 +38,7 @@ export function DailyLesson({
   loading = false,
   onItemComplete,
   onResourceComplete,
+  onResourceTimeSpent,
 }: DailyLessonProps) {
   const navigate = useNavigate();
   const [selectedDrill, setSelectedDrill] = useState<WeaknessDrill | null>(
@@ -47,11 +53,12 @@ export function DailyLesson({
 
   const handleStartDrill = (drillId: string) => {
     const drill = selectedDrill;
-    if (drill && drill.practiceQuestionIds) {
+    if (drill && drill.practiceQuestionIds && dailyLesson) {
       navigate('/practice-drill', {
         state: {
           questionIds: drill.practiceQuestionIds,
           drillData: drill,
+          sessionId: dailyLesson._id,
         },
       });
     }
@@ -165,23 +172,53 @@ export function DailyLesson({
       {/* Learning Activities */}
       {dailyLesson.planItems.map((item, index) => {
         const isCompleted = item.status === 'completed';
+        const isInProgress = item.status === 'in-progress';
         const totalResources = item.resources.length;
         const totalDrills = item.practiceDrills.length;
+        const completedResources = item.resources.filter(
+          (r) => r.completed
+        ).length;
+        const completedDrills = item.practiceDrills.filter(
+          (d) => d.completed
+        ).length;
 
         return (
           <Card
             key={item._id}
-            className={`p-5 ${isCompleted ? 'bg-gray-50 opacity-75' : 'bg-white'}`}
+            className={`p-5 ${isCompleted ? 'bg-gray-50 opacity-75' : 'bg-white'} ${isInProgress ? 'border-2 border-blue-400' : ''}`}
           >
             {/* Item Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-[#3b82f6] text-white text-xs">
+                  <Badge
+                    className={`text-xs ${
+                      isCompleted
+                        ? 'bg-[#10b981] text-white'
+                        : isInProgress
+                          ? 'bg-[#3b82f6] text-white'
+                          : 'bg-[#94a3b8] text-white'
+                    }`}
+                  >
                     Step {index + 1}
                   </Badge>
                   {isCompleted && (
                     <CheckCircle2 className="w-5 h-5 text-[#10b981]" />
+                  )}
+                  {isInProgress && (
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-blue-400 text-blue-600"
+                    >
+                      In Progress
+                    </Badge>
+                  )}
+                  {/* Activity completion status */}
+                  {!isCompleted && (totalResources > 0 || totalDrills > 0) && (
+                    <Badge variant="outline" className="text-xs">
+                      {completedResources + completedDrills}/
+                      {totalResources + totalDrills} completed
+                    </Badge>
                   )}
                 </div>
                 <h3 className="text-lg font-bold text-[#0f172a] mb-2">
@@ -234,6 +271,11 @@ export function DailyLesson({
                       key={resource._id}
                       resource={resource}
                       onComplete={onResourceComplete}
+                      onTimeSpent={(resourceId, timeSpent) => {
+                        if (onResourceTimeSpent) {
+                          onResourceTimeSpent(item._id, resourceId, timeSpent);
+                        }
+                      }}
                       showCompletedState={true}
                       compact={true}
                     />
@@ -247,43 +289,68 @@ export function DailyLesson({
               <div className="mb-4">
                 <h4 className="text-sm font-bold text-[#0f172a] mb-3 flex items-center gap-2">
                   <Zap className="w-4 h-4 text-[#10b981]" />
-                  Practice Drills ({totalDrills})
+                  Practice Drills ({completedDrills}/{totalDrills})
                 </h4>
                 <div className="grid gap-3">
-                  {item.practiceDrills.map((drill, drillIndex) => (
-                    <Card
-                      key={drill._id || drillIndex}
-                      className="p-3 border border-[#e5e7eb] hover:border-[#10b981] transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h5 className="text-sm font-semibold text-[#0f172a] mb-1">
-                            {drill.title}
-                          </h5>
-                          <p className="text-xs text-[#64748b] mb-2">
-                            {drill.description}
-                          </p>
-                          <div className="flex items-center gap-3 text-xs text-[#94a3b8]">
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              <span>{drill.estimatedTime || 15} min</span>
+                  {item.practiceDrills.map((drill, drillIndex) => {
+                    const isDrillCompleted = drill.completed;
+                    return (
+                      <Card
+                        key={drill._id || drillIndex}
+                        className={`p-3 border transition-colors ${
+                          isDrillCompleted
+                            ? 'border-[#10b981] bg-[#f0fdf4]'
+                            : 'border-[#e5e7eb] hover:border-[#10b981]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h5 className="text-sm font-semibold text-[#0f172a]">
+                                {drill.title}
+                              </h5>
+                              {isDrillCompleted && (
+                                <CheckCircle2 className="w-4 h-4 text-[#10b981]" />
+                              )}
                             </div>
-                            <Badge variant="outline" className="text-xs">
-                              {drill.difficulty || 'Medium'}
-                            </Badge>
+                            <p className="text-xs text-[#64748b] mb-2">
+                              {drill.description}
+                            </p>
+                            <div className="flex items-center gap-3 text-xs text-[#94a3b8]">
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                <span>{drill.estimatedTime || 15} min</span>
+                              </div>
+                              <Badge variant="outline" className="text-xs">
+                                {drill.difficulty || 'Medium'}
+                              </Badge>
+                              {drill.minCorrectAnswers && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-amber-400 text-amber-600"
+                                >
+                                  Min: {drill.minCorrectAnswers} correct
+                                </Badge>
+                              )}
+                            </div>
                           </div>
+                          <Button
+                            size="sm"
+                            className={`${
+                              isDrillCompleted
+                                ? 'bg-[#94a3b8] hover:bg-[#64748b]'
+                                : 'bg-[#10b981] hover:bg-[#059669]'
+                            } text-white`}
+                            onClick={() => handleDrillClick(drill)}
+                            // disabled={isDrillCompleted}
+                          >
+                            <Play className="w-3 h-3 mr-1" />
+                            {isDrillCompleted ? 'Review' : 'Start'}
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          className="bg-[#10b981] hover:bg-[#059669] text-white"
-                          onClick={() => handleDrillClick(drill)}
-                        >
-                          <Play className="w-3 h-3 mr-1" />
-                          Start
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             )}

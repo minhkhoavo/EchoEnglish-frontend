@@ -38,6 +38,7 @@ import {
   useGetDailyLessonQuery,
   useCompleteLessonItemMutation,
   useGetStudyPreferencesQuery,
+  useTrackResourceTimeMutation,
 } from '../services/dashboardApi';
 import type { AIInsight, DashboardData } from '../types/dashboard.types';
 import type { StudyPreferences } from '../components/StudyPreferences';
@@ -74,6 +75,7 @@ export const UserDashboardPage = () => {
   const dailyLessonLoading = dailyLessonQueryLoading;
 
   const [completeLessonItemMutation] = useCompleteLessonItemMutation();
+  const [trackResourceTime] = useTrackResourceTimeMutation();
   const {
     data: studyPreferencesData,
     isLoading: studyPreferencesLoading,
@@ -101,6 +103,28 @@ export const UserDashboardPage = () => {
       await completeLessonItemMutation(itemId).unwrap();
     } catch (error) {
       console.error('Failed to complete lesson item:', error);
+    }
+  };
+
+  const handleResourceTimeSpent = async (
+    itemId: string,
+    resourceId: string,
+    timeSpent: number
+  ) => {
+    if (!dailyLesson) return;
+
+    try {
+      await trackResourceTime({
+        sessionId: dailyLesson._id,
+        itemId,
+        resourceId,
+        timeSpent,
+      }).unwrap();
+      console.log(
+        `Tracked ${timeSpent}s for resource ${resourceId} in item ${itemId}`
+      );
+    } catch (error) {
+      console.error('Failed to track resource time:', error);
     }
   };
 
@@ -360,6 +384,7 @@ export const UserDashboardPage = () => {
                 dailyLesson={dailyLesson}
                 loading={dailyLessonLoading}
                 onItemComplete={handleLessonItemComplete}
+                onResourceTimeSpent={handleResourceTimeSpent}
               />
 
               {/* Motivational Footer */}

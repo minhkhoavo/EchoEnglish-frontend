@@ -3,6 +3,8 @@ import type {
   CompetencyProfileInsightResponse,
   DailyLessonData,
   DashboardData,
+  TrackResourceTimeRequest,
+  CompletePracticeDrillRequest,
 } from '../types/dashboard.types';
 import type {
   RoadmapApiResponse,
@@ -79,6 +81,28 @@ export const dashboardApi = api.injectEndpoints({
       providesTags: ['Dashboard'],
     }),
 
+    // Track resource time spent
+    trackResourceTime: builder.mutation<void, TrackResourceTimeRequest>({
+      query: ({ sessionId, itemId, resourceId, timeSpent }) => ({
+        url: `/learning-plans/sessions/${sessionId}/items/${itemId}/resources/${resourceId}/track`,
+        method: 'POST',
+        data: { timeSpent },
+      }),
+      invalidatesTags: ['DailyLesson'],
+    }),
+
+    // Complete practice drill
+    completePracticeDrill: builder.mutation<void, CompletePracticeDrillRequest>(
+      {
+        query: ({ sessionId, ...data }) => ({
+          url: `/learning-plans/sessions/${sessionId}/practice-drill/complete`,
+          method: 'POST',
+          data,
+        }),
+        invalidatesTags: ['DailyLesson'],
+      }
+    ),
+
     getStudyPreferences: builder.query<StudyPreferences, void>({
       queryFn: async () => {
         await new Promise((resolve) => setTimeout(resolve, 300));
@@ -125,6 +149,8 @@ export const {
   useUpdateLessonProgressMutation,
   useUpdateTaskCompletionMutation,
   useGetActiveRoadmapQuery,
+  useTrackResourceTimeMutation,
+  useCompletePracticeDrillMutation,
   useGetStudyPreferencesQuery,
   useGetLearningStatsQuery,
 } = dashboardApi;
@@ -230,7 +256,10 @@ export const transformRoadmapData = (
       title: week.title,
       summary: week.summary,
       status: week.status,
-      dailyLessons: week.dailyFocuses.map((daily) => daily.focus),
+      dailyLessons: week.dailyFocuses.map((daily) => ({
+        focus: daily.focus,
+        status: daily.status,
+      })),
       hasDetailedPlan: week.weekNumber <= 2, // Only first 2 weeks have detailed plans
     }));
 
