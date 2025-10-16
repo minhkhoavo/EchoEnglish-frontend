@@ -369,14 +369,6 @@ export const UserDashboardPage = () => {
                     AI-recommended exercises based on your weak points
                   </p>
                 </div>
-                <Badge className="bg-blue-100 text-blue-700">
-                  <BookOpen className="h-4 w-4 mr-1" />
-                  {
-                    combinedDashboardData.dailyTasks.filter((t) => t.completed)
-                      .length
-                  }
-                  /{combinedDashboardData.dailyTasks.length} Completed
-                </Badge>
               </div>
 
               {/* Daily Lesson */}

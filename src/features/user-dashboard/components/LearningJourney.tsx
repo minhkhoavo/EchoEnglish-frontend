@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import {
   BookOpen,
   Brain,
@@ -8,7 +10,7 @@ import {
   Trophy,
   Rocket,
   CheckCircle,
-  AlertCircle,
+  Plus,
 } from 'lucide-react';
 import {
   useGetActiveRoadmapQuery,
@@ -27,6 +29,7 @@ const phaseIcons = {
 };
 
 export const LearningJourney = ({ className }: LearningJourneyProps) => {
+  const navigate = useNavigate();
   const {
     data: roadmapResponse,
     isLoading,
@@ -47,9 +50,28 @@ export const LearningJourney = ({ className }: LearningJourneyProps) => {
   if (error || !roadmapResponse?.data) {
     return (
       <Card className={`mb-8 ${className}`}>
-        <CardContent className="p-6 text-center">
-          <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-          <p className="text-gray-600">Unable to load your learning journey</p>
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <Rocket className="h-8 w-8 text-purple-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No Learning Roadmap Yet
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Create your personalized learning roadmap to see your journey to
+                your target TOEIC score.
+              </p>
+            </div>
+            <Button
+              onClick={() => navigate('/learning-plan/setup')}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Learning Plan
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );

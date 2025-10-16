@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -36,11 +36,14 @@ import {
 import { format } from 'date-fns';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import {
   useGetUserPreferencesQuery,
   useUpdateUserPreferencesMutation,
   useGenerateLearningPlanMutation,
+  useCheckTestCompletionQuery,
 } from './services/learningPlanApi';
+import { NextStepsSection } from './components/NextStepsSection';
 import type {
   UserPreferencesPartial,
   PrimaryGoal,
@@ -62,15 +65,19 @@ import {
 const TOTAL_STEPS = 4;
 
 export function PersonalizedLearningSetup() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [preferences, setPreferences] = useState<UserPreferencesPartial>({
     studyDaysOfWeek: [],
     contentInterests: [],
   });
   const [userPrompt, setUserPrompt] = useState('');
+  const [skipTestProceed, setSkipTestProceed] = useState(false);
 
   const { data: existingPreferences, isLoading: isLoadingPreferences } =
     useGetUserPreferencesQuery();
+
+  const { data: testData } = useCheckTestCompletionQuery();
 
   const [updatePreferences, { isLoading: isUpdating }] =
     useUpdateUserPreferencesMutation();
@@ -105,22 +112,20 @@ export function PersonalizedLearningSetup() {
           errors.push('Please select your current level');
         break;
       case 2:
-        if (!preferences.studyTimePerDay)
-          errors.push('Please select study time per day');
-        if (!preferences.weeklyStudyDays)
-          errors.push('Please select weekly study days');
-        if (!preferences.preferredStudyTime)
-          errors.push('Please select preferred study time');
-        if (!preferences.studyDaysOfWeek?.length)
-          errors.push('Please select at least one study day');
-        break;
-      case 3:
         if (
           !preferences.contentInterests?.length ||
           preferences.contentInterests.length < 3
         ) {
           errors.push('Please select at least 3 content interests');
         }
+        break;
+      case 3:
+        if (!preferences.studyTimePerDay)
+          errors.push('Please select study time per day');
+        if (!preferences.preferredStudyTime)
+          errors.push('Please select preferred study time');
+        if (!preferences.studyDaysOfWeek?.length)
+          errors.push('Please select at least one study day');
         break;
     }
 
@@ -133,6 +138,14 @@ export function PersonalizedLearningSetup() {
     if (!valid) {
       errors.forEach((error) => toast.error(error));
       return;
+    }
+
+    if (currentStep === 3) {
+      if (testData?.data?.hasTest) {
+        setSkipTestProceed(true);
+        setCurrentStep(4);
+        return;
+      }
     }
 
     if (currentStep < TOTAL_STEPS) {
@@ -149,7 +162,34 @@ export function PersonalizedLearningSetup() {
     }
   };
 
+  const handleSkipTestFromNextSteps = (confirmed: boolean) => {
+    if (confirmed) {
+      setSkipTestProceed(true);
+      // Move to Step 4 (Prompt)
+      setCurrentStep(4);
+      toast.warning(
+        'Without a placement test, your learning path may not accurately match your level.'
+      );
+    }
+  };
+
+  const handleCloseDialog = () => {
+    // Reset dialog state if needed
+  };
+
+  const handleTakeTest = () => {
+    navigate('/tests');
+  };
+
   const handleGenerate = async () => {
+    // Check if test is completed or skip is confirmed
+    if (!testData?.data?.hasTest && !skipTestProceed) {
+      toast.error(
+        'Please complete the placement test or skip it in the Next Steps section.'
+      );
+      return;
+    }
+
     // First save preferences
     try {
       await updatePreferences(preferences).unwrap();
@@ -158,16 +198,21 @@ export function PersonalizedLearningSetup() {
       if (
         preferences.targetScore &&
         preferences.studyTimePerDay &&
-        preferences.weeklyStudyDays
+        preferences.studyDaysOfWeek?.length
       ) {
         await generatePlan({
           targetScore: preferences.targetScore,
           studyTimePerDay: preferences.studyTimePerDay,
-          weeklyStudyDays: preferences.weeklyStudyDays,
+          weeklyStudyDays: preferences.studyDaysOfWeek.length,
           userPrompt: userPrompt.trim() || undefined,
         }).unwrap();
 
         toast.success('Learning plan generated successfully!');
+
+        // Navigate to dashboard after successful generation
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
       }
     } catch (error) {
       toast.error('Failed to generate plan. Please try again.');
@@ -406,136 +451,8 @@ export function PersonalizedLearningSetup() {
               </div>
             )}
 
-            {/* Step 2: Study Schedule */}
+            {/* Step 2: Content Interests */}
             {currentStep === 2 && (
-              <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="text-center space-y-2 py-2">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
-                    <span className="text-3xl">📅</span>
-                  </div>
-                  <h2 className="text-2xl font-bold">Study Schedule</h2>
-                  <p className="text-muted-foreground">
-                    Help us create your perfect study routine
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-base font-semibold">
-                      Study Time Per Day
-                    </Label>
-                    <Select
-                      value={preferences.studyTimePerDay?.toString()}
-                      onValueChange={(val) =>
-                        setPreferences({
-                          ...preferences,
-                          studyTimePerDay: Number(val) as StudyTimePerDay,
-                        })
-                      }
-                    >
-                      <SelectTrigger className="mt-2">
-                        <SelectValue placeholder="Select study time" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STUDY_TIME_OPTIONS.map((time) => (
-                          <SelectItem key={time} value={time.toString()}>
-                            {time} minutes
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label className="text-base font-semibold">
-                      Days Per Week
-                    </Label>
-                    <Select
-                      value={preferences.weeklyStudyDays?.toString()}
-                      onValueChange={(val) =>
-                        setPreferences({
-                          ...preferences,
-                          weeklyStudyDays: Number(val),
-                        })
-                      }
-                    >
-                      <SelectTrigger className="mt-2">
-                        <SelectValue placeholder="Select days" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1, 2, 3, 4, 5, 6, 7].map((days) => (
-                          <SelectItem key={days} value={days.toString()}>
-                            {days} {days === 1 ? 'day' : 'days'} per week
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-base font-semibold mb-3 block">
-                    Which days work best for you?
-                  </Label>
-                  <div className="grid grid-cols-7 gap-2">
-                    {Object.entries(WEEKDAY_LABELS).map(([day, label]) => {
-                      const dayNum = Number(day) as WeekDay;
-                      const isSelected =
-                        preferences.studyDaysOfWeek?.includes(dayNum);
-
-                      return (
-                        <button
-                          key={day}
-                          type="button"
-                          onClick={() => toggleWeekday(dayNum)}
-                          className={cn(
-                            'p-3 rounded-lg text-center transition-all border-2',
-                            isSelected
-                              ? 'border-blue-600 bg-blue-50'
-                              : 'border-gray-200 hover:border-blue-300'
-                          )}
-                        >
-                          <div className="font-semibold text-sm">
-                            {label.slice(0, 3)}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-base font-semibold">
-                    Preferred Study Time
-                  </Label>
-                  <Select
-                    value={preferences.preferredStudyTime}
-                    onValueChange={(val) =>
-                      setPreferences({
-                        ...preferences,
-                        preferredStudyTime: val as PreferredStudyTime,
-                      })
-                    }
-                  >
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="When do you study best?" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(PREFERRED_STUDY_TIME_LABELS).map(
-                        ([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Content Interests */}
-            {currentStep === 3 && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className="text-center space-y-2 py-2">
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
@@ -621,6 +538,116 @@ export function PersonalizedLearningSetup() {
               </div>
             )}
 
+            {/* Step 3: Study Schedule */}
+            {currentStep === 3 && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="text-center space-y-2 py-2">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                    <span className="text-3xl">📅</span>
+                  </div>
+                  <h2 className="text-2xl font-bold">Study Schedule</h2>
+                  <p className="text-muted-foreground">
+                    Help us create your perfect study routine
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-base font-semibold">
+                      Study Time Per Day
+                    </Label>
+                    <Select
+                      value={preferences.studyTimePerDay?.toString()}
+                      onValueChange={(val) =>
+                        setPreferences({
+                          ...preferences,
+                          studyTimePerDay: Number(val) as StudyTimePerDay,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Select study time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STUDY_TIME_OPTIONS.map((time) => (
+                          <SelectItem key={time} value={time.toString()}>
+                            {time} minutes
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-base font-semibold">
+                      Preferred Study Time
+                    </Label>
+                    <Select
+                      value={preferences.preferredStudyTime}
+                      onValueChange={(val) =>
+                        setPreferences({
+                          ...preferences,
+                          preferredStudyTime: val as PreferredStudyTime,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="When do you study best?" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(PREFERRED_STUDY_TIME_LABELS).map(
+                          ([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-base font-semibold mb-3 block">
+                    Which days work best for you?
+                  </Label>
+                  <div className="grid grid-cols-7 gap-2">
+                    {Object.entries(WEEKDAY_LABELS).map(([day, label]) => {
+                      const dayNum = Number(day) as WeekDay;
+                      const isSelected =
+                        preferences.studyDaysOfWeek?.includes(dayNum);
+
+                      return (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => toggleWeekday(dayNum)}
+                          className={cn(
+                            'p-3 rounded-lg text-center transition-all border-2',
+                            isSelected
+                              ? 'border-blue-600 bg-blue-50'
+                              : 'border-gray-200 hover:border-blue-300'
+                          )}
+                        >
+                          <div className="font-semibold text-sm">
+                            {label.slice(0, 3)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Next Steps Section - Show recommendation for placement test */}
+                <NextStepsSection
+                  hasCompletedTest={testData?.data?.hasTest || false}
+                  onTakeTest={handleTakeTest}
+                  onSkipTest={handleSkipTestFromNextSteps}
+                  onCloseDialog={handleCloseDialog}
+                />
+              </div>
+            )}
+
             {/* Step 4: Generate */}
             {currentStep === 4 && (
               <div className="space-y-6 animate-in fade-in duration-300">
@@ -688,7 +715,7 @@ export function PersonalizedLearningSetup() {
                     <div>
                       <span className="text-muted-foreground">Days/Week:</span>{' '}
                       <span className="font-medium">
-                        {preferences.weeklyStudyDays}
+                        {preferences.studyDaysOfWeek?.length || 0}
                       </span>
                     </div>
                     <div className="col-span-2">
@@ -713,28 +740,30 @@ export function PersonalizedLearningSetup() {
                 Back
               </Button>
 
-              <Button
-                onClick={handleNext}
-                disabled={isUpdating || isGenerating}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-              >
-                {isUpdating || isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isGenerating ? 'Generating...' : 'Saving...'}
-                  </>
-                ) : currentStep === TOTAL_STEPS ? (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Generate My Plan
-                  </>
-                ) : (
-                  <>
-                    Next
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
+              {!(currentStep === 3 && !testData?.data?.hasTest) && (
+                <Button
+                  onClick={handleNext}
+                  disabled={isUpdating || isGenerating}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                >
+                  {isUpdating || isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {isGenerating ? 'Generating...' : 'Saving...'}
+                    </>
+                  ) : currentStep === TOTAL_STEPS ? (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate My Plan
+                    </>
+                  ) : (
+                    <>
+                      Next
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

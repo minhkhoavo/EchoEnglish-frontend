@@ -12,7 +12,9 @@ import {
   Play,
   Zap,
   Target,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import type {
   DailyLessonData,
   DailyLessonPlanItem,
@@ -20,6 +22,7 @@ import type {
 import { LearningResourceCard } from '@/features/lr-analyze/components/LearningResourceCard';
 import { DrillContentModal } from '@/features/lr-analyze/components/DrillContentModal';
 import type { WeaknessDrill } from '@/features/lr-analyze/types/analysis';
+import { useGetDailyLessonQuery } from '../services/dashboardApi';
 
 interface DailyLessonProps {
   dailyLesson: DailyLessonData | null;
@@ -45,6 +48,8 @@ export function DailyLesson({
     null
   );
   const [drillModalOpen, setDrillModalOpen] = useState(false);
+  const [isLoadingDailyLesson, setIsLoadingDailyLesson] = useState(false);
+  const { refetch } = useGetDailyLessonQuery();
 
   const handleDrillClick = (drill: WeaknessDrill) => {
     setSelectedDrill(drill);
@@ -81,21 +86,59 @@ export function DailyLesson({
   }
 
   if (!dailyLesson) {
+    const handleGenerateDailyLesson = async () => {
+      setIsLoadingDailyLesson(true);
+      try {
+        const result = await refetch();
+        if (result.data?.data) {
+          toast.success('Daily lesson loaded successfully!');
+        } else {
+          toast.error(
+            'No daily lesson available yet. Please set up your learning plan first.'
+          );
+          navigate('/learning-plan/setup');
+        }
+      } catch (error) {
+        toast.error('Failed to load daily lesson');
+      } finally {
+        setIsLoadingDailyLesson(false);
+      }
+    };
+
     return (
       <Card className="p-5 border border-[#e5e7eb]">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-[#f1f5f9] rounded-lg">
-            <Calendar className="w-6 h-6 text-[#64748b]" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="p-3 bg-[#f1f5f9] rounded-lg">
+              <Calendar className="w-6 h-6 text-[#64748b]" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-[#0f172a]">
+                No Daily Lesson Available
+              </h3>
+              <p className="text-sm text-[#64748b]">
+                Complete your diagnostic test to generate personalized daily
+                lessons.
+              </p>
+            </div>
           </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-[#0f172a]">
-              No Daily Lesson Available
-            </h3>
-            <p className="text-sm text-[#64748b]">
-              Complete your diagnostic test to generate personalized daily
-              lessons.
-            </p>
-          </div>
+          <Button
+            onClick={handleGenerateDailyLesson}
+            disabled={isLoadingDailyLesson}
+            className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap"
+          >
+            {isLoadingDailyLesson ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4 mr-2" />
+                Generate Today's Lesson
+              </>
+            )}
+          </Button>
         </div>
       </Card>
     );

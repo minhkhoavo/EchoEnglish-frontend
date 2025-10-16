@@ -6,6 +6,23 @@ import type {
   LearningPlan,
 } from '../types';
 
+export interface TestCompletionResponse {
+  message: string;
+  data: {
+    hasTest: boolean;
+    firstTest: {
+      id: string;
+      testTitle: string;
+      completedAt: string;
+      listeningScore: number;
+      readingScore: number;
+      isAnalyzed: boolean;
+    };
+    totalTests: number;
+    message: string;
+  };
+}
+
 export const learningPlanApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Get user preferences
@@ -49,7 +66,15 @@ export const learningPlanApi = api.injectEndpoints({
         method: 'POST',
         data: request,
       }),
-      invalidatesTags: ['LearningPlan'],
+      invalidatesTags: ['LearningPlan', 'UserPreferences'],
+    }),
+
+    // Check if user has completed a placement test
+    checkTestCompletion: builder.query<TestCompletionResponse, void>({
+      query: () => ({
+        url: '/learning-plans/first-test',
+        method: 'GET',
+      }),
     }),
   }),
   overrideExisting: false,
@@ -60,4 +85,5 @@ export const {
   useUpdateUserPreferencesMutation,
   useGetActiveLearningPlanQuery,
   useGenerateLearningPlanMutation,
+  useCheckTestCompletionQuery,
 } = learningPlanApi;

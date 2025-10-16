@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useNavigate } from 'react-router-dom';
 import {
   Calendar,
   ChevronLeft,
@@ -12,6 +13,7 @@ import {
   CheckCircle,
   Play,
   Star,
+  Plus,
 } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -24,6 +26,7 @@ interface WeeklyProgressProps {
 }
 
 export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
+  const navigate = useNavigate();
   const {
     data: roadmapResponse,
     isLoading,
@@ -45,9 +48,28 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
   if (error || !roadmapResponse?.data) {
     return (
       <Card className={className}>
-        <CardContent className="p-6 text-center">
-          <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-          <p className="text-gray-600">Unable to load weekly progress</p>
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Calendar className="h-8 w-8 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No Weekly Progress Available
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Create your personalized learning plan to track your weekly
+                progress and stay on schedule.
+              </p>
+            </div>
+            <Button
+              onClick={() => navigate('/learning-plan/setup')}
+              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Learning Plan
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
