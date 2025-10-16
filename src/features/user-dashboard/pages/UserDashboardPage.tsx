@@ -37,11 +37,11 @@ import {
   useGetCompetencyInsightsQuery,
   useGetDailyLessonQuery,
   useCompleteLessonItemMutation,
-  useGetStudyPreferencesQuery,
+  useGetActiveRoadmapQuery,
   useTrackResourceTimeMutation,
 } from '../services/dashboardApi';
 import type { AIInsight, DashboardData } from '../types/dashboard.types';
-import type { StudyPreferences } from '../components/StudyPreferences';
+import type { RoadmapData } from '../types/roadmap.types';
 import {
   BarChart,
   Bar,
@@ -76,21 +76,14 @@ export const UserDashboardPage = () => {
 
   const [completeLessonItemMutation] = useCompleteLessonItemMutation();
   const [trackResourceTime] = useTrackResourceTimeMutation();
-  const {
-    data: studyPreferencesData,
-    isLoading: studyPreferencesLoading,
-    error: studyPreferencesError,
-  } = useGetStudyPreferencesQuery();
+  const { data: roadmapResponse, isLoading: roadmapLoading } =
+    useGetActiveRoadmapQuery();
+
+  // Extract roadmap data from response
+  const roadmapData: RoadmapData | null = roadmapResponse?.data || null;
 
   // Local state
-  const [studyPreferences, setStudyPreferences] =
-    useState<StudyPreferences | null>(null);
-
-  useEffect(() => {
-    if (studyPreferencesData) {
-      setStudyPreferences(studyPreferencesData);
-    }
-  }, [studyPreferencesData]);
+  const [selectedTab, setSelectedTab] = useState('overview');
 
   // Combine API data with static data when competency data is available
   const combinedDashboardData = competencyData
@@ -139,7 +132,7 @@ export const UserDashboardPage = () => {
     dashboardLoading ||
     competencyLoading ||
     dailyLessonQueryLoading ||
-    studyPreferencesLoading;
+    roadmapLoading;
 
   if (anyLoadingFlag) {
     return (
@@ -173,22 +166,6 @@ export const UserDashboardPage = () => {
         </div>
       </div>
     );
-  }
-
-  if (studyPreferencesLoading) {
-    return <div>Loading study preferences...</div>;
-  }
-
-  if (studyPreferencesError) {
-    if ('message' in studyPreferencesError) {
-      return (
-        <div>
-          Error loading study preferences: {studyPreferencesError.message}
-        </div>
-      );
-    } else {
-      return <div>Error loading study preferences.</div>;
-    }
   }
 
   return (
@@ -335,12 +312,9 @@ export const UserDashboardPage = () => {
                   </Card>
 
                   {/* Study Preferences */}
-                  {studyPreferences && (
-                    <StudyPreferencesCard
-                      preferences={studyPreferences}
-                      onEdit={() => navigate('/settings')}
-                    />
-                  )}
+                  <StudyPreferencesCard
+                    roadmapData={roadmapData || undefined}
+                  />
                 </div>
 
                 {/* Right Sidebar - Stats */}

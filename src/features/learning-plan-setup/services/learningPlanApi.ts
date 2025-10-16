@@ -31,6 +31,11 @@ export const learningPlanApi = api.injectEndpoints({
         url: '/users/preferences',
         method: 'GET',
       }),
+      transformResponse: (
+        response: UserPreferences | { data: UserPreferences }
+      ) => {
+        return 'data' in response ? response.data : response;
+      },
       providesTags: ['UserPreferences'],
     }),
 

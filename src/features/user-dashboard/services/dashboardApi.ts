@@ -259,6 +259,7 @@ export const transformRoadmapData = (
       dailyLessons: week.dailyFocuses.map((daily) => ({
         focus: daily.focus,
         status: daily.status,
+        dayOfWeek: daily.dayOfWeek,
       })),
       hasDetailedPlan: week.weekNumber <= 2, // Only first 2 weeks have detailed plans
     }));

@@ -102,6 +102,7 @@ export interface TransformedPhase {
 export interface TransformedDailyLesson {
   focus: string;
   status: 'pending' | 'in-progress' | 'completed';
+  dayOfWeek: number;
 }
 
 export interface TransformedWeeklyLesson {

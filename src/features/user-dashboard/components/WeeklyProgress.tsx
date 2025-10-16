@@ -117,7 +117,15 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
     }
   };
 
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
 
   return (
     <div className={className}>
@@ -246,7 +254,7 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                                         : 'bg-gray-100 text-gray-600'
                                   }`}
                                 >
-                                  {weekDays[index]}
+                                  {weekDays[lesson.dayOfWeek - 1]}
                                 </span>
                               </div>
                             </div>
