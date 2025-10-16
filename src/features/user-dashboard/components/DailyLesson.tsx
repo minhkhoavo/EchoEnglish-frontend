@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   BookOpen,
   Calendar,
@@ -17,6 +18,8 @@ import type {
   DailyLessonPlanItem,
 } from '../types/dashboard.types';
 import { LearningResourceCard } from '@/features/lr-analyze/components/LearningResourceCard';
+import { DrillContentModal } from '@/features/lr-analyze/components/DrillContentModal';
+import type { WeaknessDrill } from '@/features/lr-analyze/types/analysis';
 
 interface DailyLessonProps {
   dailyLesson: DailyLessonData | null;
@@ -31,6 +34,29 @@ export function DailyLesson({
   onItemComplete,
   onResourceComplete,
 }: DailyLessonProps) {
+  const navigate = useNavigate();
+  const [selectedDrill, setSelectedDrill] = useState<WeaknessDrill | null>(
+    null
+  );
+  const [drillModalOpen, setDrillModalOpen] = useState(false);
+
+  const handleDrillClick = (drill: WeaknessDrill) => {
+    setSelectedDrill(drill);
+    setDrillModalOpen(true);
+  };
+
+  const handleStartDrill = (drillId: string) => {
+    const drill = selectedDrill;
+    if (drill && drill.practiceQuestionIds) {
+      navigate('/practice-drill', {
+        state: {
+          questionIds: drill.practiceQuestionIds,
+          drillData: drill,
+        },
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Card className="p-5">
@@ -250,6 +276,7 @@ export function DailyLesson({
                         <Button
                           size="sm"
                           className="bg-[#10b981] hover:bg-[#059669] text-white"
+                          onClick={() => handleDrillClick(drill)}
                         >
                           <Play className="w-3 h-3 mr-1" />
                           Start
@@ -298,6 +325,16 @@ export function DailyLesson({
             )}
           </div>
         </Card>
+      )}
+
+      {/* Drill Content Modal */}
+      {selectedDrill && (
+        <DrillContentModal
+          drill={selectedDrill}
+          open={drillModalOpen}
+          onOpenChange={setDrillModalOpen}
+          onStartDrill={handleStartDrill}
+        />
       )}
     </div>
   );

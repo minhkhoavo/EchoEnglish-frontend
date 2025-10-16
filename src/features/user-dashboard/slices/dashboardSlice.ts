@@ -1,15 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type {
-  DashboardData,
-  DailyTask,
-  DailyLessonData,
-} from '../types/dashboard.types';
+import type { DashboardData, DailyTask } from '../types/dashboard.types';
 
 interface DashboardState {
   data: DashboardData | null;
-  dailyLesson: DailyLessonData | null;
-  dailyLessonLoading: boolean;
   loading: boolean;
   error: string | null;
   lastUpdated: string | null;
@@ -17,8 +11,6 @@ interface DashboardState {
 
 const initialState: DashboardState = {
   data: null,
-  dailyLesson: null,
-  dailyLessonLoading: false,
   loading: false,
   error: null,
   lastUpdated: null,
@@ -56,37 +48,6 @@ const dashboardSlice = createSlice({
           action.payload.weeklyCompleted;
       }
     },
-    updateLessonItemStatus: (
-      state,
-      action: PayloadAction<{
-        itemId: string;
-        status: 'pending' | 'in-progress' | 'completed';
-      }>
-    ) => {
-      if (state.dailyLesson) {
-        const item = state.dailyLesson.planItems.find(
-          (item) => item._id === action.payload.itemId
-        );
-        if (item) {
-          item.status = action.payload.status;
-        }
-      }
-    },
-    updateResourceCompletion: (
-      state,
-      action: PayloadAction<{ resourceId: string; completed: boolean }>
-    ) => {
-      if (state.dailyLesson) {
-        state.dailyLesson.planItems.forEach((item) => {
-          const resource = item.resources.find(
-            (r) => r._id === action.payload.resourceId
-          );
-          if (resource) {
-            resource.completed = action.payload.completed;
-          }
-        });
-      }
-    },
     clearError: (state) => {
       state.error = null;
     },
@@ -97,8 +58,6 @@ export const {
   updateTaskStatus,
   updateLearningStreak,
   updateStudyTime,
-  updateLessonItemStatus,
-  updateResourceCompletion,
   clearError,
 } = dashboardSlice.actions;
 
@@ -119,8 +78,3 @@ export const selectScoreData = (state: { dashboard: DashboardState }) =>
   state.dashboard.data?.scoreData;
 export const selectAIInsights = (state: { dashboard: DashboardState }) =>
   state.dashboard.data?.aiInsights || [];
-export const selectDailyLesson = (state: { dashboard: DashboardState }) =>
-  state.dashboard.dailyLesson;
-export const selectDailyLessonLoading = (state: {
-  dashboard: DashboardState;
-}) => state.dashboard.dailyLessonLoading;

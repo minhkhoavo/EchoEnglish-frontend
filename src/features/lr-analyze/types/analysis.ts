@@ -331,6 +331,9 @@ export interface WeaknessDrill {
   attempts?: number;
   id?: string;
   targetSkill?: string;
+  practiceQuestionIds?: string[];
+  minCorrectAnswers?: number;
+  score?: number;
 }
 
 export interface StudyPlanItem {

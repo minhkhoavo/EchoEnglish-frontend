@@ -29,10 +29,7 @@ import {
   // fetchStudyPreferences,
 } from '../services/dashboardService';
 import {
-  updateResourceCompletion,
   selectDashboardData,
-  selectDailyLesson,
-  selectDailyLessonLoading,
   selectDashboardLoading,
   selectDashboardError,
 } from '../slices/dashboardSlice';
@@ -60,8 +57,6 @@ export const UserDashboardPage = () => {
 
   // Redux selectors
   const dashboardData = useAppSelector(selectDashboardData);
-  const dailyLesson = useAppSelector(selectDailyLesson);
-  const dailyLessonLoading = useAppSelector(selectDailyLessonLoading);
   const dashboardLoading = useAppSelector(selectDashboardLoading);
   const error = useAppSelector(selectDashboardError);
 
@@ -71,8 +66,13 @@ export const UserDashboardPage = () => {
     isLoading: competencyLoading,
     error: competencyError,
   } = useGetCompetencyInsightsQuery();
-  const { data: dailyLessonData, isLoading: dailyLessonQueryLoading } =
+  const { data: dailyLessonResponse, isLoading: dailyLessonQueryLoading } =
     useGetDailyLessonQuery();
+
+  // Extract daily lesson from response
+  const dailyLesson = dailyLessonResponse?.data || null;
+  const dailyLessonLoading = dailyLessonQueryLoading;
+
   const [completeLessonItemMutation] = useCompleteLessonItemMutation();
   const {
     data: studyPreferencesData,
@@ -102,10 +102,6 @@ export const UserDashboardPage = () => {
     } catch (error) {
       console.error('Failed to complete lesson item:', error);
     }
-  };
-
-  const handleResourceComplete = (resourceId: string) => {
-    dispatch(updateResourceCompletion({ resourceId, completed: true }));
   };
 
   const handleInsightAction = (insight: AIInsight) => {
@@ -364,7 +360,6 @@ export const UserDashboardPage = () => {
                 dailyLesson={dailyLesson}
                 loading={dailyLessonLoading}
                 onItemComplete={handleLessonItemComplete}
-                onResourceComplete={handleResourceComplete}
               />
 
               {/* Motivational Footer */}
