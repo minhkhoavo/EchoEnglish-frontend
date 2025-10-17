@@ -2,4 +2,5 @@
 export {
   useGetAnalysisResultQuery,
   useLazyGetAnalysisResultQuery,
+  useRequestAnalysisMutation,
 } from './lrAnalysisApi';

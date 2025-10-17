@@ -15,9 +15,14 @@ import {
   AlertCircle,
   Info,
   RefreshCw,
+  Coins,
+  Sparkles,
 } from 'lucide-react';
 import type { ExamAnalysisResult } from '@/features/lr-analyze/types/analysis';
-import { useGetAnalysisResultQuery } from '@/features/lr-analyze/services';
+import {
+  useGetAnalysisResultQuery,
+  useRequestAnalysisMutation,
+} from '@/features/lr-analyze/services';
 import {
   SkillRadarChart,
   PartAnalysisSection,
@@ -26,7 +31,11 @@ import {
   TimeAnalysisSection,
   KeyInsightsSection,
   DomainPerformanceSection,
+  BlurredContent,
+  UnlockAnalysisDialog,
 } from '@/features/lr-analyze/components';
+import { toast } from '@/hooks/use-toast';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 
 export function ExamAnalysisPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
@@ -37,11 +46,39 @@ export function ExamAnalysisPage() {
     data: apiData,
     isLoading,
     error,
+    refetch,
   } = useGetAnalysisResultQuery(attemptId || '', {
     skip: !attemptId,
   });
 
+  const [requestAnalysis, { isLoading: isAnalyzing }] =
+    useRequestAnalysisMutation();
+
   const analysisData = apiData;
+  const hasExamAnalysis = !!analysisData?.analysis?.examAnalysis;
+  const analysisCost = 5; // Default cost, can be made configurable later
+
+  const handleRequestAnalysis = async () => {
+    try {
+      const result = await requestAnalysis(attemptId || '').unwrap();
+      toast({
+        title: 'Analysis Complete!',
+        description: `Deep analysis unlocked. ${result.creditsUsed} credits used.`,
+        variant: 'default',
+      });
+      refetch();
+    } catch (error: unknown) {
+      console.error('Failed to request analysis:', error);
+      toast({
+        title: 'Analysis Failed',
+        description:
+          error && typeof error === 'object' && 'data' in error
+            ? JSON.stringify(error.data)
+            : 'Unable to process your analysis request. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   // Show loading state
   if (attemptId && isLoading) {
@@ -130,6 +167,60 @@ export function ExamAnalysisPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
+      {/* Unlock Banner - Only show when analysis is not unlocked */}
+      {!hasExamAnalysis && (
+        <div className="bg-gradient-to-r from-[#2563eb] to-[#1e40af] text-white">
+          <div className="max-w-7xl mx-auto px-6 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">
+                    Unlock Your Deep Performance Analysis
+                  </h3>
+                  <p className="text-sm text-white/90">
+                    Get AI-powered insights, personalized study plan, and
+                    detailed skill breakdown for just {analysisCost} credits
+                  </p>
+                </div>
+              </div>
+              <ConfirmationDialog
+                title="Unlock Deep Analysis"
+                description={`This will use ${analysisCost} credits to generate a comprehensive analysis of your exam performance, including detailed insights, skill breakdown, and personalized recommendations.`}
+                confirmText={`Use ${analysisCost} Credits`}
+                cancelText="Not Now"
+                icon={
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1e40af]">
+                    <Coins className="h-6 w-6 text-white" />
+                  </div>
+                }
+                onConfirm={handleRequestAnalysis}
+              >
+                <Button
+                  variant="outline"
+                  className="bg-white text-[#2563eb] hover:bg-white/90 border-0 font-semibold"
+                  disabled={isAnalyzing}
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-[#2563eb] border-r-transparent mr-2"></div>
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Unlock Now ({analysisCost} Credits)
+                    </>
+                  )}
+                </Button>
+              </ConfirmationDialog>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white border-b border-[#e5e7eb]">
         <div className="max-w-7xl mx-auto px-6 py-8">
@@ -267,18 +358,52 @@ export function ExamAnalysisPage() {
             {/* Summary and Key Insights */}
             {(analysis.summary ||
               (analysis.keyInsights && analysis.keyInsights.length > 0)) && (
-              <KeyInsightsSection
-                insights={analysis.keyInsights}
-                summary={analysis.summary}
-              />
+              <>
+                {hasExamAnalysis ? (
+                  <KeyInsightsSection
+                    insights={analysis.keyInsights}
+                    summary={analysis.summary}
+                  />
+                ) : (
+                  <UnlockAnalysisDialog
+                    title="Unlock Key Insights"
+                    description="Get AI-powered analysis of your performance patterns and strategic recommendations."
+                    isLoading={isAnalyzing}
+                    onConfirm={handleRequestAnalysis}
+                    analysisCost={analysisCost}
+                  >
+                    <KeyInsightsSection
+                      insights={analysis.keyInsights}
+                      summary={analysis.summary}
+                    />
+                  </UnlockAnalysisDialog>
+                )}
+              </>
             )}
 
             {/* Skills Radar Chart */}
             {analysis.overallSkills ? (
-              <SkillRadarChart
-                skills={analysis.overallSkills}
-                strengths={analysis.strengths || []}
-              />
+              <>
+                {hasExamAnalysis ? (
+                  <SkillRadarChart
+                    skills={analysis.overallSkills}
+                    strengths={analysis.strengths || []}
+                  />
+                ) : (
+                  <UnlockAnalysisDialog
+                    title="Unlock Skill Analysis"
+                    description="Visualize your performance across all TOEIC skill dimensions with our interactive radar chart."
+                    isLoading={isAnalyzing}
+                    onConfirm={handleRequestAnalysis}
+                    analysisCost={analysisCost}
+                  >
+                    <SkillRadarChart
+                      skills={analysis.overallSkills}
+                      strengths={analysis.strengths || []}
+                    />
+                  </UnlockAnalysisDialog>
+                )}
+              </>
             ) : (
               <Card className="p-6">
                 <div className="text-center text-[#64748b]">
@@ -305,10 +430,25 @@ export function ExamAnalysisPage() {
                       </p>
                     </div>
                   </div>
-                  <DomainPerformanceSection
-                    domainPerformance={analysis.domainPerformance}
-                    compact={true}
-                  />
+                  {hasExamAnalysis ? (
+                    <DomainPerformanceSection
+                      domainPerformance={analysis.domainPerformance}
+                      compact={true}
+                    />
+                  ) : (
+                    <UnlockAnalysisDialog
+                      title="Unlock Domain Analysis"
+                      description="See your performance breakdown across business domains and contexts."
+                      isLoading={isAnalyzing}
+                      onConfirm={handleRequestAnalysis}
+                      analysisCost={analysisCost}
+                    >
+                      <DomainPerformanceSection
+                        domainPerformance={analysis.domainPerformance}
+                        compact={true}
+                      />
+                    </UnlockAnalysisDialog>
+                  )}
                 </Card>
               )}
           </TabsContent>
@@ -330,15 +470,53 @@ export function ExamAnalysisPage() {
           </TabsContent>
 
           <TabsContent value="parts" className="mt-4">
-            <PartAnalysisSection partAnalyses={analysis.partAnalyses || []} />
+            {hasExamAnalysis ? (
+              <PartAnalysisSection partAnalyses={analysis.partAnalyses || []} />
+            ) : (
+              <UnlockAnalysisDialog
+                title="Unlock Part-by-Part Analysis"
+                description="Get detailed breakdown of your performance in each TOEIC part with skill-level insights."
+                isLoading={isAnalyzing}
+                onConfirm={handleRequestAnalysis}
+                analysisCost={analysisCost}
+              >
+                <PartAnalysisSection
+                  partAnalyses={analysis.partAnalyses || []}
+                />
+              </UnlockAnalysisDialog>
+            )}
           </TabsContent>
 
           <TabsContent value="diagnosis" className="mt-4">
-            <DiagnosisSection weaknesses={analysis.weaknesses || []} />
+            {hasExamAnalysis ? (
+              <DiagnosisSection weaknesses={analysis.weaknesses || []} />
+            ) : (
+              <UnlockAnalysisDialog
+                title="Unlock Weakness Diagnosis"
+                description="Identify your critical weaknesses with detailed explanations and representative questions."
+                isLoading={isAnalyzing}
+                onConfirm={handleRequestAnalysis}
+                analysisCost={analysisCost}
+              >
+                <DiagnosisSection weaknesses={analysis.weaknesses || []} />
+              </UnlockAnalysisDialog>
+            )}
           </TabsContent>
 
           <TabsContent value="studyplan" className="mt-4">
-            <StudyPlanSection studyPlan={studyPlanItems} />
+            {hasExamAnalysis ? (
+              <StudyPlanSection studyPlan={studyPlanItems} />
+            ) : (
+              <UnlockAnalysisDialog
+                title="Unlock Personalized Study Plan"
+                description="Get a customized learning path with resources and practice drills tailored to your weaknesses."
+                isLoading={isAnalyzing}
+                onConfirm={handleRequestAnalysis}
+                analysisCost={analysisCost}
+              >
+                <StudyPlanSection studyPlan={studyPlanItems} />
+              </UnlockAnalysisDialog>
+            )}
           </TabsContent>
         </Tabs>
       </div>

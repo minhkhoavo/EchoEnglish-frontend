@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/collapsible';
 import { ResourceContentModal } from './ResourceContentModal';
 import { DrillContentModal } from './DrillContentModal';
+import { LearningResourceCard } from '@/features/lr-analyze/components/LearningResourceCard';
 import { toast } from '@/hooks/use-toast';
 
 interface StudyPlanSectionProps {
@@ -108,26 +109,6 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
       title: 'Starting drill...',
       description: `Drill ID: ${drillId}`,
     });
-  };
-
-  const getResourceIcon = (type: string) => {
-    const icons: Record<string, React.ElementType> = {
-      video: Video,
-      article: FileText,
-      flashcard: BookOpen,
-      drill: Zap,
-    };
-    return icons[type] || BookOpen;
-  };
-
-  const getResourceColor = (type: string) => {
-    const colors: Record<string, string> = {
-      video: 'bg-[#ef4444]',
-      article: 'bg-[#3b82f6]',
-      flashcard: 'bg-[#8b5cf6]',
-      drill: 'bg-[#10b981]',
-    };
-    return colors[type] || 'bg-[#64748b]';
   };
 
   const getPriorityConfig = (priority: number) => {
@@ -287,67 +268,13 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
                         Learning Resources
                       </h4>
                       <div className="space-y-3">
-                        {item.resources.map((resource, idx) => {
-                          const Icon = getResourceIcon(resource.type);
-                          const bgColor = getResourceColor(resource.type);
-                          const resourceId = resource._id || `resource-${idx}`;
-
-                          return (
-                            <div
-                              key={resourceId}
-                              className="flex items-start gap-3 p-4 bg-white rounded-lg border border-[#e5e7eb] hover:border-[#bfdbfe] transition-colors group"
-                            >
-                              <div
-                                className={`p-2 ${bgColor} rounded-lg flex-shrink-0`}
-                              >
-                                <Icon className="w-4 h-4 text-white" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-3 mb-1">
-                                  <h5 className="text-sm font-semibold text-[#0f172a] group-hover:text-[#2563eb] transition-colors">
-                                    {resource.title}
-                                  </h5>
-                                  <Badge
-                                    variant="outline"
-                                    className="text-xs flex-shrink-0"
-                                  >
-                                    {resource.type}
-                                  </Badge>
-                                </div>
-                                <p className="text-xs text-[#64748b] mb-2">
-                                  {resource.description}
-                                </p>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-1 text-xs text-[#94a3b8]">
-                                    <Clock className="w-3 h-3" />
-                                    <span>30 min</span>
-                                  </div>
-                                  <Button
-                                    size="sm"
-                                    className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white h-7 text-xs"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleResourceClick(resource);
-                                    }}
-                                  >
-                                    {resource.type === 'article' ||
-                                    resource.type === 'video' ? (
-                                      <>
-                                        View
-                                        <ExternalLink className="w-3 h-3 ml-1" />
-                                      </>
-                                    ) : (
-                                      <>
-                                        Start
-                                        <Play className="w-3 h-3 ml-1" />
-                                      </>
-                                    )}
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                        {item.resources.map((resource, idx) => (
+                          <LearningResourceCard
+                            key={resource._id || `resource-${idx}`}
+                            resource={resource}
+                            compact={true}
+                          />
+                        ))}
                       </div>
                     </div>
 
