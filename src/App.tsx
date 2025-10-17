@@ -60,6 +60,7 @@ import ResourceDetailPage from './pages/resource/ResourceDetailPage';
 
 // Test Management
 import { ToeicTestDetail } from './features/tests/components/lis-read/TOEICTestDetail';
+import LandingPage from './pages/LandingPage';
 
 // Error Pages
 import NotFound from './pages/NotFound';
@@ -76,6 +77,9 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -89,7 +93,7 @@ function App() {
         {/* ================================================================== */}
         <Route element={<Layout />}>
           {/* DASHBOARD & PROFILE */}
-          <Route path="/" element={<ContentPage />} />
+          <Route path="/content" element={<ContentPage />} />
           <Route path="/dashboard" element={<UserDashboardPage />} />
 
           {/* LEARNING FEATURES */}
