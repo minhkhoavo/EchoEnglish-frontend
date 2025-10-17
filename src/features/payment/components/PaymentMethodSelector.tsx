@@ -21,20 +21,20 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     {
       id: 'VNPAY' as PaymentMethod,
       name: 'VNPay',
-      description: 'Thanh toán qua VNPay',
+      description: 'Pay via VNPay',
       icon: Smartphone,
-      features: ['Hỗ trợ ATM', 'Internet Banking', 'Ví điện tử'],
+      features: ['ATM Support', 'Internet Banking', 'E-wallet'],
       popular: true,
-      processingTime: 'Tức thì',
+      processingTime: 'Instant',
     },
     {
       id: 'STRIPE' as PaymentMethod,
       name: 'Stripe',
-      description: 'Thanh toán qua thẻ quốc tế',
+      description: 'Pay via international card',
       icon: CreditCard,
-      features: ['Visa/Mastercard', 'American Express', 'Bảo mật cao'],
+      features: ['Visa/Mastercard', 'American Express', 'High Security'],
       popular: false,
-      processingTime: '1-2 phút',
+      processingTime: '1-2 minutes',
     },
   ];
 
@@ -84,7 +84,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                             variant="secondary"
                             className="text-xs bg-green-100 text-green-800"
                           >
-                            Phổ biến
+                            Popular
                           </Badge>
                         )}
                       </div>

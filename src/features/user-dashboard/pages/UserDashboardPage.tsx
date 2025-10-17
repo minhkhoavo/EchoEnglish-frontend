@@ -192,40 +192,6 @@ export const UserDashboardPage = () => {
       className="min-h-screen flex flex-col w-full"
       style={{ backgroundColor: '#F8FAFC' }}
     >
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Button variant="ghost" size="icon" className="mr-4 lg:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-              <h1 className="text-xl font-bold" style={{ color: '#1F2937' }}>
-                Dashboard
-              </h1>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Badge
-                variant="outline"
-                className="bg-blue-50 text-blue-700 border-blue-200 hidden sm:flex"
-              >
-                <Brain className="h-3 w-3 mr-1" />
-                AI-Powered
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/settings')}
-                className="text-purple-600 border-purple-200 hover:bg-purple-50"
-              >
-                <Settings className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Settings</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <Tabs defaultValue="overview" className="w-full">

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import {
   Home,
   Upload,
@@ -9,16 +8,6 @@ import {
   Library,
 } from 'lucide-react';
 
-import { type RootState, type AppDispatch } from '@/core/store/store';
-import {
-  setActiveTab,
-  setSidebarOpen,
-  type ActiveTab,
-} from '@/core/store/slices/uiSlice.';
-
-import { Header } from '@/components/layout/Header';
-import { Sidebar } from '@/components/layout/Sidebar';
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ContentManager } from '@/features/content-manager/ContentManager';
@@ -27,57 +16,21 @@ import AllTestsPage from './test/AllTestsPage';
 import NewResourcePage from './resource/ResourcePage';
 import { ToeicTestDetail } from '@/features/tests/components/lis-read/TOEICTestDetail';
 
-const ContentPage = () => {
-  const dispatch: AppDispatch = useDispatch();
-  const { activeTab, isSidebarOpen } = useSelector(
-    (state: RootState) => state.ui
-  );
+type TabId =
+  | 'dashboard'
+  | 'content'
+  | 'resources'
+  | 'flashcards'
+  | 'tests'
+  | 'analytics';
 
-  // State for test detail view
+const ContentPage = () => {
+  const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [showTestDetail, setShowTestDetail] = useState(false);
 
-  const navigation = [
-    {
-      id: 'dashboard',
-      name: 'Dashboard',
-      icon: Home,
-      description: 'Overview & Quick Actions',
-    },
-    {
-      id: 'content',
-      name: 'Content Manager',
-      icon: Upload,
-      description: 'Upload & AI Analysis',
-    },
-    {
-      id: 'resources',
-      name: 'DocumentHub',
-      icon: Library,
-      description: 'Learning Resources',
-    },
-    {
-      id: 'flashcards',
-      name: 'Study Cards',
-      icon: BookOpen,
-      description: 'Practice & Review',
-    },
-    {
-      id: 'tests',
-      name: 'TOEIC Tests',
-      icon: FileText,
-      description: 'Practice Tests Library',
-    },
-    {
-      id: 'analytics',
-      name: 'Progress',
-      icon: BarChart3,
-      description: 'Track Performance',
-    },
-  ];
-
-  const handleTabClick = (tabId: string) => {
-    dispatch(setActiveTab(tabId as ActiveTab));
+  const handleTabClick = (tabId: TabId) => {
+    setActiveTab(tabId);
     // Reset test detail view when switching tabs
     if (tabId !== 'tests') {
       handleBackToTests();
@@ -143,28 +96,8 @@ const ContentPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-background">
-      <Header
-        sidebarOpen={isSidebarOpen}
-        setSidebarOpen={(open) => dispatch(setSidebarOpen(open))}
-      />
-      <div className="flex">
-        <Sidebar
-          sidebarOpen={isSidebarOpen}
-          activeTab={activeTab}
-          navigation={navigation}
-          onTabClick={handleTabClick}
-        />
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-background/50 z-30 lg:hidden"
-            onClick={() => dispatch(setSidebarOpen(false))}
-          />
-        )}
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">{renderContent()}</div>
-        </main>
-      </div>
+    <div className="w-full">
+      <div className="max-w-7xl mx-auto p-6">{renderContent()}</div>
     </div>
   );
 };
