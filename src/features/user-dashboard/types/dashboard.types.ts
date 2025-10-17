@@ -4,6 +4,22 @@ import type {
   WeaknessDrill,
 } from '../../lr-analyze/types/analysis';
 
+// Listening Reading Chart Data
+export interface ListeningReadingChartItem {
+  date: string;
+  listeningScore?: number;
+  readingScore?: number;
+  totalScore?: number;
+  testTitle?: string;
+}
+
+export interface ListeningReadingChartResponse {
+  message: string;
+  data: {
+    timeline: ListeningReadingChartItem[];
+  };
+}
+
 // API Response interfaces
 export interface CompetencyProfileInsightResponse {
   message: string;
@@ -173,10 +189,10 @@ export interface VocabularyPlan {
 export interface LearningStats {
   currentStreak: number;
   longestStreak: number;
-  todayGoal: number;
-  completed: number;
+  todayProgress: number;
   weeklyGoal: number;
   weeklyCompleted: number;
+  weeklyProgress?: number;
   totalStudyTime: number;
   averageDaily: number;
 }
@@ -218,11 +234,8 @@ export interface DashboardData {
   partPerformance: PartPerformance[];
   learningPhases: LearningPhase[];
   dailyTasks: DailyTask[];
-  dailyLesson?: DailyLessonData; // New daily lesson data
+  dailyLesson?: DailyLessonData;
   weeklyPlan: WeeklyPlan[];
-  vocabularyPlan: VocabularyPlan;
   learningStats: LearningStats;
   aiInsights: AIInsight[];
-  studyGoals: StudyGoal[];
-  milestones: Milestone[];
 }

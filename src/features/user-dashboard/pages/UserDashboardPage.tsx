@@ -24,10 +24,7 @@ import {
   LearningStatsSidebar,
   StudyPreferencesCard,
 } from '../components';
-import {
-  fetchDashboardData,
-  // fetchStudyPreferences,
-} from '../services/dashboardService';
+import { fetchDashboardData } from '../services/dashboardService';
 import {
   selectDashboardData,
   selectDashboardLoading,
@@ -39,8 +36,13 @@ import {
   useCompleteLessonItemMutation,
   useGetActiveRoadmapQuery,
   useTrackResourceTimeMutation,
+  useGetListeningReadingChartDataQuery,
 } from '../services/dashboardApi';
-import type { AIInsight, DashboardData } from '../types/dashboard.types';
+import type {
+  AIInsight,
+  DashboardData,
+  ListeningReadingChartItem,
+} from '../types/dashboard.types';
 import type { RoadmapData } from '../types/roadmap.types';
 import {
   BarChart,
@@ -79,6 +81,22 @@ export const UserDashboardPage = () => {
   const { data: roadmapResponse, isLoading: roadmapLoading } =
     useGetActiveRoadmapQuery();
 
+  // Get listening/reading chart data
+  const { data: chartDataResponse, isLoading: chartLoading } =
+    useGetListeningReadingChartDataQuery();
+
+  // Extract and prepare chart data - top 10 entries
+  const chartData: ListeningReadingChartItem[] = chartDataResponse?.data
+    ?.timeline
+    ? chartDataResponse.data.timeline.slice(0, 10).map((item) => ({
+        date: item.date,
+        listeningScore: item.listeningScore,
+        readingScore: item.readingScore,
+        totalScore: item.totalScore,
+        testTitle: item.testTitle,
+      }))
+    : [];
+
   // Extract roadmap data from response
   const roadmapData: RoadmapData | null = roadmapResponse?.data || null;
 
@@ -87,7 +105,7 @@ export const UserDashboardPage = () => {
 
   // Combine API data with static data when competency data is available
   const combinedDashboardData = competencyData
-    ? fetchDashboardData(competencyData)
+    ? fetchDashboardData(competencyData, roadmapData || undefined, dailyLesson)
     : null;
 
   // Event handlers
@@ -132,7 +150,8 @@ export const UserDashboardPage = () => {
     dashboardLoading ||
     competencyLoading ||
     dailyLessonQueryLoading ||
-    roadmapLoading;
+    roadmapLoading ||
+    chartLoading;
 
   if (anyLoadingFlag) {
     return (
@@ -276,7 +295,7 @@ export const UserDashboardPage = () => {
                     />
                   </div>
 
-                  {/* Part Performance */}
+                  {/* Listening & Reading Performance */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center">
@@ -288,26 +307,44 @@ export const UserDashboardPage = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={combinedDashboardData.partPerformance}
-                          >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              stroke="#E5E7EB"
-                            />
-                            <XAxis dataKey="part" tick={{ fill: '#6B7280' }} />
-                            <YAxis tick={{ fill: '#6B7280' }} />
-                            <Tooltip />
-                            <Bar
-                              dataKey="score"
-                              fill="#3B82F6"
-                              radius={[8, 8, 0, 0]}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
+                      {chartData && chartData.length > 0 ? (
+                        <div className="h-80">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chartData}>
+                              <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="#E5E7EB"
+                              />
+                              <XAxis
+                                dataKey="date"
+                                tick={{ fill: '#6B7280', fontSize: 12 }}
+                                angle={-45}
+                                textAnchor="end"
+                                height={80}
+                              />
+                              <YAxis tick={{ fill: '#6B7280' }} />
+                              <Tooltip
+                                formatter={(value) =>
+                                  typeof value === 'number'
+                                    ? value.toFixed(0)
+                                    : value
+                                }
+                                labelFormatter={(label) => `Date: ${label}`}
+                              />
+                              <Bar
+                                dataKey="totalScore"
+                                fill="#3B82F6"
+                                radius={[8, 8, 0, 0]}
+                                name="Total Score"
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-80 text-gray-500">
+                          <p>No test data available yet</p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
 

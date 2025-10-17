@@ -9,8 +9,14 @@ interface LearningStatsSidebarProps {
 }
 
 export const LearningStatsSidebar = ({ stats }: LearningStatsSidebarProps) => {
-  const todayProgress = (stats.completed / stats.todayGoal) * 100;
-  const weeklyProgress = (stats.weeklyCompleted / stats.weeklyGoal) * 100;
+  const todayProgress = stats.todayProgress || 0;
+  const weeklyProgress =
+    stats.weeklyProgress ??
+    (stats.weeklyGoal > 0
+      ? (stats.weeklyCompleted / stats.weeklyGoal) * 100
+      : 0);
+  const todayRemaining = Math.max(0, 100 - todayProgress);
+  const weeklyRemaining = Math.max(0, stats.weeklyGoal - stats.weeklyCompleted);
 
   return (
     <div className="space-y-4">
@@ -50,13 +56,13 @@ export const LearningStatsSidebar = ({ stats }: LearningStatsSidebarProps) => {
                 Today's Progress
               </div>
               <div className="text-xl font-bold text-blue-600">
-                {stats.completed}/{stats.todayGoal}
+                {stats.todayProgress}/100
               </div>
             </div>
           </div>
-          <Progress value={todayProgress} className="h-2 mb-2" />
+          <Progress value={Math.min(todayProgress, 100)} className="h-2 mb-2" />
           <div className="text-xs text-muted-foreground">
-            {stats.todayGoal - stats.completed} min remaining
+            {todayRemaining} min remaining
           </div>
         </CardContent>
       </Card>
@@ -77,9 +83,12 @@ export const LearningStatsSidebar = ({ stats }: LearningStatsSidebarProps) => {
               </div>
             </div>
           </div>
-          <Progress value={weeklyProgress} className="h-2 mb-2" />
+          <Progress
+            value={Math.min(weeklyProgress, 100)}
+            className="h-2 mb-2"
+          />
           <div className="text-xs text-green-600">
-            {Math.round(weeklyProgress)}% complete
+            {Math.round(Math.min(weeklyProgress, 100))}% complete
           </div>
         </CardContent>
       </Card>

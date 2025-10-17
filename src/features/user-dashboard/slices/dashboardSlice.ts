@@ -43,7 +43,7 @@ const dashboardSlice = createSlice({
       action: PayloadAction<{ todayCompleted: number; weeklyCompleted: number }>
     ) => {
       if (state.data) {
-        state.data.learningStats.completed = action.payload.todayCompleted;
+        state.data.learningStats.todayProgress = action.payload.todayCompleted;
         state.data.learningStats.weeklyCompleted =
           action.payload.weeklyCompleted;
       }

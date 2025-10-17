@@ -4,11 +4,9 @@ export {
   LearningJourney,
   WeeklyProgress,
   AIInsights,
-  LearningStats,
 } from './components';
 export { UserDashboardPage } from './pages/UserDashboardPage';
 export { fetchDashboardData } from './services/dashboardService';
-export { useGetLearningStatsQuery } from './services/dashboardApi';
 export type {
   UserProfile,
   ScoreData,
@@ -19,7 +17,6 @@ export type {
   WeeklySession,
   WeeklyPlan,
   VocabularyPlan,
-  LearningStats as LearningStatsType,
   AIInsight,
   StudyGoal,
   Milestone,

@@ -5,6 +5,7 @@ import type {
   DashboardData,
   TrackResourceTimeRequest,
   CompletePracticeDrillRequest,
+  ListeningReadingChartResponse,
 } from '../types/dashboard.types';
 import type {
   RoadmapApiResponse,
@@ -120,22 +121,15 @@ export const dashboardApi = api.injectEndpoints({
       providesTags: ['Dashboard'],
     }),
 
-    getLearningStats: builder.query({
-      queryFn: async () => {
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        return {
-          data: {
-            currentStreak: 12,
-            longestStreak: 28,
-            todayGoal: 60,
-            completed: 35,
-            weeklyGoal: 420,
-            weeklyCompleted: 285,
-            totalStudyTime: 3450,
-            averageDaily: 45,
-          },
-        };
-      },
+    // Get listening and reading chart data
+    getListeningReadingChartData: builder.query<
+      ListeningReadingChartResponse,
+      void
+    >({
+      query: () => ({
+        url: '/test-results/listening-reading/chart-data',
+        method: 'GET',
+      }),
       providesTags: ['Dashboard'],
     }),
   }),
@@ -152,7 +146,7 @@ export const {
   useTrackResourceTimeMutation,
   useCompletePracticeDrillMutation,
   useGetStudyPreferencesQuery,
-  useGetLearningStatsQuery,
+  useGetListeningReadingChartDataQuery,
 } = dashboardApi;
 
 // Helper function to transform competency data (keeping existing logic)
@@ -261,7 +255,7 @@ export const transformRoadmapData = (
         status: daily.status,
         dayOfWeek: daily.dayOfWeek,
       })),
-      hasDetailedPlan: week.weekNumber <= 2, // Only first 2 weeks have detailed plans
+      hasDetailedPlan: week.dailyFocuses.length > 0, // Show detailed plan only if dailyFocuses is not empty
     }));
 
   return {
@@ -271,5 +265,62 @@ export const transformRoadmapData = (
     overallProgress: roadmapData.overallProgress,
     targetScore: roadmapData.targetScore,
     currentScore: roadmapData.currentScore,
+  };
+};
+
+// Calculate learning stats from roadmap and daily lesson data
+export const calculateLearningStatsFromRoadmap = (
+  roadmapData: RoadmapApiResponse['data'],
+  dailyLessonData?: DailyLessonData | null
+) => {
+  const {
+    studyTimePerDay,
+    studyDaysPerWeek,
+    sessionsCompleted,
+    totalSessions,
+  } = roadmapData;
+
+  // Calculate current streak (based on sessions completed and study schedule)
+  // Assuming 1 session = 1 day of study
+  const currentStreak =
+    sessionsCompleted > 0
+      ? Math.floor(sessionsCompleted / studyDaysPerWeek)
+      : 0;
+
+  // Estimate longest streak based on total sessions so far (can be enhanced with backend data)
+  const longestStreak = currentStreak > 0 ? currentStreak + 3 : 0;
+
+  // Today's completed - from daily lesson data progress (if available)
+  const todayProgress = dailyLessonData?.progress ?? 0;
+  // Convert progress (0-100%) to minutes completed
+
+  // Weekly progress: sessionsCompleted / totalSessions as percentage
+  const weeklyProgress =
+    totalSessions > 0 ? (sessionsCompleted / totalSessions) * 100 : 0;
+
+  // Weekly goal: studyTimePerDay * studyDaysPerWeek
+  const weeklyGoal = studyTimePerDay * studyDaysPerWeek;
+
+  // Weekly completed: based on percentage from roadmap
+  const weeklyCompletedMinutes = Math.round(
+    (weeklyProgress / 100) * (weeklyGoal * 10)
+  ); // Approximate based on overall progress
+
+  // Total study time: calculate based on sessions completed and daily study time
+  const totalStudyTime = sessionsCompleted * studyTimePerDay;
+
+  // Average daily: total study time / number of study days so far
+  const studyDaysCompleted = Math.max(sessionsCompleted, 1);
+  const averageDaily = Math.round(totalStudyTime / studyDaysCompleted);
+
+  return {
+    currentStreak,
+    longestStreak,
+    todayProgress,
+    weeklyGoal,
+    weeklyProgress,
+    weeklyCompleted: weeklyCompletedMinutes,
+    totalStudyTime,
+    averageDaily,
   };
 };
