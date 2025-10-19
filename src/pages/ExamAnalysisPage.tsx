@@ -34,13 +34,18 @@ import {
   BlurredContent,
   UnlockAnalysisDialog,
 } from '@/features/lr-analyze/components';
+import { AffordabilityDialog } from '@/features/lr-analyze/components/AffordabilityDialog';
 import { toast } from '@/hooks/use-toast';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
+import { useLazyCheckCanAffordFeatureQuery } from '@/features/auth/services/creditsApi';
+import { FeaturePricingType } from '@/features/auth/services/creditsApi';
+import type { CheckAffordFeatureResponse } from '@/features/auth/services/creditsApi';
 
 export function ExamAnalysisPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [showAffordabilityDialog, setShowAffordabilityDialog] = useState(false);
 
   const {
     data: apiData,
@@ -61,6 +66,7 @@ export function ExamAnalysisPage() {
   const handleRequestAnalysis = async () => {
     try {
       const result = await requestAnalysis(attemptId || '').unwrap();
+      setShowAffordabilityDialog(false);
       toast({
         title: 'Analysis Complete!',
         description: `Deep analysis unlocked. ${result.creditsUsed} credits used.`,
@@ -188,15 +194,15 @@ export function ExamAnalysisPage() {
               </div>
               <ConfirmationDialog
                 title="Unlock Deep Analysis"
-                description={`This will use ${analysisCost} credits to generate a comprehensive analysis of your exam performance, including detailed insights, skill breakdown, and personalized recommendations.`}
-                confirmText={`Use ${analysisCost} Credits`}
+                description={`This will use credits to generate a comprehensive analysis of your exam performance, including detailed insights, skill breakdown, and personalized recommendations.`}
+                confirmText={`Use Credits`}
                 cancelText="Not Now"
                 icon={
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1e40af]">
                     <Coins className="h-6 w-6 text-white" />
                   </div>
                 }
-                onConfirm={handleRequestAnalysis}
+                onConfirm={() => setShowAffordabilityDialog(true)}
               >
                 <Button
                   variant="outline"
@@ -211,11 +217,22 @@ export function ExamAnalysisPage() {
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 mr-2" />
-                      Unlock Now ({analysisCost} Credits)
+                      Unlock Now
                     </>
                   )}
                 </Button>
               </ConfirmationDialog>
+
+              {/* Affordability Dialog */}
+              <AffordabilityDialog
+                isOpen={showAffordabilityDialog}
+                onClose={() => setShowAffordabilityDialog(false)}
+                featureType={FeaturePricingType.TEST_ANALYSIS_LR}
+                onProceed={handleRequestAnalysis}
+                onBuyCredits={() => navigate('/payment-history')}
+                isPending={isAnalyzing}
+                description="Get comprehensive analysis of your exam performance with detailed insights and personalized recommendations."
+              />
             </div>
           </div>
         </div>
@@ -370,7 +387,6 @@ export function ExamAnalysisPage() {
                     description="Get AI-powered analysis of your performance patterns and strategic recommendations."
                     isLoading={isAnalyzing}
                     onConfirm={handleRequestAnalysis}
-                    analysisCost={analysisCost}
                   >
                     <KeyInsightsSection
                       insights={analysis.keyInsights}
@@ -395,7 +411,6 @@ export function ExamAnalysisPage() {
                     description="Visualize your performance across all TOEIC skill dimensions with our interactive radar chart."
                     isLoading={isAnalyzing}
                     onConfirm={handleRequestAnalysis}
-                    analysisCost={analysisCost}
                   >
                     <SkillRadarChart
                       skills={analysis.overallSkills}
@@ -441,7 +456,6 @@ export function ExamAnalysisPage() {
                       description="See your performance breakdown across business domains and contexts."
                       isLoading={isAnalyzing}
                       onConfirm={handleRequestAnalysis}
-                      analysisCost={analysisCost}
                     >
                       <DomainPerformanceSection
                         domainPerformance={analysis.domainPerformance}
@@ -478,7 +492,6 @@ export function ExamAnalysisPage() {
                 description="Get detailed breakdown of your performance in each TOEIC part with skill-level insights."
                 isLoading={isAnalyzing}
                 onConfirm={handleRequestAnalysis}
-                analysisCost={analysisCost}
               >
                 <PartAnalysisSection
                   partAnalyses={analysis.partAnalyses || []}
@@ -496,7 +509,6 @@ export function ExamAnalysisPage() {
                 description="Identify your critical weaknesses with detailed explanations and representative questions."
                 isLoading={isAnalyzing}
                 onConfirm={handleRequestAnalysis}
-                analysisCost={analysisCost}
               >
                 <DiagnosisSection weaknesses={analysis.weaknesses || []} />
               </UnlockAnalysisDialog>
@@ -512,7 +524,6 @@ export function ExamAnalysisPage() {
                 description="Get a customized learning path with resources and practice drills tailored to your weaknesses."
                 isLoading={isAnalyzing}
                 onConfirm={handleRequestAnalysis}
-                analysisCost={analysisCost}
               >
                 <StudyPlanSection studyPlan={studyPlanItems} />
               </UnlockAnalysisDialog>

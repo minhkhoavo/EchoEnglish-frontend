@@ -13,6 +13,7 @@ import {
 } from '../services/paymentApi';
 import type { CreditCalculation, PaymentMethod } from '../types';
 import { PromoCodeInput } from '../components/PromoCodeInput';
+import { toast } from 'sonner';
 
 const PaymentPage: React.FC = () => {
   // RTK Query hooks
@@ -20,7 +21,7 @@ const PaymentPage: React.FC = () => {
     useCreatePaymentMutation();
   const [
     validatePromoCode,
-    { data: promoValidation, isLoading: isValidatingPromo },
+    { data: promoValidation, isLoading: isValidatingPromo, error: promoError },
   ] = useValidatePromoCodeMutation();
 
   // Local state
@@ -28,6 +29,7 @@ const PaymentPage: React.FC = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethod>('VNPAY');
   const [currentPromoCode, setCurrentPromoCode] = useState<string>('');
+  const [validatingCode, setValidatingCode] = useState<string>('');
   const [calculation, setCalculation] = useState<CreditCalculation | null>(
     null
   );
@@ -39,9 +41,7 @@ const PaymentPage: React.FC = () => {
   useEffect(() => {
     if (creditAmount > 0) {
       const baseAmount = creditAmount * 1000;
-      const discountAmount = promoValidation?.data?.isValid
-        ? promoValidation.data.discountVnd
-        : 0;
+      const discountAmount = promoValidation?.data?.discount || 0;
       const finalAmount = Math.max(0, baseAmount - discountAmount);
 
       setCalculation({
@@ -49,12 +49,26 @@ const PaymentPage: React.FC = () => {
         baseAmountVnd: baseAmount,
         discountVnd: discountAmount,
         finalAmountVnd: finalAmount,
-        promoCode: promoValidation?.data?.isValid
-          ? currentPromoCode
-          : undefined,
+        promoCode: promoValidation?.data?.code,
       });
     }
   }, [creditAmount, promoValidation, currentPromoCode]);
+
+  useEffect(() => {
+    if (promoValidation) {
+      if (promoValidation.data) {
+        setCurrentPromoCode(validatingCode);
+      } else {
+        toast.error(promoValidation.message || 'Invalid promo code');
+      }
+    }
+    if (promoError) {
+      toast.error(
+        (promoError as { data?: { message?: string } })?.data?.message ||
+          'Failed to validate promo code'
+      );
+    }
+  }, [promoValidation, promoError, validatingCode]);
 
   const handleCreatePayment = async () => {
     if (!calculation) return;
@@ -64,6 +78,7 @@ const PaymentPage: React.FC = () => {
         credits: calculation.credits,
         paymentGateway: selectedPaymentMethod,
         description: `Purchase ${calculation.credits} credits via ${selectedPaymentMethod}`,
+        promoCode: calculation.promoCode,
       }).unwrap();
 
       // Redirect to payment URL
@@ -83,12 +98,9 @@ const PaymentPage: React.FC = () => {
     setCurrentPromoCode(code);
   };
 
-  const handlePromoCodeValidate = async (code: string) => {
-    try {
-      await validatePromoCode({ code, credits: creditAmount });
-    } catch (error) {
-      console.error('Promo code validation failed:', error);
-    }
+  const handlePromoCodeValidate = (code: string) => {
+    setValidatingCode(code);
+    validatePromoCode({ code, credits: creditAmount });
   };
 
   const formatCurrency = (amount: number) => {
@@ -225,7 +237,7 @@ const PaymentPage: React.FC = () => {
                       value={currentPromoCode || ''}
                       onChange={handlePromoCodeChange}
                       onValidate={handlePromoCodeValidate}
-                      validation={promoValidation?.data || null}
+                      validation={promoValidation || null}
                       credits={creditAmount}
                       isValidating={isValidatingPromo}
                       error={null}

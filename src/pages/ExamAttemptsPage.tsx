@@ -166,7 +166,9 @@ const ExamAttemptsPage: React.FC = () => {
   };
 
   const handleContinue = (id: string) => {
-    // TODO: Implement continue functionality
+    if (activeTab === 'speaking') {
+      navigate(`/test/speaking/${id}/exam`);
+    }
   };
 
   const handleNewTest = () => {

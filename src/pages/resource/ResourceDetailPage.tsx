@@ -6,7 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Header } from '@/components/layout/Header';
 import { useGetTranscriptMutation } from '@/features/resource/services/resourceApi';
 import { useGetFlashcardsBySourceQuery } from '@/features/flashcard/services/flashcardApi';
 import {
@@ -129,7 +128,6 @@ export default function ResourceDetailPage() {
   if (!resource) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -153,8 +151,6 @@ export default function ResourceDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50" onMouseUp={handleTextSelection}>
-      <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

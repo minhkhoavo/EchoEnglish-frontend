@@ -108,10 +108,11 @@ export interface PromoCode {
 
 // Promo Code Validation Response
 export interface PromoCodeValidation {
-  isValid: boolean;
-  discountVnd: number;
-  message?: string;
-  promoCode?: PromoCode;
+  message: string;
+  data?: {
+    code: string;
+    discount: number;
+  };
 }
 
 // Credit Calculation Interface

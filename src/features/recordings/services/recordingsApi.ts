@@ -9,17 +9,17 @@ export const recordingsApiRTK = api.injectEndpoints({
     getRecordings: builder.query<RecordingsListResponse, void>({
       query: () => ({ url: '/speech/recordings', method: 'GET' }),
       transformResponse: (response: RecordingsListResponse) => {
-        // Thêm fallback overallScore = 0 cho các recordings không có trường này
         const transformedData = {
           ...response,
           data: {
             ...response.data,
-            items: response.data.items.map((recording) => ({
-              ...recording,
-              overallScore: recording.overallScore ?? 0,
-            })),
+            // items: response.data.items.map((recording) => ({
+            //   ...recording,
+            //   overallScore: recording.overallScore ?? 0,
+            // })),
           },
         };
+        console.log('Transformed Recordings Response:', transformedData);
         return transformedData;
       },
     }),

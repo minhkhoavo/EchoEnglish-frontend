@@ -23,7 +23,8 @@ export function RecordingsList({ onAnalyze }: RecordingsListProps) {
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'score' | 'duration'>('date');
-
+  console.log('Recordings List', recordingsResponse);
+  console.log('Recordings Array', recordings);
   const filteredRecordings = useMemo(() => {
     const filtered = recordings.filter((recording) =>
       recording.name.toLowerCase().includes(searchQuery.toLowerCase())

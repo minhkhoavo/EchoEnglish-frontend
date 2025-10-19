@@ -64,7 +64,7 @@ export interface SpeakingAttempt {
   submissionTimestamp: string;
   status: 'in_progress' | 'completed';
   createdAt: string;
-  scoreOverall?: number;
+  totalScore?: number;
   level?: string;
 }
 

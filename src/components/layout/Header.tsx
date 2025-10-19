@@ -278,17 +278,12 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
                   <History className="mr-2 h-4 w-4" />
                   <span>Transaction History</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate('/me/tests')}
+                >
                   <BookOpen className="mr-2 h-4 w-4" />
                   <span>My Learning</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Crown className="mr-2 h-4 w-4" />
-                  <span>Upgrade to Premium</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

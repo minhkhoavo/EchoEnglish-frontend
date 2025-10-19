@@ -7,5 +7,6 @@ export { TimeAnalysisSection } from './TimeAnalysisSection';
 export { KeyInsightsSection } from './KeyInsightsSection';
 export { DomainPerformanceSection } from './DomainPerformanceSection';
 export { BlurredContent } from './BlurredContent';
-export { ProtectedAnalysisContent } from './ProtectedAnalysisContent';
+// export { ProtectedAnalysisContent } from './ProtectedAnalysisContent';
 export { UnlockAnalysisDialog } from './UnlockAnalysisDialog';
+export { AffordabilityDialog } from './AffordabilityDialog';

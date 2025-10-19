@@ -31,17 +31,18 @@ const transformListeningReadingResult = (
 
 const transformSpeakingAttempt = (attempt: SpeakingAttempt): ExamAttempt => {
   return {
-    id: attempt._id,
+    id: attempt.toeicSpeakingTestId,
     type: 'speaking',
     status: attempt.status === 'completed' ? 'completed' : 'in-progress',
     title: `TOEIC Speaking Test ${attempt.testIdNumeric}`,
     description: attempt.level,
     startedAt: attempt.createdAt,
-    score: attempt.scoreOverall,
+    score: attempt.status === 'completed' ? attempt.totalScore : 0,
     maxScore: 200,
-    percentage: attempt.scoreOverall
-      ? (attempt.scoreOverall / 200) * 100
-      : undefined,
+    percentage:
+      attempt.status === 'completed' && attempt.totalScore
+        ? (attempt.totalScore / 200) * 100
+        : undefined,
   };
 };
 
@@ -80,6 +81,7 @@ export const examAttemptsApi = api.injectEndpoints({
         method: 'GET',
       }),
       transformResponse: (response: SpeakingAttemptsResponse) => {
+        console.log('Speaking Attempts Response:', response);
         return response.data.map(transformSpeakingAttempt);
       },
       providesTags: ['SpeakingTest'],

@@ -18,13 +18,12 @@ export function UnlockAnalysisDialog({
   description,
   isLoading = false,
   onConfirm,
-  analysisCost = 5,
 }: UnlockAnalysisDialogProps) {
   return (
     <ConfirmationDialog
       title="Unlock Deep Analysis"
-      description={`This will use ${analysisCost} credits to generate a comprehensive analysis of your exam performance, including detailed insights, skill breakdown, and personalized recommendations.`}
-      confirmText={`Use ${analysisCost} Credits`}
+      description={`This will use credits to generate a comprehensive analysis of your exam performance, including detailed insights, skill breakdown, and personalized recommendations.`}
+      confirmText={`Use Credits`}
       cancelText="Not Now"
       icon={
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-[#1e40af]">

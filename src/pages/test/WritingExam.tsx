@@ -39,6 +39,10 @@ import {
 } from '@/features/tests/utils/writingExamRecovery';
 import { WritingRecoveryDialog } from '@/features/tests/components/speak-write/writing/WritingRecoveryDialog';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
+import { useLazyCheckCanAffordFeatureQuery } from '@/features/auth/services/creditsApi';
+import { FeaturePricingType } from '@/features/auth/services/creditsApi';
+import type { CheckAffordFeatureResponse } from '@/features/auth/services/creditsApi';
+import { AffordabilityDialog } from '@/features/lr-analyze/components/AffordabilityDialog';
 import { toast } from 'sonner';
 
 const PART_TIME_LIMITS = {
@@ -67,6 +71,7 @@ const WritingExam = () => {
   const [recoveryData, setRecoveryData] = useState<WritingRecoveryData | null>(
     null
   );
+  const [showAffordabilityDialog, setShowAffordabilityDialog] = useState(false);
 
   const {
     data: testData,
@@ -297,28 +302,8 @@ const WritingExam = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answersSignature, isExamActive, testId]); // Only depend on answers changes and essential flags
 
-  const handleSubmit = useCallback(async () => {
-    // Save progress before submitting - but verify testId matches
-    if (
-      recoveryInfo &&
-      partStates &&
-      testId &&
-      recoveryInfo.testId === testId
-    ) {
-      try {
-        await saveWritingRecoveryData({
-          recoveryInfo,
-          partStates,
-          currentPartIndex,
-          currentQuestionIndex: 0,
-          globalTimeLeft,
-          lastSavedAt: new Date().toISOString(),
-        });
-      } catch (error) {
-        console.error('[WritingExam] Failed to save before submit:', error);
-      }
-    }
-
+  // Submit writing test after affordability dialog is confirmed
+  const proceedWithSubmit = useCallback(async () => {
     if (!testData || !partStates) {
       return;
     }
@@ -360,7 +345,6 @@ const WritingExam = () => {
       toast.success('Test submitted successfully! Redirecting to results...');
 
       // Navigate immediately with resultId
-      // The WritingResultPage will handle loading state and polling
       if (result.data?.resultId) {
         navigate(`/writing-result?id=${result.data.resultId}`);
       } else {
@@ -379,10 +363,33 @@ const WritingExam = () => {
     examMode,
     dispatch,
     navigate,
-    recoveryInfo,
-    currentPartIndex,
-    globalTimeLeft,
   ]);
+
+  const handleSubmit = useCallback(async () => {
+    // Save progress before submitting - but verify testId matches
+    if (
+      recoveryInfo &&
+      partStates &&
+      testId &&
+      recoveryInfo.testId === testId
+    ) {
+      try {
+        await saveWritingRecoveryData({
+          recoveryInfo,
+          partStates,
+          currentPartIndex,
+          currentQuestionIndex: 0,
+          globalTimeLeft,
+          lastSavedAt: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('[WritingExam] Failed to save before submit:', error);
+      }
+    }
+
+    // Show affordability dialog
+    setShowAffordabilityDialog(true);
+  }, [partStates, testId, recoveryInfo, currentPartIndex, globalTimeLeft]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -656,6 +663,16 @@ const WritingExam = () => {
             </div>
           </div>
         </div>
+
+        {/* Affordability Dialog */}
+        <AffordabilityDialog
+          isOpen={showAffordabilityDialog}
+          onClose={() => setShowAffordabilityDialog(false)}
+          featureType={FeaturePricingType.TEST_ANALYSIS_WRITING}
+          onProceed={proceedWithSubmit}
+          onBuyCredits={() => navigate('/payment-history')}
+          isPending={isSubmitting}
+        />
       </div>
     </div>
   );

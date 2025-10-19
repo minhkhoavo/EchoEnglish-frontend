@@ -13,7 +13,12 @@ const paymentApiInjected = api.injectEndpoints({
   endpoints: (builder) => ({
     createPayment: builder.mutation<
       ApiResponse<PaymentResponse>,
-      { credits: number; paymentGateway: string; description: string }
+      {
+        credits: number;
+        paymentGateway: string;
+        description: string;
+        promoCode?: string;
+      }
     >({
       query: (body) => ({
         url: '/payments/create',
@@ -24,11 +29,11 @@ const paymentApiInjected = api.injectEndpoints({
     }),
 
     validatePromoCode: builder.mutation<
-      ApiResponse<PromoCodeValidation>,
+      PromoCodeValidation,
       { code: string; credits: number }
     >({
       query: ({ code, credits }) => ({
-        url: '/promo-codes/validate',
+        url: '/promo/validate',
         method: 'POST',
         data: { code, credits },
       }),

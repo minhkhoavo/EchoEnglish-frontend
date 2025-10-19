@@ -57,13 +57,15 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
     }
   };
 
-  const formatDiscount = (discount: number) => {
-    return discount.toLocaleString('vi-VN') + ' VND';
+  const formatDiscount = (amount: number) => {
+    return amount.toLocaleString('vi-VN') + ' VND';
   };
 
   const canValidate = localValue && credits > 0 && !isValidating && !disabled;
   const showValidation = hasValidated && validation;
-  const showError = hasValidated && error;
+  const isValid = !!validation?.data;
+  const discountVnd = validation?.data?.discount || 0;
+  const validationMessage = validation?.message || '';
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -85,7 +87,7 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
               disabled={disabled || isValidating}
               className={`uppercase ${
                 showValidation
-                  ? validation?.isValid
+                  ? isValid
                     ? 'border-green-500 focus:border-green-500'
                     : 'border-red-500 focus:border-red-500'
                   : ''
@@ -96,7 +98,7 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
             {/* Status Icon */}
             {showValidation && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                {validation?.isValid ? (
+                {isValid ? (
                   <Check className="w-4 h-4 text-green-500" />
                 ) : (
                   <X className="w-4 h-4 text-red-500" />
@@ -124,7 +126,7 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
       {/* Validation Result */}
       {showValidation && validation && (
         <div className="space-y-2">
-          {validation.isValid ? (
+          {isValid ? (
             <Alert className="border-green-200 bg-green-50">
               <Check className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
@@ -134,12 +136,12 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
                     variant="secondary"
                     className="bg-green-100 text-green-800"
                   >
-                    -{formatDiscount(validation.discountVnd)}
+                    -{formatDiscount(discountVnd)}
                   </Badge>
                 </div>
-                {validation.message && (
+                {validationMessage && (
                   <p className="text-sm text-green-700 mt-1">
-                    {validation.message}
+                    {validationMessage}
                   </p>
                 )}
               </AlertDescription>
@@ -148,23 +150,15 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
             <Alert className="border-red-200 bg-red-50">
               <AlertCircle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
-                {validation.message || 'Invalid promo code'}
+                {validationMessage || 'Invalid promo code'}
               </AlertDescription>
             </Alert>
           )}
         </div>
       )}
 
-      {/* Error Message */}
-      {showError && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-800">{error}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Helper Text */}
-      {!showValidation && !showError && (
+      {!showValidation && (
         <p className="text-xs text-muted-foreground">
           Enter a valid promo code to get discounts on your token purchase.
         </p>
