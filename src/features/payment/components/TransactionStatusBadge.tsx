@@ -50,7 +50,7 @@ export const TransactionStatusBadge: React.FC<TransactionStatusBadgeProps> = ({
           className:
             'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200',
           label: 'Pending Payment',
-          icon: Clock,
+          icon: Loader2,
         };
       case 'PENDING':
         return {
@@ -102,7 +102,9 @@ export const TransactionStatusBadge: React.FC<TransactionStatusBadgeProps> = ({
       variant={config.variant}
       className={`${config.className} transition-all duration-200 px-2 py-1 text-xs flex items-center gap-1`}
     >
-      <IconComponent className="h-3 w-3" />
+      <IconComponent
+        className={`h-3 w-3 ${actualStatus === 'INITIATED' || actualStatus === 'PENDING' ? 'animate-spin' : ''}`}
+      />
       {config.label}
     </Badge>
   );

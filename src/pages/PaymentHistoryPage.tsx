@@ -42,6 +42,7 @@ export const PaymentHistoryPage: React.FC = () => {
   } = useGetTransactionHistoryQuery(filters);
 
   const transactions = transactionData?.data?.transaction || [];
+  const pagination = transactionData?.data?.pagination;
 
   // Handle filter changes
   const handleFiltersChange = (newFilters: TransactionFilters) => {
@@ -83,39 +84,62 @@ export const PaymentHistoryPage: React.FC = () => {
   const handleExportCSV = () => {
     if (!transactions.length) return;
 
-    const csvContent = [
-      [
-        'Thời gian',
-        'Mã GD',
-        'Loại',
-        'Số tiền',
-        'Credit',
-        'Mô tả',
-        'Trạng thái',
-        'Cổng TT',
-      ].join(','),
-      ...transactions.map((t) =>
-        [
-          new Date(t.createdAt).toLocaleString('vi-VN'),
-          t._id,
-          t.type === 'purchase' ? 'Mua credit' : 'Sử dụng credit',
-          t.amount.toString(),
-          t.tokens.toString(),
-          `"${t.description.replace(/"/g, '""')}"`,
-          t.status,
-          t.paymentGateway,
-        ].join(',')
-      ),
-    ].join('\n');
+    // Format date consistently
+    const formatDateForExport = (dateString: string) => {
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+      } catch {
+        return '';
+      }
+    };
+
+    // Format currency consistently
+    const formatCurrency = (amount: number) => {
+      return new Intl.NumberFormat('vi-VN').format(amount);
+    };
+
+    // Create CSV content with BOM for Vietnamese characters
+    const BOM = '\uFEFF';
+    const headers = [
+      'Time',
+      'Transaction ID',
+      'Type',
+      'Amount (VND)',
+      'Credit',
+      'Description',
+      'Status',
+      'Gateway',
+      'Expiry',
+    ];
+
+    const rows = transactions.map((t) => [
+      formatDateForExport(t.createdAt),
+      t._id,
+      t.type === 'purchase' ? 'Purchase' : 'Usage',
+      t.amount > 0 ? formatCurrency(t.amount) : '-',
+      `${t.type === 'purchase' ? '+' : '-'}${t.tokens}`,
+      `"${t.description.replace(/"/g, '""')}"`,
+      t.status,
+      t.paymentGateway,
+      t.expiredAt ? formatDateForExport(t.expiredAt) : '-',
+    ]);
+
+    const csvContent =
+      BOM + [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`;
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+
     link.setAttribute('href', url);
-    link.setAttribute(
-      'download',
-      `payment-history-${new Date().toISOString().split('T')[0]}.csv`
-    );
+    link.setAttribute('download', `payment-history_${dateStr}_${timeStr}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -309,29 +333,47 @@ export const PaymentHistoryPage: React.FC = () => {
         />
 
         {/* Pagination */}
-        {transactions.length > 0 && (
+        {transactions.length > 0 && pagination && (
           <Card className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg">
             <CardContent className="py-4">
-              <div className="flex justify-center">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                {/* Pagination Info */}
+                <div className="text-sm text-gray-600">
+                  Showing{' '}
+                  <span className="font-semibold text-gray-900">
+                    {transactions.length}
+                  </span>{' '}
+                  of{' '}
+                  <span className="font-semibold text-gray-900">
+                    {pagination.total}
+                  </span>{' '}
+                  transactions
+                </div>
+
+                {/* Pagination Controls */}
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
                     onClick={() => handlePageChange((filters.page || 1) - 1)}
-                    disabled={!filters.page || filters.page <= 1}
-                    className="bg-white/80 backdrop-blur-sm border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 disabled:opacity-50"
+                    disabled={!filters.page || filters.page <= 1 || isLoading}
+                    className="bg-white/80 backdrop-blur-sm border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     ← Previous
                   </Button>
                   <div className="flex items-center gap-2">
                     <span className="px-4 py-2 text-sm font-medium text-gray-700 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg border border-blue-200">
-                      Page {filters.page || 1}
+                      Page {filters.page || 1} of {pagination.totalPages}
                     </span>
                   </div>
                   <Button
                     variant="outline"
                     onClick={() => handlePageChange((filters.page || 1) + 1)}
-                    disabled={transactions.length < (filters.limit || 20)}
-                    className="bg-white/80 backdrop-blur-sm border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 disabled:opacity-50"
+                    disabled={
+                      !pagination.totalPages ||
+                      (filters.page || 1) >= pagination.totalPages ||
+                      isLoading
+                    }
+                    className="bg-white/80 backdrop-blur-sm border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next →
                   </Button>

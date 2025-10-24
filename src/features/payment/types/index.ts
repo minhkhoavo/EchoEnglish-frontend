@@ -55,6 +55,12 @@ export interface TransactionHistoryResponse {
   message: string;
   data: {
     transaction: Transaction[];
+    pagination: {
+      page: number | null;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
   };
 }
 

@@ -10,7 +10,6 @@ import { Badge } from '../../../components/ui/badge';
 import type { Transaction } from '../types';
 import { TransactionType, PaymentMethod } from '../types';
 import { TransactionStatusBadge } from './TransactionStatusBadge';
-import { TransactionFiltersComponent } from './TransactionFilters';
 import {
   Table,
   TableBody,
@@ -29,16 +28,12 @@ import {
   Copy,
   CheckCircle2,
 } from 'lucide-react';
-import type { TransactionFilters } from '../types';
 
 interface PaymentHistoryTableProps {
   transactions: Transaction[];
   isLoading?: boolean;
   error?: string | null;
   onPaymentContinue?: (transaction: Transaction) => void;
-  filters?: TransactionFilters;
-  onFiltersChange?: (filters: TransactionFilters) => void;
-  onClearFilters?: () => void;
 }
 
 export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
@@ -46,9 +41,6 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
   isLoading = false,
   error = null,
   onPaymentContinue,
-  filters,
-  onFiltersChange,
-  onClearFilters,
 }) => {
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
 
@@ -238,31 +230,19 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
   return (
     <Card className="border-gray-200">
       <CardHeader className="pb-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Calendar className="h-5 w-5 text-gray-600" />
-            <span className="text-gray-900">
-              Transaction History ({transactions.length} transactions)
-            </span>
-          </CardTitle>
-
-          {/* Compact Filters */}
-          {filters && onFiltersChange && onClearFilters && (
-            <TransactionFiltersComponent
-              filters={filters}
-              onFiltersChange={onFiltersChange}
-              onClearFilters={onClearFilters}
-              compact={true}
-            />
-          )}
-        </div>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Calendar className="h-5 w-5 text-gray-600" />
+          <span className="text-gray-900">
+            Transaction History ({transactions.length} transactions)
+          </span>
+        </CardTitle>
       </CardHeader>
       <CardContent className="p-1.5">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow className="bg-gradient-to-r from-gray-50/50 to-blue-50/50 hover:from-gray-100/50 hover:to-blue-100/50">
-                <TableHead className="w-[140px] font-semibold text-gray-700">
+                <TableHead className="w-[100px] font-semibold text-gray-700">
                   Time
                 </TableHead>
                 <TableHead className="font-semibold text-gray-700">
@@ -277,7 +257,7 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
                 <TableHead className="text-right font-semibold text-gray-700">
                   Credit
                 </TableHead>
-                <TableHead className="font-semibold text-gray-700">
+                <TableHead className="w-60 max-w-[220px] font-semibold text-gray-700">
                   Description
                 </TableHead>
                 <TableHead className="font-semibold text-gray-700">
@@ -286,7 +266,7 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
                 <TableHead className="font-semibold text-gray-700">
                   Gateway
                 </TableHead>
-                <TableHead className="text-center font-semibold text-gray-700">
+                <TableHead className="w-20 text-center font-semibold text-gray-700">
                   Actions
                 </TableHead>
               </TableRow>
@@ -385,8 +365,8 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
                     </TableCell>
 
                     {/* Mô tả */}
-                    <TableCell>
-                      <div className="max-w-xs">
+                    <TableCell className="w-44 max-w-[180px]">
+                      <div className="overflow-hidden">
                         <p
                           className="text-sm truncate"
                           title={transaction.description}
