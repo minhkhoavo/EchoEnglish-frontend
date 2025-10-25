@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { store } from '../store/store';
-import { logout } from '../../features/auth/slices/authSlice';
+import { logout, resetApiState } from '../../features/auth/slices/authSlice';
 import { toast } from 'sonner';
 
 const axiosInstance = axios.create({
@@ -38,6 +38,7 @@ axiosInstance.interceptors.response.use(
 
     if (error.response?.status === 401 || error.response?.status === 403) {
       store.dispatch(logout());
+      store.dispatch(resetApiState());
       window.location.href = '/login';
     } else if (!error.response) {
       if (now - lastNetworkErrorToast > TOAST_COOLDOWN) {

@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 interface SelectionMenuProps {
   selectedText: string;
   position: { x: number; y: number };
-  onSave: () => void;
+  onSave: (translation?: string) => void;
   onClose: () => void;
 }
 
@@ -119,7 +119,7 @@ export default function SelectionMenu({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onSave}
+            onClick={() => onSave(translation)}
             className="flex items-center gap-2 h-8 px-3"
           >
             <Save className="h-3 w-3" />
