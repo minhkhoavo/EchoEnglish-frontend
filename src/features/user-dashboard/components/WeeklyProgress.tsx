@@ -87,30 +87,42 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
     selectedWeek <= currentWeek ? (selectedWeek < currentWeek ? 100 : 71) : 0; // Keep mock for now, or calculate based on daily lesson statuses
 
   const getDisplayStatus = (
-    status: 'pending' | 'in-progress' | 'completed'
+    status: 'pending' | 'in-progress' | 'completed' | 'skipped'
   ) => {
     if (status === 'pending') return 'upcoming';
     return status;
   };
 
-  const getDayIcon = (status: 'upcoming' | 'in-progress' | 'completed') => {
+  const getDayIcon = (
+    status: 'upcoming' | 'in-progress' | 'completed' | 'skipped'
+  ) => {
     switch (status) {
       case 'completed':
         return <CheckCircle className="h-5 w-5 text-white" />;
       case 'in-progress':
         return <Play className="h-4 w-4 text-white" />;
+      case 'skipped':
+        return (
+          <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center">
+            <span className="text-[#dc2626] font-bold text-sm">✕</span>
+          </div>
+        );
       case 'upcoming':
       default:
         return <div className="w-5 h-5 rounded-full bg-white/30" />;
     }
   };
 
-  const getDayColors = (status: 'upcoming' | 'in-progress' | 'completed') => {
+  const getDayColors = (
+    status: 'upcoming' | 'in-progress' | 'completed' | 'skipped'
+  ) => {
     switch (status) {
       case 'completed':
         return 'bg-green-500';
       case 'in-progress':
         return 'bg-blue-500';
+      case 'skipped':
+        return 'bg-[#dc2626]';
       case 'upcoming':
       default:
         return 'bg-gray-300';
@@ -200,15 +212,15 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                     Week {selectedWeek}:{' '}
                     {currentWeekData.title.replace(/^Week \d+:\s*/, '')}
                   </h3>
-                  <div className="text-right">
+                  {/* <div className="text-right">
                     <div className="text-2xl font-bold text-blue-600">
                       {progressPercentage}%
                     </div>
                     <div className="text-sm text-gray-500">Progress</div>
-                  </div>
+                  </div> */}
                 </div>
 
-                <Progress value={progressPercentage} className="h-3" />
+                {/* <Progress value={progressPercentage} className="h-3" /> */}
 
                 <p className="text-gray-600 leading-relaxed">
                   {currentWeekData.summary}
@@ -228,6 +240,7 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                         const displayStatus = getDisplayStatus(lesson.status);
                         const isToday = displayStatus === 'in-progress';
                         const isCompleted = displayStatus === 'completed';
+                        const isSkipped = displayStatus === 'skipped';
                         const isUpcoming = displayStatus === 'upcoming';
 
                         return (
@@ -251,7 +264,9 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                                       ? 'bg-green-100 text-green-700'
                                       : isToday
                                         ? 'bg-blue-100 text-blue-700'
-                                        : 'bg-gray-100 text-gray-600'
+                                        : isSkipped
+                                          ? 'bg-[#fee2e2] text-[#dc2626]'
+                                          : 'bg-gray-100 text-gray-600'
                                   }`}
                                 >
                                   {weekDays[lesson.dayOfWeek - 1]}
@@ -267,7 +282,9 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                                     ? 'border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg'
                                     : isCompleted
                                       ? 'border-green-200 bg-gradient-to-r from-green-50 to-emerald-50'
-                                      : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+                                      : isSkipped
+                                        ? 'border-[#fecaca] bg-gradient-to-r from-[#fee2e2] to-[#fecaca] opacity-75'
+                                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
                                 }`}
                               >
                                 <div className="flex items-start justify-between mb-2">
@@ -278,7 +295,9 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                                           ? 'text-green-700'
                                           : isToday
                                             ? 'text-blue-700'
-                                            : 'text-gray-700'
+                                            : isSkipped
+                                              ? 'text-[#991b1b]'
+                                              : 'text-gray-700'
                                       }`}
                                     >
                                       Day {index + 1}
@@ -291,6 +310,11 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                                     {isCompleted && (
                                       <Badge className="bg-green-100 text-green-700 text-xs">
                                         Completed
+                                      </Badge>
+                                    )}
+                                    {isSkipped && (
+                                      <Badge className="bg-[#fecaca] text-[#dc2626] text-xs border-0">
+                                        Skipped
                                       </Badge>
                                     )}
                                     {isUpcoming && (
@@ -340,7 +364,9 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                                       ? 'text-green-700'
                                       : isToday
                                         ? 'text-blue-700'
-                                        : 'text-gray-600'
+                                        : isSkipped
+                                          ? 'text-[#991b1b] line-through opacity-70'
+                                          : 'text-gray-600'
                                   }`}
                                 >
                                   {lesson.focus}
@@ -394,6 +420,12 @@ export const WeeklyProgress = ({ className }: WeeklyProgressProps) => {
                           <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
                           <span className="text-xs text-gray-600">
                             Upcoming
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-[#dc2626] rounded-full"></div>
+                          <span className="text-xs text-[#dc2626]">
+                            Skipped
                           </span>
                         </div>
                       </div>

@@ -224,7 +224,7 @@ export const LearningJourney = ({ className }: LearningJourneyProps) => {
           </div>
 
           {/* Overall Progress Bar */}
-          <Card className="mt-8 bg-white/90">
+          {/* <Card className="mt-8 bg-white/90">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -261,7 +261,7 @@ export const LearningJourney = ({ className }: LearningJourneyProps) => {
                 <span>Goal: {targetScore}+</span>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </CardContent>
     </Card>

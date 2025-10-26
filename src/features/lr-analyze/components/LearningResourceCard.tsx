@@ -15,6 +15,7 @@ import {
 import type { LearningResource } from '../types/analysis';
 import { ResourceContentModal } from './ResourceContentModal';
 import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface LearningResourceCardProps {
   resource: LearningResource;
@@ -31,6 +32,7 @@ export function LearningResourceCard({
   showCompletedState = false,
   compact = false,
 }: LearningResourceCardProps) {
+  const navigate = useNavigate();
   const [resourceModalOpen, setResourceModalOpen] = useState(false);
   const [selectedResource, setSelectedResource] =
     useState<LearningResource | null>(null);
@@ -94,14 +96,20 @@ export function LearningResourceCard({
   };
 
   const handleResourceClick = (resource: LearningResource) => {
-    // Handle external links
+    // Handle external links (article, video) - mark as viewed by setting high timeSpent
     if (resource.type === 'article' && resource.url) {
-      window.open(resource.url, '_blank', 'noopener,noreferrer');
+      if (onTimeSpent && resource._id) {
+        onTimeSpent(resource._id, 99999);
+      }
+      navigate(`/resources/${resource.resourceId}`);
       return;
     }
 
     if (resource.type === 'video' && resource.url) {
-      window.open(resource.url, '_blank', 'noopener,noreferrer');
+      if (onTimeSpent && resource._id) {
+        onTimeSpent(resource._id, 99999);
+      }
+      navigate(`/resources/${resource.resourceId}`);
       return;
     }
 

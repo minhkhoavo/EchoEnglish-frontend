@@ -111,7 +111,7 @@ export interface DailyLessonPlanItem {
   activityType: 'learn' | 'practice';
   resourceType: 'generated' | 'external';
   order: number;
-  status: 'pending' | 'in-progress' | 'completed';
+  status: 'pending' | 'in-progress' | 'completed' | 'skipped';
 }
 
 export interface DailyLessonData {
@@ -238,4 +238,24 @@ export interface DashboardData {
   weeklyPlan: WeeklyPlan[];
   learningStats: LearningStats;
   aiInsights: AIInsight[];
+}
+
+// Missed Sessions Check Types
+export interface MissedSession {
+  sessionId: string;
+  scheduledDate: string;
+  weekNumber: number;
+  dayNumber: number;
+  title?: string;
+}
+
+export interface CheckMissedSessionsResponse {
+  message: string;
+  data: {
+    hasMissedSessions: boolean;
+    missedCount: number;
+    message: string;
+    action: 'none' | 'mark_skipped' | 'regenerate_week';
+    missedSessions: MissedSession[];
+  };
 }
