@@ -38,6 +38,7 @@ interface CreateEditFlashcardDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   selectedText?: string;
+  selectedTranslation?: string;
   resourceUrl?: string;
 }
 
@@ -49,6 +50,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
   open,
   onOpenChange,
   selectedText,
+  selectedTranslation,
   resourceUrl,
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
@@ -107,7 +109,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
       // Pre-fill with selected text and resource URL
       setFormData({
         front: selectedText || '',
-        back: '',
+        back: selectedTranslation || '',
         category: '',
         difficulty: 'Medium',
         tags: [],
@@ -115,7 +117,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
         isAIGenerated: false,
       });
     }
-  }, [isEdit, flashcard, selectedText, resourceUrl]);
+  }, [isEdit, flashcard, selectedText, selectedTranslation, resourceUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,7 +230,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
       if (!isEdit) {
         setFormData({
           front: selectedText || '',
-          back: '',
+          back: selectedTranslation || '',
           category: '',
           difficulty: 'Medium',
           tags: [],
@@ -249,7 +251,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
             if (!isEdit) {
               setFormData({
                 front: selectedText || '',
-                back: '',
+                back: selectedTranslation || '',
                 category: '',
                 difficulty: 'Medium',
                 tags: [],

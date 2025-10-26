@@ -28,6 +28,7 @@ export default function ResourceDetailPage() {
   const [showFlashcardDialog, setShowFlashcardDialog] = useState(false);
   const [selectionPosition, setSelectionPosition] = useState({ x: 0, y: 0 });
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
+  const [selectedTranslation, setSelectedTranslation] = useState<string>('');
 
   const { toast } = useToast();
 
@@ -109,7 +110,8 @@ export default function ResourceDetailPage() {
     setShowSelectionMenu(true);
   };
 
-  const handleCreateFlashcard = () => {
+  const handleCreateFlashcard = (translation?: string) => {
+    setSelectedTranslation(translation || '');
     setShowSelectionMenu(false);
     setShowFlashcardDialog(true);
   };
@@ -117,11 +119,13 @@ export default function ResourceDetailPage() {
   const handleCloseSelection = () => {
     setShowSelectionMenu(false);
     setSelectedText('');
+    setSelectedTranslation('');
   };
 
   const handleFlashcardSuccess = () => {
     setShowFlashcardDialog(false);
     setSelectedText('');
+    setSelectedTranslation('');
     refetchFlashcards();
   };
 
@@ -305,6 +309,7 @@ export default function ResourceDetailPage() {
           open={showFlashcardDialog}
           onOpenChange={setShowFlashcardDialog}
           selectedText={selectedText}
+          selectedTranslation={selectedTranslation}
           resourceUrl={resource?.url}
           onSuccess={handleFlashcardSuccess}
         />

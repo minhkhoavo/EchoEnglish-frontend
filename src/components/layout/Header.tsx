@@ -25,7 +25,7 @@ import {
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
-import { logout } from '@/features/auth/slices/authSlice';
+import { logout, resetApiState } from '@/features/auth/slices/authSlice';
 import { useEffect, useState } from 'react';
 import { useGetUserBalanceQuery } from '@/features/payment/services/paymentApi';
 import {
@@ -120,6 +120,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(resetApiState());
     toast.success('Logged out successfully!');
     navigate('/login');
   };

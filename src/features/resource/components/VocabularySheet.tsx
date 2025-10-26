@@ -13,6 +13,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BookOpen, Edit2, Trash2, Volume2, Plus } from 'lucide-react';
 import type { Flashcard } from '@/features/flashcard/types/flashcard.types';
 import CreateEditFlashcardDialog from './CreateEditFlashcardDialog';
+import { useDeleteFlashcardMutation } from '@/features/flashcard/services/flashcardApi';
+import { useToast } from '@/hooks/use-toast';
 
 interface VocabularySheetProps {
   flashcards: Flashcard[];
@@ -31,6 +33,34 @@ const VocabularySheet: React.FC<VocabularySheetProps> = ({
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = language === 'en' ? 'en-US' : 'vi-VN';
     speechSynthesis.speak(utterance);
+  };
+
+  const { toast } = useToast();
+  const [deleteFlashcard] = useDeleteFlashcardMutation();
+
+  const handleDelete = async (flashcard: Flashcard) => {
+    if (!flashcard._id) {
+      toast({
+        title: 'Error',
+        description: 'Cannot delete flashcard: missing ID.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await deleteFlashcard(flashcard._id).unwrap();
+      toast({ title: 'Deleted', description: 'Flashcard deleted.' });
+      // Let parent refetch if provided (keeps behavior consistent)
+      if (onRefetch) onRefetch();
+    } catch (error) {
+      console.error('Failed to delete flashcard', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete flashcard. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getCategoryName = (category: string | object): string => {
@@ -65,7 +95,7 @@ const VocabularySheet: React.FC<VocabularySheetProps> = ({
               resourceUrl={resourceUrl}
               onSuccess={onRefetch}
               trigger={
-                <Button type="button" size="sm" variant="outline">
+                <Button type="button" size="sm" className="mr-5">
                   <Plus className="w-4 h-4 mr-1" />
                   Add
                 </Button>
@@ -156,16 +186,14 @@ const VocabularySheet: React.FC<VocabularySheetProps> = ({
                               </Button>
                             }
                           />
-                          {onDelete && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onDelete(flashcard)}
-                              className="h-8 w-8 p-0 hover:bg-red-50 text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(flashcard)}
+                            className="h-8 w-8 p-0 hover:bg-red-50 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
                         </div>
                       </div>
 
