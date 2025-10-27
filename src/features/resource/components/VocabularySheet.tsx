@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -102,6 +103,9 @@ const VocabularySheet: React.FC<VocabularySheetProps> = ({
               }
             />
           </div>
+          <SheetDescription>
+            View and manage your saved flashcards from this resource
+          </SheetDescription>
         </SheetHeader>
 
         <ScrollArea className="h-full mt-6 pr-4">

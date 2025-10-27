@@ -26,6 +26,7 @@ const YouTubeTranscriptPlayer: React.FC<YouTubeTranscriptPlayerProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState(-1);
+  const [playerError, setPlayerError] = useState<string | null>(null);
   const playerRef = useRef<{
     seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
     playVideo: () => void;
@@ -109,6 +110,14 @@ const YouTubeTranscriptPlayer: React.FC<YouTubeTranscriptPlayerProps> = ({
   // YouTube player event handlers
   const onReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
+    setPlayerError(null); // Clear any previous errors
+  };
+
+  const onError: YouTubeProps['onError'] = (event) => {
+    console.error('YouTube player error:', event);
+    setPlayerError(
+      'Failed to load video. Please check your network connection.'
+    );
   };
 
   const onStateChange: YouTubeProps['onStateChange'] = (event) => {
@@ -169,15 +178,30 @@ const YouTubeTranscriptPlayer: React.FC<YouTubeTranscriptPlayerProps> = ({
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-0 min-h-[500px]">
           {/* Video Player - Left Side */}
           <div className="bg-black flex items-center justify-center">
-            <div className="w-full">
-              <YouTube
-                videoId={videoId}
-                opts={opts}
-                onReady={onReady}
-                onStateChange={onStateChange}
-                className="w-full h-full"
-              />
-            </div>
+            {playerError ? (
+              <div className="text-center p-8">
+                <div className="text-red-400 mb-4">{playerError}</div>
+                <a
+                  href={videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:underline"
+                >
+                  Watch on YouTube
+                </a>
+              </div>
+            ) : (
+              <div className="w-full">
+                <YouTube
+                  videoId={videoId}
+                  opts={opts}
+                  onReady={onReady}
+                  onError={onError}
+                  onStateChange={onStateChange}
+                  className="w-full h-full"
+                />
+              </div>
+            )}
           </div>
 
           {/* Transcript - Right Side */}
