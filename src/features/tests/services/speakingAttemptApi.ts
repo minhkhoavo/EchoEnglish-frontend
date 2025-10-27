@@ -2,10 +2,34 @@ import { api } from '@/core/api/api';
 
 export interface StartSpeakingAttemptRequest {
   toeicSpeakingTestId: string | number;
+  examMode: 'normal' | 'exam';
 }
 
-export interface StartSpeakingAttemptResponse {
-  testAttemptId: string;
+export type StartSpeakingAttemptResponse = SpeakingAttemptData;
+
+export interface SpeakingAttemptData {
+  _id: string;
+  testAttemptId?: string;
+  userId: string;
+  toeicSpeakingTestId: string;
+  status: 'in_progress' | 'completed';
+  totalScore: number;
+  level: string;
+  examMode: 'normal' | 'exam';
+  createdAt: string;
+  submissionTimestamp?: string;
+  parts: Array<{
+    partIndex: number;
+    partTitle: string;
+    questions: Array<{
+      questionNumber: number;
+      promptText?: string;
+      promptImage?: string;
+      s3AudioUrl: string | null;
+      recordingId: string | null;
+      result: unknown | null;
+    }>;
+  }>;
 }
 
 export interface SubmitSpeakingQuestionParams {
@@ -16,6 +40,10 @@ export interface SubmitSpeakingQuestionParams {
 
 export interface FinishSpeakingAttemptParams {
   testAttemptId: string;
+}
+
+export interface GetAttemptByIdParams {
+  attemptId: string;
 }
 
 export const speakingAttemptApi = api.injectEndpoints({
@@ -29,6 +57,10 @@ export const speakingAttemptApi = api.injectEndpoints({
         method: 'POST',
         data: body,
       }),
+      transformResponse: (response: {
+        message: string;
+        data: SpeakingAttemptData;
+      }) => response.data,
     }),
 
     submitSpeakingQuestion: builder.mutation<

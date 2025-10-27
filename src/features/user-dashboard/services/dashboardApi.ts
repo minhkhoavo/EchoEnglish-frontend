@@ -137,7 +137,7 @@ export const dashboardApi = api.injectEndpoints({
     // Check for missed sessions
     checkMissedSessions: builder.query<CheckMissedSessionsResponse, void>({
       query: () => ({
-        url: '/roadmap-calibration/check-missed',
+        url: '/learning-plans/check-missed',
         method: 'GET',
       }),
       keepUnusedDataFor: 0,

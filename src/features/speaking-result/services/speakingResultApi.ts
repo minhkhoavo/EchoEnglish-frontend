@@ -50,7 +50,6 @@ type BackendSpeakingResult = {
   _id: MaybeOID;
   userId: MaybeOID;
   toeicSpeakingTestId: MaybeOID;
-  testIdNumeric: number;
   submissionTimestamp: MaybeISO;
   status: string;
   parts: BackendPart[];
@@ -231,7 +230,7 @@ function transformSpeakingResult(input: BackendSpeakingResult): {
     ),
     testDate: testDateIso,
     testDuration: 20,
-    testTitle: `TOEIC Speaking Test #${input.testIdNumeric}`,
+    testTitle: `TOEIC Speaking Test`,
     completionRate: (() => {
       const total = parts.reduce((acc, p) => acc + p.questions.length, 0);
       const answered = parts.reduce(

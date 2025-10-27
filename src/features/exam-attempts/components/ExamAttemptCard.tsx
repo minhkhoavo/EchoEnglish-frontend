@@ -209,7 +209,7 @@ export const ExamAttemptCard: React.FC<ExamAttemptCardProps> = ({
             attempt.type === 'speaking' &&
             onContinue && (
               <Button
-                onClick={() => onContinue(attempt.id)}
+                onClick={() => onContinue(attempt.toeicSpeakingTestId)}
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md h-8 text-xs"
                 size="sm"
               >

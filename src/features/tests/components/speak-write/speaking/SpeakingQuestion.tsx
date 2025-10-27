@@ -2,20 +2,15 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Clock } from 'lucide-react';
+import { Clock, CheckCircle2 } from 'lucide-react';
 import type { SpeakingQuestionProps } from '@/features/tests/types/speaking-test.types';
 import { Loader2, Upload } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
-import {
-  updateQuestionPhase,
-  updateQuestionTime,
-  markQuestionSubmitted,
-  nextQuestion,
-  initQuestionState,
-} from '@/features/tests/slices/speakingExamSlice';
+import { goToQuestion } from '@/features/tests/slices/speakingExamSlice';
 import { useSubmitSpeakingQuestionMutation } from '@/features/tests/services/speakingAttemptApi';
+import { AudioPlayer } from '@/components/AudioPlayer';
 
-// Import new shared components
+// Import shared components
 import { QuestionTimer } from '../QuestionTimer';
 import { RecordingControls } from '../RecordingControls';
 import { HelperButtons } from '../HelperButtons';
@@ -53,6 +48,8 @@ const playPipSound = (frequency: number = 800, duration: number = 200) => {
   oscillator.stop(audioContext.currentTime + duration / 1000);
 };
 
+type QuestionPhase = 'idle' | 'preparation' | 'response' | 'completed';
+
 export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
   question,
   partTitle,
@@ -65,51 +62,45 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
   testAttemptId,
   onSubmitRecording,
   onBlobRecorded,
+  // Get uploaded status from backend data - this is the source of truth
+  uploadedAudioUrl,
 }) => {
   const dispatch = useAppDispatch();
-  const { examMode, questionStates, isAutoFlow, playPipSounds } =
+  const { examMode, playPipSounds, currentQuestionIndex, currentPartIndex } =
     useAppSelector((state) => state.speakingExam);
   const [submitSpeakingQuestion] = useSubmitSpeakingQuestionMutation();
 
-  // Get current question state from Redux or initialize
-  const questionState = questionStates[question.id] || {
-    id: question.id,
-    phase: 'idle',
-    preparationTimeLeft: question.time_to_think,
-    recordingTimeLeft: question.limit_time,
-    hasAudio: false,
-  };
+  // Local loading state for this specific question
+  const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
 
-  // Use Redux state for phase and timing
-  const currentPhase = questionState.phase;
-  const preparationTimeLeft = questionState.preparationTimeLeft;
-  const responseTimeLeft = questionState.recordingTimeLeft;
+  // Check if already uploaded based on backend data
+  const isAlreadyUploaded = !!uploadedAudioUrl;
+  const isViewOnlyMode = isAlreadyUploaded;
+
+  // Local component state only - no state management, backend is source of truth
+  const [currentPhase, setCurrentPhase] = useState<QuestionPhase>(
+    isAlreadyUploaded ? 'completed' : 'idle'
+  );
+  const [preparationTimeLeft, setPreparationTimeLeft] = useState(
+    question.time_to_think ?? 0
+  );
+  const [responseTimeLeft, setResponseTimeLeft] = useState(
+    question.limit_time ?? 60
+  );
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [showSampleAnswer, setShowSampleAnswer] = useState(false);
   const [showIdea, setShowIdea] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
   const autoFlowTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // Initialize refs from question props to avoid referencing block-scoped
-  // Redux variables before they're declared during module evaluation.
   const preparationTimeRef = useRef<number>(question.time_to_think ?? 0);
   const responseTimeRef = useRef<number>(question.limit_time ?? 0);
   const audioResumedRef = useRef<boolean>(false);
-
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  // Map Redux phase to component phase
-  const componentPhase =
-    currentPhase === 'recording'
-      ? ('response' as const)
-      : currentPhase === 'submitted'
-        ? ('completed' as const)
-        : (currentPhase as 'idle' | 'preparation' | 'completed');
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -119,11 +110,29 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
       }
       if (autoFlowTimeoutRef.current) {
         clearTimeout(autoFlowTimeoutRef.current);
+        autoFlowTimeoutRef.current = null;
       }
     };
-  }, [question.id]);
+  }, []);
 
-  // Keep refs in sync with latest redux values so interval callbacks use fresh numbers
+  // Reset refs and state when question changes or component re-mounts
+  useEffect(() => {
+    preparationTimeRef.current = question.time_to_think ?? 0;
+    responseTimeRef.current = question.limit_time ?? 60;
+    setPreparationTimeLeft(question.time_to_think ?? 0);
+    setResponseTimeLeft(question.limit_time ?? 60);
+
+    // Reset phase based on uploaded status - this is critical for resume
+    const newPhase = isAlreadyUploaded ? 'completed' : 'idle';
+    setCurrentPhase(newPhase);
+  }, [
+    question.id,
+    question.time_to_think,
+    question.limit_time,
+    isAlreadyUploaded,
+  ]);
+
+  // Keep refs in sync with state
   useEffect(() => {
     preparationTimeRef.current = preparationTimeLeft;
   }, [preparationTimeLeft]);
@@ -158,42 +167,45 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
         setRecordedBlob(blob);
         onBlobRecorded?.(question.id, blob);
 
-        // Auto-submit in exam mode
-        if (testAttemptId) {
+        // Auto-submit recording
+        if (testAttemptId && !isAlreadyUploaded) {
           try {
-            await submitSpeakingQuestion({
+            const result = await submitSpeakingQuestion({
               testAttemptId,
               questionNumber: absoluteQuestionNumber ?? 0,
               file: blob,
             }).unwrap();
 
-            dispatch(
-              markQuestionSubmitted({
-                questionId: question.id,
-                hasAudio: true,
-              })
-            );
-
+            setCurrentPhase('completed');
             if (playPipSounds) {
               playPipSound(600, 300);
             }
 
-            if ((examMode === 'exam' && isAutoFlow) || examMode === 'normal') {
-              setTimeout(() => dispatch(nextQuestion()), 1500);
-            }
+            toast.success('Recording uploaded successfully');
+            console.log('Recording submitted:', result);
 
-            toast.success('Question submitted successfully');
-          } catch (error) {
-            console.error('Failed to submit:', error);
-            toast.error('Failed to submit recording');
-            if ((examMode === 'exam' && isAutoFlow) || examMode === 'normal') {
-              dispatch(
-                markQuestionSubmitted({
-                  questionId: question.id,
-                  hasAudio: true,
-                })
+            // Auto move to next question after short delay in exam mode
+            if (examMode === 'exam') {
+              setTimeout(
+                () =>
+                  dispatch(
+                    goToQuestion({ questionIndex: currentQuestionIndex + 1 })
+                  ),
+                1500
               );
-              setTimeout(() => dispatch(nextQuestion()), 1500);
+            }
+          } catch (error) {
+            console.error('Failed to submit recording:', error);
+            toast.error('Failed to upload recording');
+            // Still move to next question in exam mode
+            if (examMode === 'exam') {
+              setTimeout(
+                () =>
+                  dispatch(
+                    goToQuestion({ questionIndex: currentQuestionIndex + 1 })
+                  ),
+                1500
+              );
             }
           }
         }
@@ -203,26 +215,23 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
-      dispatch(
-        updateQuestionPhase({ questionId: question.id, phase: 'recording' })
-      );
     } catch (error) {
       console.error('Error starting recording:', error);
       toast.error('Failed to start recording');
     }
   }, [
-    dispatch,
     question.id,
     onBlobRecorded,
     testAttemptId,
     absoluteQuestionNumber,
-    examMode,
-    isAutoFlow,
     playPipSounds,
     submitSpeakingQuestion,
+    dispatch,
+    isAlreadyUploaded,
+    currentQuestionIndex,
+    examMode,
   ]);
 
-  // Helper function to handle timeout logic
   const handleTimeout = useCallback(() => {
     clearTimer();
 
@@ -233,36 +242,11 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
         setIsRecording(false);
       }
     } catch (e) {
-      // ignore stop errors
+      // ignore
     }
 
-    // Handle auto-flow modes
-    if ((examMode === 'exam' && isAutoFlow) || examMode === 'normal') {
-      if (recordedBlob && testAttemptId) {
-        // Submit will be handled by onstop callback
-      } else {
-        dispatch(
-          markQuestionSubmitted({
-            questionId: question.id,
-            hasAudio: !!recordedBlob,
-          })
-        );
-        setTimeout(() => dispatch(nextQuestion()), 1500);
-      }
-    } else {
-      dispatch(
-        updateQuestionPhase({ questionId: question.id, phase: 'completed' })
-      );
-    }
-  }, [
-    clearTimer,
-    examMode,
-    isAutoFlow,
-    recordedBlob,
-    testAttemptId,
-    dispatch,
-    question.id,
-  ]);
+    setCurrentPhase('completed');
+  }, [clearTimer]);
 
   // Generic timer function
   const createTimer = useCallback(
@@ -307,35 +291,26 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
   const startResponseTimer = useCallback(() => {
     createTimer(
       responseTimeRef,
-      (time) =>
-        dispatch(
-          updateQuestionTime({ questionId: question.id, recordingTime: time })
-        ),
+      (time) => setResponseTimeLeft(time),
       () => setTimeout(handleTimeout, 350)
     );
-  }, [createTimer, dispatch, question.id, handleTimeout]);
+  }, [createTimer, handleTimeout]);
 
   const handleStartPreparation = useCallback(() => {
     if (currentPhase !== 'idle') return;
 
-    dispatch(
-      updateQuestionPhase({ questionId: question.id, phase: 'preparation' })
-    );
+    setCurrentPhase('preparation');
     if (playPipSounds) playPipSound(800, 200);
 
     createTimer(
       preparationTimeRef,
-      (time) =>
-        dispatch(
-          updateQuestionTime({ questionId: question.id, preparationTime: time })
-        ),
+      (time) => setPreparationTimeLeft(time),
       () => {
-        dispatch(
-          updateQuestionPhase({ questionId: question.id, phase: 'recording' })
-        );
+        setCurrentPhase('response');
         if (playPipSounds) playPipSound(1000, 200);
 
-        if ((examMode === 'exam' && isAutoFlow) || examMode === 'normal') {
+        // Auto-start recording in exam mode
+        if (examMode === 'exam') {
           setTimeout(() => {
             startRecording();
             startResponseTimer();
@@ -347,61 +322,31 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
     );
   }, [
     currentPhase,
-    dispatch,
-    question.id,
     playPipSounds,
     createTimer,
     examMode,
-    isAutoFlow,
     startRecording,
     startResponseTimer,
   ]);
 
-  // Auto-start preparation in exam mode
+  // Auto-start preparation in exam mode ONLY (not in practice mode)
+  // This ensures each question is independent in practice mode
   useEffect(() => {
-    if (examMode === 'exam' && isAutoFlow && currentPhase === 'idle') {
-      autoFlowTimeoutRef.current = setTimeout(() => {
+    if (examMode === 'exam' && currentPhase === 'idle' && !isViewOnlyMode) {
+      const timeoutId = setTimeout(() => {
         handleStartPreparation();
       }, 1000);
-    }
-  }, [examMode, isAutoFlow, currentPhase, handleStartPreparation]);
 
-  const handleManualStartRecording = useCallback(() => {
-    if (currentPhase === 'recording' && !isRecording) {
-      startRecording();
-    } else if (currentPhase === 'recording' && isRecording) {
-      if (mediaRecorderRef.current) {
-        mediaRecorderRef.current.stop();
-        setIsRecording(false);
-      }
+      return () => clearTimeout(timeoutId);
     }
-  }, [currentPhase, isRecording, startRecording]);
+  }, [examMode, currentPhase, isViewOnlyMode, handleStartPreparation]);
 
   const handleRecordAgain = useCallback(() => {
     setRecordedBlob(null);
-    if (currentPhase === 'recording') {
-      dispatch(
-        updateQuestionPhase({ questionId: question.id, phase: 'preparation' })
-      );
-    } else {
-      dispatch(
-        updateQuestionPhase({ questionId: question.id, phase: 'recording' })
-      );
-    }
-    dispatch(
-      updateQuestionTime({
-        questionId: question.id,
-        recordingTime: question.limit_time || 60,
-      })
-    );
+    setCurrentPhase('response');
+    setResponseTimeLeft(question.limit_time || 60);
     startResponseTimer();
-  }, [
-    dispatch,
-    question.id,
-    question.limit_time,
-    startResponseTimer,
-    currentPhase,
-  ]);
+  }, [question.limit_time, startResponseTimer]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
@@ -409,22 +354,6 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
       setIsRecording(false);
     }
   }, [isRecording]);
-
-  const handleNewRecording = () => {
-    setRecordedBlob(null);
-    startRecording();
-  };
-
-  // Initialize question state in Redux
-  useEffect(() => {
-    dispatch(
-      initQuestionState({
-        questionId: question.id,
-        preparationTime: question.time_to_think ?? 0,
-        recordingTime: question.limit_time ?? 0,
-      })
-    );
-  }, [dispatch, question.id, question.time_to_think, question.limit_time]);
 
   return (
     <Card className="w-full border-l-4 border-cyan-500">
@@ -437,55 +366,69 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
           imageUrl={question.image || undefined}
         />
 
-        <QuestionTimer
-          currentPhase={componentPhase}
-          preparationTime={
-            typeof question.time_to_think === 'number'
-              ? question.time_to_think
-              : 0
-          }
-          responseTime={
-            typeof question.limit_time === 'number' ? question.limit_time : 0
-          }
-          preparationTimeLeft={
-            typeof preparationTimeLeft === 'number' ? preparationTimeLeft : 0
-          }
-          responseTimeLeft={
-            typeof responseTimeLeft === 'number' ? responseTimeLeft : 0
-          }
-        />
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2">
-          {currentPhase === 'idle' && (
-            <Button onClick={handleStartPreparation} className="flex-1">
-              <Clock className="h-4 w-4 mr-2" />
-              Start Preparation ({question.time_to_think}s)
-            </Button>
-          )}
-
-          <RecordingControls
-            currentPhase={componentPhase}
-            isRecording={isRecording}
-            recordedBlob={recordedBlob}
-            responseTimeLeft={
-              typeof responseTimeLeft === 'number' ? responseTimeLeft : 0
-            }
-            onStartRecording={startRecording}
-            onStopRecording={stopRecording}
-            onRecordAgain={handleRecordAgain}
+        {isViewOnlyMode ? (
+          <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-md">
+            <CheckCircle2 className="h-5 w-5" />
+            <span className="font-medium">Recording submitted</span>
+          </div>
+        ) : (
+          <QuestionTimer
+            currentPhase={currentPhase}
             preparationTime={
               typeof question.time_to_think === 'number'
                 ? question.time_to_think
                 : 0
             }
+            responseTime={
+              typeof question.limit_time === 'number' ? question.limit_time : 0
+            }
+            preparationTimeLeft={
+              typeof preparationTimeLeft === 'number' ? preparationTimeLeft : 0
+            }
+            responseTimeLeft={
+              typeof responseTimeLeft === 'number' ? responseTimeLeft : 0
+            }
           />
+        )}
+      </CardHeader>
 
-          {(currentPhase === 'completed' ||
-            (examMode === 'exam' && questionState.phase === 'submitted')) &&
-            recordedBlob && (
+      <CardContent className="space-y-4">
+        {/* View-only mode: Show playback of uploaded audio */}
+        {isViewOnlyMode && uploadedAudioUrl && (
+          <div className="p-4 bg-muted rounded-lg">
+            <h4 className="font-semibold mb-2">Your Submitted Recording:</h4>
+            <AudioPlayer audioUrl={uploadedAudioUrl} />
+          </div>
+        )}
+
+        {/* Action Buttons - only show if not uploaded */}
+        {!isViewOnlyMode && (
+          <div className="flex flex-wrap gap-2">
+            {currentPhase === 'idle' && (
+              <Button onClick={handleStartPreparation} className="flex-1">
+                <Clock className="h-4 w-4 mr-2" />
+                Start Preparation ({question.time_to_think}s)
+              </Button>
+            )}
+
+            <RecordingControls
+              currentPhase={currentPhase}
+              isRecording={isRecording}
+              recordedBlob={recordedBlob}
+              responseTimeLeft={
+                typeof responseTimeLeft === 'number' ? responseTimeLeft : 0
+              }
+              onStartRecording={startRecording}
+              onStopRecording={stopRecording}
+              onRecordAgain={handleRecordAgain}
+              preparationTime={
+                typeof question.time_to_think === 'number'
+                  ? question.time_to_think
+                  : 0
+              }
+            />
+
+            {currentPhase === 'completed' && recordedBlob && (
               <Button
                 onClick={handleRecordAgain}
                 variant="outline"
@@ -495,83 +438,111 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
               </Button>
             )}
 
-          <HelperButtons
-            hasIdea={!!question.idea}
-            hasSampleAnswer={!!question.sample_answer}
-            showIdea={showIdea}
-            showSampleAnswer={showSampleAnswer}
-            showSuggestions={false}
-            onToggleIdea={() => setShowIdea(!showIdea)}
-            onToggleSampleAnswer={() => setShowSampleAnswer(!showSampleAnswer)}
-            onToggleSuggestions={() => {}}
-          />
+            <HelperButtons
+              hasIdea={!!question.idea}
+              hasSampleAnswer={!!question.sample_answer}
+              showIdea={showIdea}
+              showSampleAnswer={showSampleAnswer}
+              showSuggestions={false}
+              onToggleIdea={() => setShowIdea(!showIdea)}
+              onToggleSampleAnswer={() =>
+                setShowSampleAnswer(!showSampleAnswer)
+              }
+              onToggleSuggestions={() => {}}
+            />
 
-          {/* File upload for manual submission */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="audio/*"
-            className="hidden"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file || !testAttemptId) return;
-
-              try {
-                setIsSubmitting(true);
-                await submitSpeakingQuestion({
-                  testAttemptId,
-                  questionNumber: absoluteQuestionNumber ?? 0,
-                  file,
-                }).unwrap();
-
-                dispatch(
-                  markQuestionSubmitted({
-                    questionId: question.id,
-                    hasAudio: true,
-                  })
-                );
-
-                if (playPipSounds) {
-                  playPipSound(600, 300);
+            {/* File upload for manual submission */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file || !testAttemptId) {
+                  toast.error('Please wait for test to initialize');
+                  return;
                 }
 
-                toast.success('File uploaded and submitted successfully');
-              } catch (error) {
-                console.error('Failed to submit file:', error);
-                toast.error('Failed to submit file');
-              } finally {
-                setIsSubmitting(false);
-                // Reset input
-                e.currentTarget.value = '';
-              }
-            }}
-          />
-          <div className="flex items-center gap-2 ml-auto">
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              variant="outline"
-              disabled={isSubmitting || !testAttemptId}
-              title="Upload an audio file manually for this question"
-            >
-              {isSubmitting ? (
-                <span className="inline-flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Uploading
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-2">
-                  <Upload className="h-4 w-4" /> Upload File
-                </span>
-              )}
-            </Button>
-          </div>
-        </div>
-        <AnswerDisplay
-          currentPhase={componentPhase}
-          recordedBlob={recordedBlob}
-          onRecordAgain={handleRecordAgain}
-        />
-        <RecordingPlayback recordedBlob={recordedBlob} />
+                try {
+                  setIsLocalSubmitting(true);
+                  const result = await submitSpeakingQuestion({
+                    testAttemptId,
+                    questionNumber: absoluteQuestionNumber ?? 0,
+                    file,
+                  }).unwrap();
 
+                  setCurrentPhase('completed');
+                  if (playPipSounds) {
+                    playPipSound(600, 300);
+                  }
+
+                  toast.success('File uploaded successfully');
+                  console.log('File submitted:', result);
+
+                  // Auto move to next question after short delay in exam mode
+                  if (examMode === 'exam') {
+                    setTimeout(
+                      () =>
+                        dispatch(
+                          goToQuestion({
+                            questionIndex: currentQuestionIndex + 1,
+                          })
+                        ),
+                      1500
+                    );
+                  }
+                } catch (error) {
+                  console.error('Failed to submit file:', error);
+                  toast.error('Failed to submit file');
+                } finally {
+                  setIsLocalSubmitting(false);
+                  // Reset input
+                  e.currentTarget.value = '';
+                }
+              }}
+            />
+            <div className="flex items-center gap-2 ml-auto">
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                variant="outline"
+                disabled={
+                  isLocalSubmitting || !testAttemptId || isAlreadyUploaded
+                }
+                title={
+                  !testAttemptId
+                    ? 'Test attempt ID not available'
+                    : isAlreadyUploaded
+                      ? 'Recording already uploaded'
+                      : 'Upload an audio file manually for this question'
+                }
+              >
+                {isLocalSubmitting ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Uploading
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2">
+                    <Upload className="h-4 w-4" /> Upload File
+                  </span>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!isViewOnlyMode && (
+          <>
+            <AnswerDisplay
+              currentPhase={currentPhase}
+              recordedBlob={recordedBlob}
+              onRecordAgain={handleRecordAgain}
+            />
+            <RecordingPlayback recordedBlob={recordedBlob} />
+          </>
+        )}
+
+        {/* Helper sections - available in both modes */}
         <IdeasDisplay idea={question.idea || ''} show={showIdea} />
 
         <SampleAnswerDisplay

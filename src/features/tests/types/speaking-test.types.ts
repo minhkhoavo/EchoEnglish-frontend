@@ -70,6 +70,8 @@ export interface SpeakingQuestionProps {
     file: Blob | File;
   }) => Promise<void> | void;
   onBlobRecorded?: (questionId: number, blob: Blob) => void;
+  // Backend state - if this exists, the question is already uploaded
+  uploadedAudioUrl?: string | null;
 }
 
 export interface SpeakingPartProps {

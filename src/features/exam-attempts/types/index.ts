@@ -14,6 +14,7 @@ export interface ExamAttempt {
   score?: number;
   maxScore?: number;
   percentage?: number;
+  toeicSpeakingTestId?: string;
 }
 
 export interface ExamAttemptsState {
@@ -60,7 +61,6 @@ export interface SpeakingAttempt {
   _id: string;
   userId: string;
   toeicSpeakingTestId: string;
-  testIdNumeric: number;
   submissionTimestamp: string;
   status: 'in_progress' | 'completed';
   createdAt: string;
@@ -77,7 +77,6 @@ export interface WritingAttempt {
   _id: string;
   userId: string;
   toeicWritingTestId: string;
-  testIdNumeric: number;
   submissionTimestamp: string;
   status: 'in_progress' | 'completed';
   createdAt: string;

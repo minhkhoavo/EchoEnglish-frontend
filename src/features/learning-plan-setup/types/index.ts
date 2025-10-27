@@ -43,7 +43,7 @@ export type PrimaryGoal =
 
 export type StudyTimePerDay = 15 | 30 | 60 | 120;
 
-export type WeekDay = 1 | 2 | 3 | 4 | 5 | 6 | 7; // 1=Monday, 7=Sunday
+export type WeekDay = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0=Sunday, 1=Monday, ..., 6=Saturday
 
 export type PreferredStudyTime = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -120,13 +120,13 @@ export const CURRENT_LEVEL_LABELS: Record<CurrentLevel, string> = {
 };
 
 export const WEEKDAY_LABELS: Record<WeekDay, string> = {
+  0: 'Sunday',
   1: 'Monday',
   2: 'Tuesday',
   3: 'Wednesday',
   4: 'Thursday',
   5: 'Friday',
   6: 'Saturday',
-  7: 'Sunday',
 };
 
 export const DOMAIN_LABELS: Record<Domain, string> = {
