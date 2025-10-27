@@ -6,7 +6,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useGetTranscriptMutation } from '@/features/resource/services/resourceApi';
+import {
+  useGetTranscriptMutation,
+  useGetResourceByIdQuery,
+} from '@/features/resource/services/resourceApi';
 import { useGetFlashcardsBySourceQuery } from '@/features/flashcard/services/flashcardApi';
 import {
   ResourceType,
@@ -32,12 +35,24 @@ export default function ResourceDetailPage() {
 
   const { toast } = useToast();
 
-  // Get resource from location state (passed from search page)
-  const resource = location.state?.resource;
+  // Get resource from location state OR fetch by ID
+  const resourceFromState = location.state?.resource;
+  const {
+    data: resourceResponse,
+    isLoading: isLoadingResource,
+    error: resourceError,
+  } = useGetResourceByIdQuery(id || '', {
+    skip: !id || !!resourceFromState, // Skip if we have resource from state
+  });
+
+  // Use resource from state if available, otherwise from API
+  const resource = resourceFromState || resourceResponse?.data;
 
   // API calls
   const { data: flashcardsResponse, refetch: refetchFlashcards } =
-    useGetFlashcardsBySourceQuery(resource?.url || '');
+    useGetFlashcardsBySourceQuery(resource?.url || '', {
+      skip: !resource?.url, // Skip if resource URL is not available yet
+    });
   const [getTranscript, { isLoading: isLoadingTranscript }] =
     useGetTranscriptMutation();
 
@@ -129,7 +144,22 @@ export default function ResourceDetailPage() {
     refetchFlashcards();
   };
 
-  if (!resource) {
+  // Loading state
+  if (isLoadingResource) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading resource...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error or not found state
+  if (!resource || resourceError) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="flex items-center justify-center h-96">
