@@ -63,40 +63,6 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
     setExpandedItems(newExpanded);
   };
 
-  // Handle resource click
-  const handleResourceClick = (resource: LearningResource) => {
-    if (resource.type === 'article' && resource.url) {
-      window.open(resource.url, '_blank', 'noopener,noreferrer');
-      return;
-    }
-
-    if (resource.type === 'video' && resource.url) {
-      window.open(resource.url, '_blank', 'noopener,noreferrer');
-      return;
-    }
-
-    if (
-      resource.type === 'vocabulary_set' ||
-      resource.type === 'personalized_guide'
-    ) {
-      setSelectedResource(resource);
-      setResourceModalOpen(true);
-      return;
-    }
-
-    if (resource.generatedContent) {
-      setSelectedResource(resource);
-      setResourceModalOpen(true);
-      return;
-    }
-
-    toast({
-      title: 'Resource not available',
-      description: 'This resource type is not yet supported.',
-      variant: 'destructive',
-    });
-  };
-
   // Handle drill click
   const handleDrillClick = (drill: WeaknessDrill) => {
     setSelectedDrill(drill);

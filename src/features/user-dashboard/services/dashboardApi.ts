@@ -6,6 +6,7 @@ import type {
   TrackResourceTimeRequest,
   CompletePracticeDrillRequest,
   ListeningReadingChartResponse,
+  CheckMissedSessionsResponse,
 } from '../types/dashboard.types';
 import type {
   RoadmapApiResponse,
@@ -26,7 +27,7 @@ export const dashboardApi = api.injectEndpoints({
         url: '/users/competency-profile/insights',
         method: 'GET',
       }),
-      providesTags: ['Dashboard'],
+      //   providesTags: ['Dashboard'],
     }),
 
     // Fetch daily lesson
@@ -79,7 +80,7 @@ export const dashboardApi = api.injectEndpoints({
         url: '/learning-plans/active',
         method: 'GET',
       }),
-      providesTags: ['Dashboard'],
+      //   providesTags: ['Dashboard'],
     }),
 
     // Track resource time spent
@@ -132,6 +133,15 @@ export const dashboardApi = api.injectEndpoints({
       }),
       providesTags: ['Dashboard'],
     }),
+
+    // Check for missed sessions
+    checkMissedSessions: builder.query<CheckMissedSessionsResponse, void>({
+      query: () => ({
+        url: '/roadmap-calibration/check-missed',
+        method: 'GET',
+      }),
+      keepUnusedDataFor: 0,
+    }),
   }),
 });
 
@@ -147,6 +157,7 @@ export const {
   useCompletePracticeDrillMutation,
   useGetStudyPreferencesQuery,
   useGetListeningReadingChartDataQuery,
+  useCheckMissedSessionsQuery,
 } = dashboardApi;
 
 // Helper function to transform competency data (keeping existing logic)

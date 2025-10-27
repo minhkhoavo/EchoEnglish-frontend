@@ -147,9 +147,14 @@ export function DailyLesson({
   const completedItems = dailyLesson.planItems.filter(
     (item) => item.status === 'completed'
   ).length;
+  const skippedItems = dailyLesson.planItems.filter(
+    (item) => item.status === 'skipped'
+  ).length;
+  console.log('skippedItems:', skippedItems);
   const totalItems = dailyLesson.planItems.length;
+  const activeItems = totalItems - skippedItems; // Exclude skipped from total
   const progressPercentage =
-    totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
+    activeItems > 0 ? (completedItems / activeItems) * 100 : 0;
 
   return (
     <div className="space-y-4">
@@ -166,18 +171,16 @@ export function DailyLesson({
                   {dailyLesson.title}
                 </h2>
                 <div className="flex items-center gap-3 text-sm text-[#475569]">
-                  <span>
-                    Day {dailyLesson.dayNumber}, Week {dailyLesson.weekNumber}
-                  </span>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
+                  <span>Week {dailyLesson.weekNumber}</span>
+                  <span>• Learning</span>
+                  {/* <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     <span>{dailyLesson.totalEstimatedTime} min</span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
               <Badge className="bg-[#10b981] text-white border-0">
-                {completedItems}/{totalItems} completed
+                {completedItems}/{activeItems} completed
               </Badge>
             </div>
 
@@ -216,6 +219,7 @@ export function DailyLesson({
       {dailyLesson.planItems.map((item, index) => {
         const isCompleted = item.status === 'completed';
         const isInProgress = item.status === 'in-progress';
+        const isSkipped = item.status === 'skipped';
         const totalResources = item.resources.length;
         const totalDrills = item.practiceDrills.length;
         const completedResources = item.resources.filter(
@@ -228,7 +232,7 @@ export function DailyLesson({
         return (
           <Card
             key={item._id}
-            className={`p-5 ${isCompleted ? 'bg-gray-50 opacity-75' : 'bg-white'} ${isInProgress ? 'border-2 border-blue-400' : ''}`}
+            className={`p-5 ${isCompleted ? 'bg-gray-50 opacity-75' : isSkipped ? 'bg-[#fee2e2] opacity-75 border border-[#fecaca]' : 'bg-white'} ${isInProgress ? 'border-2 border-blue-400' : ''}`}
           >
             {/* Item Header */}
             <div className="flex items-start justify-between mb-4">
@@ -240,7 +244,9 @@ export function DailyLesson({
                         ? 'bg-[#10b981] text-white'
                         : isInProgress
                           ? 'bg-[#3b82f6] text-white'
-                          : 'bg-[#94a3b8] text-white'
+                          : isSkipped
+                            ? 'bg-[#fca5a5] text-[#991b1b]'
+                            : 'bg-[#94a3b8] text-white'
                     }`}
                   >
                     Step {index + 1}
@@ -254,6 +260,11 @@ export function DailyLesson({
                       className="text-xs border-blue-400 text-blue-600"
                     >
                       In Progress
+                    </Badge>
+                  )}
+                  {isSkipped && (
+                    <Badge className="text-xs bg-[#fecaca] text-[#dc2626] border-0">
+                      Skipped
                     </Badge>
                   )}
                   {/* Activity completion status */}
@@ -290,7 +301,7 @@ export function DailyLesson({
                 </div>
               </div>
 
-              {!isCompleted && onItemComplete && (
+              {!isCompleted && !isSkipped && onItemComplete && (
                 <Button
                   className="bg-[#10b981] hover:bg-[#059669] text-white"
                   onClick={() => onItemComplete(item._id)}
@@ -302,7 +313,7 @@ export function DailyLesson({
             </div>
 
             {/* Learning Resources Section */}
-            {totalResources > 0 && (
+            {totalResources > 0 && !isSkipped && (
               <div className="mb-6">
                 <h4 className="text-sm font-bold text-[#0f172a] mb-3 flex items-center gap-2">
                   <BookOpen className="w-4 h-4 text-[#3b82f6]" />
@@ -328,7 +339,7 @@ export function DailyLesson({
             )}
 
             {/* Practice Drills Section */}
-            {totalDrills > 0 && (
+            {totalDrills > 0 && !isSkipped && (
               <div className="mb-4">
                 <h4 className="text-sm font-bold text-[#0f172a] mb-3 flex items-center gap-2">
                   <Zap className="w-4 h-4 text-[#10b981]" />

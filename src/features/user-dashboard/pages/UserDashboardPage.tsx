@@ -23,6 +23,7 @@ import {
   AIInsights,
   LearningStatsSidebar,
   StudyPreferencesCard,
+  MissedSessionsDialog,
 } from '../components';
 import { fetchDashboardData } from '../services/dashboardService';
 import {
@@ -37,6 +38,7 @@ import {
   useGetActiveRoadmapQuery,
   useTrackResourceTimeMutation,
   useGetListeningReadingChartDataQuery,
+  useCheckMissedSessionsQuery,
 } from '../services/dashboardApi';
 import type {
   AIInsight,
@@ -69,17 +71,6 @@ export const UserDashboardPage = () => {
     isLoading: competencyLoading,
     error: competencyError,
   } = useGetCompetencyInsightsQuery();
-  const { data: dailyLessonResponse, isLoading: dailyLessonQueryLoading } =
-    useGetDailyLessonQuery();
-
-  // Extract daily lesson from response
-  const dailyLesson = dailyLessonResponse?.data || null;
-  const dailyLessonLoading = dailyLessonQueryLoading;
-
-  const [completeLessonItemMutation] = useCompleteLessonItemMutation();
-  const [trackResourceTime] = useTrackResourceTimeMutation();
-  const { data: roadmapResponse, isLoading: roadmapLoading } =
-    useGetActiveRoadmapQuery();
 
   // Get listening/reading chart data
   const { data: chartDataResponse, isLoading: chartLoading } =
@@ -97,11 +88,52 @@ export const UserDashboardPage = () => {
       }))
     : [];
 
-  // Extract roadmap data from response
-  const roadmapData: RoadmapData | null = roadmapResponse?.data || null;
-
   // Local state
   const [selectedTab, setSelectedTab] = useState('overview');
+  const [missedSessionsDialogOpen, setMissedSessionsDialogOpen] =
+    useState(false);
+
+  // Only fetch daily lesson and roadmap when user switches to practice tab
+  const shouldFetchPracticeData = selectedTab === 'practice';
+
+  // Check for missed sessions when accessing Today or Progress tabs
+  const shouldCheckMissedSessions =
+    selectedTab === 'practice' || selectedTab === 'progress';
+
+  const { data: missedSessionsData } = useCheckMissedSessionsQuery(undefined, {
+    skip: !shouldCheckMissedSessions,
+  });
+
+  // Show dialog when missed sessions are detected
+  useEffect(() => {
+    if (
+      missedSessionsData?.data?.hasMissedSessions &&
+      (missedSessionsData.data.action === 'mark_skipped' ||
+        missedSessionsData.data.action === 'regenerate_week')
+    ) {
+      setMissedSessionsDialogOpen(true);
+    }
+  }, [missedSessionsData]);
+
+  const { data: dailyLessonResponse, isLoading: dailyLessonQueryLoading } =
+    useGetDailyLessonQuery(undefined, {
+      skip: !shouldFetchPracticeData,
+    });
+
+  // Extract daily lesson from response
+  const dailyLesson = dailyLessonResponse?.data || null;
+  const dailyLessonLoading = dailyLessonQueryLoading;
+
+  const [completeLessonItemMutation] = useCompleteLessonItemMutation();
+  const [trackResourceTime] = useTrackResourceTimeMutation();
+
+  const { data: roadmapResponse, isLoading: roadmapLoading } =
+    useGetActiveRoadmapQuery(undefined, {
+      skip: selectedTab === 'practice', // Don't load roadmap when on practice tab
+    });
+
+  // Extract roadmap data from response
+  const roadmapData: RoadmapData | null = roadmapResponse?.data || null;
 
   // Combine API data with static data when competency data is available
   const combinedDashboardData = competencyData
@@ -146,12 +178,7 @@ export const UserDashboardPage = () => {
     // }
   };
 
-  const anyLoadingFlag =
-    dashboardLoading ||
-    competencyLoading ||
-    dailyLessonQueryLoading ||
-    roadmapLoading ||
-    chartLoading;
+  const anyLoadingFlag = dashboardLoading || competencyLoading || chartLoading;
 
   if (anyLoadingFlag) {
     return (
@@ -194,7 +221,11 @@ export const UserDashboardPage = () => {
     >
       <div className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <Tabs defaultValue="overview" className="w-full">
+          <Tabs
+            defaultValue="overview"
+            className="w-full"
+            onValueChange={(value) => setSelectedTab(value)}
+          >
             <TabsList className="grid w-full grid-cols-3 mb-6 sm:mb-8">
               <TabsTrigger value="overview" className="text-xs sm:text-sm">
                 <Target className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
@@ -388,6 +419,13 @@ export const UserDashboardPage = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Missed Sessions Dialog */}
+      <MissedSessionsDialog
+        open={missedSessionsDialogOpen}
+        onClose={() => setMissedSessionsDialogOpen(false)}
+        data={missedSessionsData?.data || null}
+      />
     </div>
   );
 };
