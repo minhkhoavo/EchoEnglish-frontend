@@ -1,6 +1,12 @@
 import { Clock, ExternalLink } from 'lucide-react';
 import { NotificationIcon } from './NotificationIcon';
 import type { NotificationType } from '../types/notification-types';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface NotificationContentProps {
   title: string;
@@ -77,61 +83,75 @@ export const NotificationContent = ({
   const colors = getNotificationColors(type, isRead);
 
   return (
-    <div className="flex items-start gap-4 w-full pr-4">
-      {/* Notification type icon */}
-      <div
-        className={`p-2.5 rounded-xl flex-shrink-0 ${colors.iconBg} ${colors.text} shadow-md border border-white/50`}
-      >
-        <NotificationIcon type={type} className="h-5 w-5" />
-      </div>
-
-      <div className="flex-1 min-w-0 w-full">
-        {/* Title */}
-        <h4
-          className={`text-sm mb-2 line-clamp-2 transition-all ${
-            !isRead
-              ? 'text-gray-900 font-semibold'
-              : 'text-gray-700 font-medium'
-          }`}
+    <TooltipProvider>
+      <div className="flex items-start gap-4 w-full pr-4">
+        {/* Notification type icon */}
+        <div
+          className={`p-2.5 rounded-xl flex-shrink-0 ${colors.iconBg} ${colors.text} shadow-md border border-white/50`}
         >
-          {title}
-        </h4>
+          <NotificationIcon type={type} className="h-5 w-5" />
+        </div>
 
-        {/* Body content if available */}
-        {body && (
-          <p
-            className={`text-xs mb-3 line-clamp-2 ${
-              !isRead ? 'text-gray-800 font-medium' : 'text-gray-600'
+        <div className="flex-1 min-w-0 w-full">
+          {/* Title */}
+          <h4
+            className={`text-sm mb-2 line-clamp-2 transition-all ${
+              !isRead
+                ? 'text-gray-900 font-semibold'
+                : 'text-gray-700 font-medium'
             }`}
           >
-            {body}
-          </p>
-        )}
+            {title}
+          </h4>
 
-        {/* Timestamp and View button */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <Clock className="h-3 w-3" />
-            <span>{formatTime(createdAt)}</span>
-            {!isRead && <div className="w-2 h-2 rounded-full bg-blue-500" />}
-          </div>
-
-          {/* View button on same line */}
-          {deepLink && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onViewClick?.();
-              }}
-              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors px-2 py-1 hover:bg-blue-50 rounded"
-            >
-              <ExternalLink className="h-3 w-3" />
-              View
-            </button>
+          {/* Body content if available */}
+          {body && (
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <p
+                  className={`text-xs mb-3 line-clamp-2 cursor-help ${
+                    !isRead ? 'text-gray-800 font-medium' : 'text-gray-600'
+                  }`}
+                >
+                  {body}
+                </p>
+              </TooltipTrigger>
+              <TooltipContent
+                side="bottom"
+                align="center"
+                sideOffset={8}
+                className="max-w-lg w-auto min-w-[200px] max-h-[400px] overflow-y-auto px-4 py-3 text-sm leading-relaxed shadow-xl border-2"
+              >
+                <p className="whitespace-pre-wrap break-words">{body}</p>
+              </TooltipContent>
+            </Tooltip>
           )}
+
+          {/* Timestamp and View button */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <Clock className="h-3 w-3" />
+              <span>{formatTime(createdAt)}</span>
+              {!isRead && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+            </div>
+
+            {/* View button on same line */}
+            {deepLink && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onViewClick?.();
+                }}
+                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors px-2 py-1 hover:bg-blue-50 rounded"
+              >
+                <ExternalLink className="h-3 w-3" />
+                View
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 };

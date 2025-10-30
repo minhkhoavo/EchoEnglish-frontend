@@ -68,8 +68,8 @@ export const AdminPanel = ({ onSendNotification }: AdminPanelProps) => {
     if (!userSearch) return users;
     return users.filter(
       (user) =>
-        user.fullName.toLowerCase().includes(userSearch.toLowerCase()) ||
-        user._id.toLowerCase().includes(userSearch.toLowerCase())
+        user.email.toLowerCase().includes(userSearch.toLowerCase()) ||
+        user.fullName.toLowerCase().includes(userSearch.toLowerCase())
     );
   }, [users, userSearch]);
 
@@ -228,7 +228,7 @@ export const AdminPanel = ({ onSendNotification }: AdminPanelProps) => {
                     <div className="flex items-center gap-2">
                       <Search className="h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Search users..."
+                        placeholder="Search users by email or name..."
                         value={userSearch}
                         onChange={(e) => setUserSearch(e.target.value)}
                         className="flex-1"
@@ -271,10 +271,10 @@ export const AdminPanel = ({ onSendNotification }: AdminPanelProps) => {
                               />
                               <div className="flex-1">
                                 <div className="font-medium text-sm">
-                                  {user.fullName}
+                                  {user.email}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  {user._id}
+                                  {user.fullName}
                                 </div>
                               </div>
                             </div>
