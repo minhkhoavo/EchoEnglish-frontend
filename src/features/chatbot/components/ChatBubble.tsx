@@ -51,7 +51,10 @@ const renderUIContract = (
       action: action.type,
       payload: {
         ...(action.type === 'OPEN_URL' && { href: action.href }),
-        ...(action.type === 'NAVIGATE' && { route: action.route }),
+        ...(action.type === 'NAVIGATE' && {
+          route: action.route,
+          args: action.args,
+        }),
         ...(action.type === 'RUN_TOOL' && {
           tool: action.tool,
           args: action.args,

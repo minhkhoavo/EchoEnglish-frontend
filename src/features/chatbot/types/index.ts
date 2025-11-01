@@ -1,6 +1,12 @@
 export type ChatbotAction =
   | { type: 'OPEN_URL'; label: string; href: string; confirm?: boolean }
-  | { type: 'NAVIGATE'; label: string; route: string; confirm?: boolean }
+  | {
+      type: 'NAVIGATE';
+      label: string;
+      route: string;
+      args?: Record<string, unknown>;
+      confirm?: boolean;
+    }
   | {
       type: 'RUN_TOOL';
       label: string;
