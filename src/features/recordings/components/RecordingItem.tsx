@@ -11,6 +11,7 @@ import {
   AudioLines,
   AlertCircle,
   Loader2,
+  CheckCircle2,
 } from 'lucide-react';
 import type { Recording } from '../types/recordings.types';
 
@@ -48,11 +49,11 @@ export function RecordingItem({
     }
   };
 
-  const formatDuration = (milliseconds: number) => {
-    const totalSeconds = Math.floor(milliseconds / 1000);
+  const formatDuration = (seconds: number) => {
+    const totalSeconds = Math.floor(seconds);
     const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const remainingSeconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const getScoreColor = (score: number) => {
@@ -101,11 +102,10 @@ export function RecordingItem({
     switch (recording.analysisStatus) {
       case 'done':
         return (
-          <Badge
-            className={`${getScoreColor(recording.overallScore || 0)} border font-bold px-3 py-1`}
-          >
-            <TrendingUp className="w-4 h-4 mr-1" />
-            {recording.overallScore || 0}%
+          <Badge className={`${getScoreColor(100)} border font-bold px-3 py-1`}>
+            <CheckCircle2 className="w-4 h-4 mr-1" />
+            {/* {recording.overallScore || 0}% */}
+            Done
           </Badge>
         );
       case 'processing':

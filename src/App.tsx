@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 
 // Layout
 import { Layout } from './components/layout/Layout';
+import { NoHeaderLayout } from './components/layout/NoHeaderLayout';
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -97,7 +98,6 @@ function App() {
           <Route path="/dashboard" element={<UserDashboardPage />} />
 
           {/* LEARNING FEATURES */}
-          <Route path="/flashcards" element={<FlashcardPage />} />
           <Route path="/quiz" element={<QuizRouteWrapper />} />
           <Route path="/tests" element={<AllTestsPage />} />
           <Route path="/recordings" element={<RecordingsPage />} />
@@ -120,23 +120,6 @@ function App() {
 
           {/* TEST RESULTS & ANALYSIS */}
           <Route path="/me/tests" element={<ExamAttemptsPage />} />
-          <Route
-            path="/me/tests/:attemptId/analysis"
-            element={<ExamAnalysisPage />}
-          />
-          <Route
-            path="/speech/recordings/:id"
-            element={<SpeechAnalyzePage />}
-          />
-          <Route path="/test-detail/:testId" element={<ToeicTestDetail />} />
-          <Route path="/test-exam/:testId" element={<TestExam />} />
-          <Route path="/test-exam" element={<TestExam />} />
-          <Route
-            path="/speaking-result-demo"
-            element={<SpeakingResultDemoPage />}
-          />
-          <Route path="/speaking-result" element={<SpeakingResultPage />} />
-          <Route path="/writing-result" element={<WritingResultPage />} />
 
           {/* LEARNING & PRACTICE */}
           <Route
@@ -160,6 +143,32 @@ function App() {
           {/* RESOURCES */}
           <Route path="/resources" element={<ResourcePage />} />
           <Route path="/resources/:id" element={<ResourceDetailPage />} />
+        </Route>
+
+        {/* ================================================================== */}
+        {/* NoHeaderLayout (Sidebar only) */}
+        {/* ================================================================== */}
+        <Route element={<NoHeaderLayout />}>
+          {/* TEST RESULTS & ANALYSIS */}
+          <Route path="/test-exam/:testId" element={<TestExam />} />
+          <Route path="/test-exam" element={<TestExam />} />
+          <Route path="/flashcards" element={<FlashcardPage />} />
+
+          <Route
+            path="/me/tests/:attemptId/analysis"
+            element={<ExamAnalysisPage />}
+          />
+          <Route
+            path="/speech/recordings/:id"
+            element={<SpeechAnalyzePage />}
+          />
+          <Route path="/test-detail/:testId" element={<ToeicTestDetail />} />
+          <Route
+            path="/speaking-result-demo"
+            element={<SpeakingResultDemoPage />}
+          />
+          <Route path="/speaking-result" element={<SpeakingResultPage />} />
+          <Route path="/writing-result" element={<WritingResultPage />} />
         </Route>
 
         {/* ================================================================== */}

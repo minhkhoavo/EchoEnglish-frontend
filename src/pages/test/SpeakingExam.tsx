@@ -1,10 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { SpeakingQuestion } from '@/features/tests/components/speak-write/speaking/SpeakingQuestion';
 import { AudioPlayer } from '@/components/AudioPlayer';
 import { useGetSpeakingTestByIdQuery } from '@/features/tests/services/speakingTestApi';
+import type { SpeakingTestDetail } from '@/features/tests/types/speaking-test.types';
 import {
   useFinishSpeakingAttemptMutation,
   useStartSpeakingAttemptMutation,
@@ -50,7 +57,10 @@ const SpeakingExam = () => {
   const [attemptData, setAttemptData] = useState<SpeakingAttemptData | null>(
     null
   );
+  const [mergedTestData, setMergedTestData] =
+    useState<SpeakingTestDetail | null>(null);
   const [isLoadingAttempt, setIsLoadingAttempt] = useState(true);
+  const hasResumedRef = useRef(false);
 
   // Fetch test structure
   const {
@@ -104,6 +114,37 @@ const SpeakingExam = () => {
     attemptData?._id || location.state?.testAttemptId || reduxTestAttemptId;
   console.log('Using testAttemptId:::::::::', testAttemptId);
 
+  // Transform testData with attempt data
+  useEffect(() => {
+    if (testData && attemptData) {
+      // Create a deep copy of testData and update with attempt data
+      const merged = structuredClone(testData);
+
+      // Update merged questions with actual questionText from attempt
+      merged.parts.forEach((part, partIndex) => {
+        const attemptPart = attemptData.parts.find(
+          (p) => p.partIndex === part.offset
+        );
+        if (attemptPart) {
+          part.questions.forEach((question, qIndex) => {
+            const attemptQuestion = attemptPart.questions[qIndex];
+            // Backend returns questionText, not promptText
+            if (attemptQuestion?.questionText) {
+              question.title = attemptQuestion.questionText;
+            }
+            if (attemptQuestion?.promptImage) {
+              question.image = attemptQuestion.promptImage;
+            }
+          });
+        }
+      });
+
+      setMergedTestData(merged);
+    } else if (testData && !attemptData) {
+      setMergedTestData(testData);
+    }
+  }, [testData, attemptData]);
+
   const [finishAttempt, { isLoading: isFinishing }] =
     useFinishSpeakingAttemptMutation();
 
@@ -139,6 +180,10 @@ const SpeakingExam = () => {
                   partIndex: p,
                 })
               );
+              console.log(
+                'Found first unanswered question at index:',
+                firstUnansweredIndex
+              );
               return;
             }
             firstUnansweredIndex++;
@@ -148,70 +193,100 @@ const SpeakingExam = () => {
     }
   }, [attemptData, isExamActive, dispatch]);
 
-  // When resuming, also find first unanswered question in exam mode
+  // Resume to first unanswered question when data is loaded (for exam mode)
+  // This handles the case when user exits and comes back
   useEffect(() => {
     if (
       examMode === 'exam' &&
       isExamActive &&
       attemptData &&
-      currentQuestionIndex === 0
+      mergedTestData &&
+      !hasResumedRef.current
     ) {
-      // Check if current question already has recording
-      const allQuestions =
-        testData?.parts.flatMap((part) => part.questions) || [];
-      const currentQuestion = allQuestions[currentQuestionIndex];
+      console.log('=== Resume Logic Debug ===');
+      console.log('attemptData.parts:', attemptData.parts);
+      console.log('mergedTestData.parts:', mergedTestData.parts);
 
-      if (currentQuestion) {
-        const currentPartIndex =
-          testData?.parts.findIndex((part) =>
-            part.questions.some((q) => q.id === currentQuestion.id)
-          ) || 0;
+      // Find the first unanswered question
+      let absoluteQuestionIndex = 0;
+      let foundUnanswered = false;
 
-        const partIndexInAttempt = attemptData.parts.findIndex(
-          (p) => p.partIndex === testData?.parts[currentPartIndex].offset
+      // Loop through all parts in attempt data
+      for (let p = 0; p < attemptData.parts.length; p++) {
+        const attemptPart = attemptData.parts[p];
+        console.log(
+          `Checking part ${p} (partIndex: ${attemptPart.partIndex}):`,
+          attemptPart
         );
-        const questionStatus =
-          attemptData.parts[partIndexInAttempt]?.questions?.[0];
 
-        // If current question is already answered, find next unanswered
-        if (questionStatus?.s3AudioUrl) {
-          let firstUnansweredIndex = currentQuestionIndex + 1;
+        // Loop through all questions in this part
+        for (let q = 0; q < attemptPart.questions.length; q++) {
+          const question = attemptPart.questions[q];
+          console.log(`  Question ${q} (absolute: ${absoluteQuestionIndex}):`, {
+            questionNumber: question.questionNumber,
+            hasAudio: !!question.s3AudioUrl,
+            s3AudioUrl: question.s3AudioUrl,
+          });
 
-          for (let p = currentPartIndex; p < attemptData.parts.length; p++) {
-            const part = attemptData.parts[p];
-            const startQ = p === currentPartIndex ? 1 : 0;
-            for (let q = startQ; q < part.questions.length; q++) {
-              const question = part.questions[q];
-              if (!question.s3AudioUrl) {
-                dispatch(
-                  goToQuestion({
-                    questionIndex: firstUnansweredIndex,
-                    partIndex: p,
-                  })
-                );
-                return;
-              }
-              firstUnansweredIndex++;
+          if (!question.s3AudioUrl) {
+            // Found first unanswered question
+            console.log('✅ Found first unanswered question:', {
+              partIndex: p,
+              questionIndexInPart: q,
+              absoluteQuestionIndex,
+              questionNumber: question.questionNumber,
+            });
+
+            // Only navigate if we're not already at this question
+            if (currentQuestionIndex !== absoluteQuestionIndex) {
+              console.log(
+                `Navigating from ${currentQuestionIndex} to ${absoluteQuestionIndex}`
+              );
+              dispatch(
+                goToQuestion({
+                  questionIndex: absoluteQuestionIndex,
+                  partIndex: p,
+                })
+              );
+            } else {
+              console.log('Already at the correct question');
             }
+
+            foundUnanswered = true;
+            hasResumedRef.current = true;
+            break;
           }
+
+          // Move to next question
+          absoluteQuestionIndex++;
         }
+
+        if (foundUnanswered) break;
       }
+
+      if (!foundUnanswered) {
+        console.log(
+          '⚠️ No unanswered questions found. All questions completed?'
+        );
+      }
+
+      console.log('=== End Resume Logic Debug ===');
     }
   }, [
     examMode,
     isExamActive,
     attemptData,
-    currentQuestionIndex,
-    testData,
+    mergedTestData,
     dispatch,
+    currentQuestionIndex,
   ]);
 
   // Auto-update currentPartIndex when currentQuestionIndex changes in exam mode
   useEffect(() => {
-    if (examMode === 'exam' && testData && isExamActive) {
+    if (examMode === 'exam' && mergedTestData && isExamActive) {
       let questionCount = 0;
-      for (let p = 0; p < testData.parts.length; p++) {
-        const part = testData.parts[p];
+      for (let p = 0; p < mergedTestData.parts.length; p++) {
+        const part = mergedTestData.parts[p];
         if (questionCount + part.questions.length > currentQuestionIndex) {
           // Current question is in this part
           if (currentPartIndex !== p) {
@@ -230,7 +305,7 @@ const SpeakingExam = () => {
   }, [
     examMode,
     currentQuestionIndex,
-    testData,
+    mergedTestData,
     currentPartIndex,
     isExamActive,
     dispatch,
@@ -260,16 +335,19 @@ const SpeakingExam = () => {
     partIndex: number,
     questionIndex: number
   ) => {
-    if (!testData) return 0;
+    if (!mergedTestData) return 0;
     let count = 0;
     for (let i = 0; i < partIndex; i++) {
-      count += testData.parts[i].questions.length;
+      count += mergedTestData.parts[i].questions.length;
     }
     return count + questionIndex + 1;
   };
 
   const totalQuestions =
-    testData?.parts.reduce((sum, part) => sum + part.questions.length, 0) ?? 0;
+    mergedTestData?.parts.reduce(
+      (sum, part) => sum + part.questions.length,
+      0
+    ) ?? 0;
 
   // Get question status from backend attempt data
   const getQuestionStatus = (partIndex: number, questionIndex: number) => {
@@ -294,7 +372,7 @@ const SpeakingExam = () => {
     );
   }
 
-  if (error || !testData || !attemptData) {
+  if (error || !mergedTestData || !attemptData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Alert className="max-w-md border-red-200 bg-red-50">
@@ -332,7 +410,7 @@ const SpeakingExam = () => {
             </Button>
             <div className="min-w-0 flex-1">
               <h1 className="text-lg xl:text-2xl font-bold text-foreground truncate">
-                {testData.testTitle}
+                {mergedTestData.testTitle}
               </h1>
               <p className="text-xs xl:text-sm text-muted-foreground">
                 {examMode === 'exam' ? 'Real Exam Mode' : 'Practice Mode'} -
@@ -392,7 +470,7 @@ const SpeakingExam = () => {
           {examMode === 'normal' && (
             <div className="xl:col-span-1 order-first xl:order-last">
               <TestPartSidebar
-                parts={testData.parts}
+                parts={mergedTestData.parts}
                 currentPartIndex={localCurrentPartIndex}
                 setCurrentPartIndex={setLocalCurrentPartIndex}
               />
@@ -406,11 +484,11 @@ const SpeakingExam = () => {
             {examMode === 'exam'
               ? // EXAM MODE: Only show current question
                 (() => {
-                  const allQuestions = testData.parts.flatMap(
+                  const allQuestions = mergedTestData.parts.flatMap(
                     (part) => part.questions
                   );
                   const currentQuestion = allQuestions[currentQuestionIndex];
-                  const currentPart = testData.parts.find((part) =>
+                  const currentPart = mergedTestData.parts.find((part) =>
                     part.questions.some((q) => q.id === currentQuestion?.id)
                   );
 
@@ -428,17 +506,25 @@ const SpeakingExam = () => {
                   }
 
                   // Find question status from backend
-                  const partIndexInAttempt = attemptData.parts.findIndex(
-                    (part: SpeakingAttemptData['parts'][0]) =>
-                      part.partIndex === currentPart.offset
-                  );
-                  const questionIndexInPart = currentPart.questions.findIndex(
-                    (q) => q.id === currentQuestion.id
-                  );
-                  const questionStatus = getQuestionStatus(
-                    partIndexInAttempt,
-                    questionIndexInPart
-                  );
+                  // We need to map by absolute question number, not by part index
+                  const absoluteQuestionNum = currentQuestionIndex + 1; // 1-based
+
+                  let questionStatus = null;
+                  // Search through all parts to find matching questionNumber
+                  for (const attemptPart of attemptData.parts) {
+                    const foundQuestion = attemptPart.questions.find(
+                      (q) => q.questionNumber === absoluteQuestionNum
+                    );
+                    if (foundQuestion) {
+                      questionStatus = foundQuestion;
+                      console.log('Found question status:', {
+                        questionNumber: absoluteQuestionNum,
+                        hasAudio: !!foundQuestion.s3AudioUrl,
+                        s3AudioUrl: foundQuestion.s3AudioUrl,
+                      });
+                      break;
+                    }
+                  }
 
                   return (
                     <div className="w-full p-4 xl:p-6">
@@ -508,7 +594,7 @@ const SpeakingExam = () => {
                   );
                 })()
               : // PRACTICE MODE: Show all questions in current part with navigation
-                testData.parts[localCurrentPartIndex] && (
+                mergedTestData.parts[localCurrentPartIndex] && (
                   <div
                     className="h-[calc(100vh-105px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 pr-2 xl:pr-4 scroll-smooth bg-white dark:bg-gray-900 rounded-lg border shadow-sm"
                     data-testid="main-scroll-container"
@@ -518,47 +604,49 @@ const SpeakingExam = () => {
                         {/* Part Instructions */}
                         <div className="mb-6 p-4 bg-muted rounded-lg">
                           <h3 className="font-semibold mb-2">
-                            {testData.parts[localCurrentPartIndex].title}
+                            {mergedTestData.parts[localCurrentPartIndex].title}
                           </h3>
                           <div
                             className="prose prose-sm max-w-none text-muted-foreground"
                             dangerouslySetInnerHTML={{
                               __html:
-                                testData.parts[localCurrentPartIndex].direction
-                                  .text,
+                                mergedTestData.parts[localCurrentPartIndex]
+                                  .direction.text,
                             }}
                           />
 
                           {/* Narrator section if available */}
-                          {testData.parts[localCurrentPartIndex].narrator && (
+                          {mergedTestData.parts[localCurrentPartIndex]
+                            .narrator && (
                             <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
                               <h4 className="font-medium mb-2">Scenario:</h4>
-                              {testData.parts[localCurrentPartIndex].narrator
-                                .text && (
+                              {mergedTestData.parts[localCurrentPartIndex]
+                                .narrator.text && (
                                 <p className="text-sm mb-2">
                                   {
-                                    testData.parts[localCurrentPartIndex]
+                                    mergedTestData.parts[localCurrentPartIndex]
                                       .narrator.text
                                   }
                                 </p>
                               )}
-                              {testData.parts[localCurrentPartIndex].narrator
-                                .audio && (
+                              {mergedTestData.parts[localCurrentPartIndex]
+                                .narrator.audio && (
                                 <AudioPlayer
                                   audioUrl={
-                                    testData.parts[localCurrentPartIndex]
+                                    mergedTestData.parts[localCurrentPartIndex]
                                       .narrator.audio
                                   }
                                   className="mt-2"
                                 />
                               )}
-                              {testData.parts[localCurrentPartIndex].narrator
-                                .image && (
+                              {mergedTestData.parts[localCurrentPartIndex]
+                                .narrator.image && (
                                 <div className="mt-2">
                                   <img
                                     src={
-                                      testData.parts[localCurrentPartIndex]
-                                        .narrator.image
+                                      mergedTestData.parts[
+                                        localCurrentPartIndex
+                                      ].narrator.image
                                     }
                                     alt="Scenario image"
                                     className="max-w-full h-auto rounded border"
@@ -572,43 +660,51 @@ const SpeakingExam = () => {
 
                         {/* Display All Questions in this Part */}
                         <div className="space-y-6">
-                          {testData.parts[localCurrentPartIndex].questions.map(
-                            (question, qIndex) => {
-                              // Find corresponding backend status
-                              const partIndexInAttempt =
-                                attemptData.parts.findIndex(
-                                  (part: SpeakingAttemptData['parts'][0]) =>
-                                    part.partIndex ===
-                                    testData.parts[localCurrentPartIndex].offset
-                                );
-                              const questionStatus = getQuestionStatus(
-                                partIndexInAttempt,
+                          {mergedTestData.parts[
+                            localCurrentPartIndex
+                          ].questions.map((question, qIndex) => {
+                            // Find corresponding backend status by absolute question number
+                            const absoluteQuestionNum =
+                              getAbsoluteQuestionNumber(
+                                localCurrentPartIndex,
                                 qIndex
                               );
 
-                              return (
-                                <SpeakingQuestion
-                                  key={question.id}
-                                  question={question}
-                                  partTitle={
-                                    testData.parts[localCurrentPartIndex].title
-                                  }
-                                  questionIndex={qIndex}
-                                  totalQuestions={
-                                    testData.parts[localCurrentPartIndex]
-                                      .questions.length
-                                  }
-                                  absoluteQuestionNumber={getAbsoluteQuestionNumber(
-                                    localCurrentPartIndex,
-                                    qIndex
-                                  )}
-                                  isReviewMode={false}
-                                  testAttemptId={testAttemptId ?? undefined}
-                                  uploadedAudioUrl={questionStatus?.s3AudioUrl}
-                                />
+                            let questionStatus = null;
+                            // Search through all parts to find matching questionNumber
+                            for (const attemptPart of attemptData.parts) {
+                              const foundQuestion = attemptPart.questions.find(
+                                (q) => q.questionNumber === absoluteQuestionNum
                               );
+                              if (foundQuestion) {
+                                questionStatus = foundQuestion;
+                                break;
+                              }
                             }
-                          )}
+
+                            return (
+                              <SpeakingQuestion
+                                key={question.id}
+                                question={question}
+                                partTitle={
+                                  mergedTestData.parts[localCurrentPartIndex]
+                                    .title
+                                }
+                                questionIndex={qIndex}
+                                totalQuestions={
+                                  mergedTestData.parts[localCurrentPartIndex]
+                                    .questions.length
+                                }
+                                absoluteQuestionNumber={getAbsoluteQuestionNumber(
+                                  localCurrentPartIndex,
+                                  qIndex
+                                )}
+                                isReviewMode={false}
+                                testAttemptId={testAttemptId ?? undefined}
+                                uploadedAudioUrl={questionStatus?.s3AudioUrl}
+                              />
+                            );
+                          })}
                         </div>
 
                         {/* Navigation for practice mode */}
@@ -627,7 +723,7 @@ const SpeakingExam = () => {
                           </Button>
 
                           {localCurrentPartIndex ===
-                          testData.parts.length - 1 ? (
+                          mergedTestData.parts.length - 1 ? (
                             <Button
                               onClick={handleSubmit}
                               disabled={isFinishing}
@@ -647,14 +743,14 @@ const SpeakingExam = () => {
                               onClick={() =>
                                 setLocalCurrentPartIndex(
                                   Math.min(
-                                    testData.parts.length - 1,
+                                    mergedTestData.parts.length - 1,
                                     localCurrentPartIndex + 1
                                   )
                                 )
                               }
                               disabled={
                                 localCurrentPartIndex ===
-                                testData.parts.length - 1
+                                mergedTestData.parts.length - 1
                               }
                             >
                               Next Part

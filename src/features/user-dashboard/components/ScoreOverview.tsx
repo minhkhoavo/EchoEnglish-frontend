@@ -11,12 +11,17 @@ interface ScoreOverviewProps {
 
 export const ScoreOverview = ({ scoreData }: ScoreOverviewProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const roundToNearestFive = (score: number) => Math.ceil(score / 5) * 5;
+
+  const roundedListeningScore = roundToNearestFive(scoreData.listeningScore);
+  const roundedReadingScore = roundToNearestFive(scoreData.readingScore);
+  const roundedOverallScore = roundedListeningScore + roundedReadingScore;
 
   const chartData = [
-    { name: 'Current Score', value: scoreData.overallScore, color: '#3B82F6' },
+    { name: 'Current Score', value: roundedOverallScore, color: '#3B82F6' },
     {
       name: 'Remaining',
-      value: scoreData.targetScore - scoreData.overallScore,
+      value: scoreData.targetScore - roundedOverallScore,
       color: '#E5E7EB',
     },
   ];
@@ -99,7 +104,7 @@ export const ScoreOverview = ({ scoreData }: ScoreOverviewProps) => {
         </div>
         <div className="text-center w-full">
           <div className="text-4xl font-bold mb-2" style={{ color: '#3B82F6' }}>
-            {scoreData.overallScore}/{scoreData.targetScore}
+            {roundedOverallScore}/{scoreData.targetScore}
           </div>
           <Badge className="bg-blue-100 text-blue-800 text-sm mb-4">
             CEFR {scoreData.cefrLevel} Level
@@ -108,21 +113,21 @@ export const ScoreOverview = ({ scoreData }: ScoreOverviewProps) => {
             <div className="flex justify-between text-sm">
               <span style={{ color: '#6B7280' }}>Listening</span>
               <span className="font-semibold" style={{ color: '#1F2937' }}>
-                {scoreData.listeningScore}/495
+                {roundedListeningScore}/495
               </span>
             </div>
             <Progress
-              value={(scoreData.listeningScore / 495) * 100}
+              value={(roundedListeningScore / 495) * 100}
               className="h-2"
             />
             <div className="flex justify-between text-sm">
               <span style={{ color: '#6B7280' }}>Reading</span>
               <span className="font-semibold" style={{ color: '#1F2937' }}>
-                {scoreData.readingScore}/495
+                {roundedReadingScore}/495
               </span>
             </div>
             <Progress
-              value={(scoreData.readingScore / 495) * 100}
+              value={(roundedReadingScore / 495) * 100}
               className="h-2"
             />
           </div>

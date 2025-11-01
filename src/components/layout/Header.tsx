@@ -217,15 +217,6 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
               />
             </div>
 
-            {/* Settings */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-
             {/* User Avatar Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

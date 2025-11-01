@@ -23,7 +23,8 @@ export interface SpeakingAttemptData {
     partTitle: string;
     questions: Array<{
       questionNumber: number;
-      promptText?: string;
+      questionText?: string; // Backend returns questionText, not promptText
+      promptText?: string; // Keep for backward compatibility
       promptImage?: string;
       s3AudioUrl: string | null;
       recordingId: string | null;

@@ -334,12 +334,44 @@ export const SpeakingQuestion: React.FC<SpeakingQuestionProps> = ({
   useEffect(() => {
     if (examMode === 'exam' && currentPhase === 'idle' && !isViewOnlyMode) {
       const timeoutId = setTimeout(() => {
-        handleStartPreparation();
+        // Inline handleStartPreparation logic to avoid dependency issues
+        if (currentPhase !== 'idle') return;
+
+        setCurrentPhase('preparation');
+        if (playPipSounds) playPipSound(800, 200);
+
+        createTimer(
+          preparationTimeRef,
+          (time) => setPreparationTimeLeft(time),
+          () => {
+            setCurrentPhase('response');
+            if (playPipSounds) playPipSound(1000, 200);
+
+            // Auto-start recording in exam mode
+            if (examMode === 'exam') {
+              setTimeout(() => {
+                startRecording();
+                startResponseTimer();
+              }, 500);
+            } else {
+              startResponseTimer();
+            }
+          }
+        );
       }, 1000);
 
       return () => clearTimeout(timeoutId);
     }
-  }, [examMode, currentPhase, isViewOnlyMode, handleStartPreparation]);
+  }, [
+    examMode,
+    currentPhase,
+    isViewOnlyMode,
+    question.id,
+    playPipSounds,
+    createTimer,
+    startRecording,
+    startResponseTimer,
+  ]);
 
   const handleRecordAgain = useCallback(() => {
     setRecordedBlob(null);

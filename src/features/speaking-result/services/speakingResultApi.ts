@@ -26,7 +26,8 @@ type BackendScore = {
 
 type BackendQuestion = {
   questionNumber: number;
-  promptText: string;
+  questionText?: string; // Backend returns questionText
+  promptText?: string; // Keep for backward compatibility
   promptImage: string | null;
   s3AudioUrl: string | null;
   recordingId: MaybeOID | null;
@@ -178,7 +179,7 @@ function transformSpeakingResult(input: BackendSpeakingResult): {
         return {
           questionId: q.questionNumber,
           questionNumber: q.questionNumber,
-          questionText: q.promptText,
+          questionText: q.questionText || q.promptText || '',
           score,
           maxScore,
           proficiencyLevel: getProficiencyFromPercent(pct),
