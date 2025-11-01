@@ -1,4 +1,4 @@
-# 🎨 EchoEnglish Frontend – Modern React UI for AI English Learning Platform
+# 🎨 EchoEnglish Frontend 
 
 > A modern, responsive, and performance-focused frontend built using React, Redux Toolkit, RTK Query, TailwindCSS, and ShadCN/UI.
 
@@ -76,7 +76,8 @@
   <img src="docs/test_lr.PNG" width="320" alt="test_lr" />
 </p>
 
----# 🚀 Quick Start
+---
+## 🚀 Quick Start
 
 ## Prerequisites
 
@@ -87,8 +88,8 @@
 
 ``` bash
 # Clone the repository
-git clone https://github.com/minhkhoavo/EchoEnglish-nodejs.git
-cd EchoEnglish-nodejs
+git clone https://github.com/minhkhoavo/EchoEnglish-frontend.git
+cd EchoEnglish-frontend
 
 # Install dependencies
 pnpm install
