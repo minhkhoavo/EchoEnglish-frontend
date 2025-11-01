@@ -183,7 +183,25 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
         switch (command.action) {
           case 'NAVIGATE':
             if (command.payload?.route) {
-              navigate(command.payload.route as string);
+              const route = command.payload.route as string;
+              const args = command.payload.args as
+                | Record<string, unknown>
+                | undefined;
+
+              if (args?.questionIds) {
+                // Navigate with query params for questionIds
+                const queryParams = new URLSearchParams();
+                let questionIdsStr: string;
+                if (Array.isArray(args.questionIds)) {
+                  questionIdsStr = args.questionIds.join(',');
+                } else {
+                  questionIdsStr = args.questionIds as string;
+                }
+                queryParams.set('questionIds', questionIdsStr);
+                navigate(`${route}?${queryParams.toString()}`);
+              } else {
+                navigate(route);
+              }
             }
             break;
 

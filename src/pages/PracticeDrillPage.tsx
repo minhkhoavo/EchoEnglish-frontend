@@ -1,11 +1,21 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { PracticeDrill } from '../features/practice-drill/components/PracticeDrill';
 import { useCompletePracticeDrillMutation } from '../features/user-dashboard/services/dashboardApi';
 import { toast } from '@/hooks/use-toast';
 
 const PracticeDrillPage = () => {
   const location = useLocation();
-  const { questionIds, drillData, sessionId } = location.state || {};
+  const [searchParams] = useSearchParams();
+  const {
+    questionIds: stateQuestionIds,
+    drillData,
+    sessionId,
+  } = location.state || {};
+
+  // Get questionIds from URL params if not available in state
+  const urlQuestionIds =
+    searchParams.get('questionIds')?.split(',').filter(Boolean) || [];
+  const questionIds = stateQuestionIds || urlQuestionIds;
   const [completePracticeDrill] = useCompletePracticeDrillMutation();
 
   const drillConfig = drillData

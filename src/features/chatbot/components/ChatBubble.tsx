@@ -51,7 +51,10 @@ const renderUIContract = (
       action: action.type,
       payload: {
         ...(action.type === 'OPEN_URL' && { href: action.href }),
-        ...(action.type === 'NAVIGATE' && { route: action.route }),
+        ...(action.type === 'NAVIGATE' && {
+          route: action.route,
+          args: action.args,
+        }),
         ...(action.type === 'RUN_TOOL' && {
           tool: action.tool,
           args: action.args,
@@ -217,10 +220,10 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
           <Button
             onClick={onToggle}
             size="lg"
-            className="h-16 w-16 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 group chatbot-button"
+            className="h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 group chatbot-button"
             style={{ cursor: 'pointer', pointerEvents: 'auto', zIndex: 9999 }}
           >
-            <MessageCircle className="h-7 w-7 text-white group-hover:scale-110 transition-transform duration-300" />
+            <MessageCircle className="h-4 w-4 text-white group-hover:scale-110 transition-transform duration-300" />
           </Button>
           {/* Pulse effect */}
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 opacity-20 animate-pulse"></div>
