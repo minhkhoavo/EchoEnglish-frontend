@@ -18,16 +18,19 @@
 
 ## ✨ Features
 
-- **AI Chat Interface**
-- **Speech Practice UI**
-- **Writing Workspace**
-- **Learning Dashboard**
-- **Flashcards**
-- **Learning Route**
-- **Auth Pages**
-- **RTK Query API Integration**
-- **Responsive UI**
-
+- **AI Chat Interface** – giao diện trò chuyện với trợ lý học tiếng Anh sử dụng API AI.
+- **Speech Practice UI** – giao diện luyện nói, thu âm và hiển thị kết quả phân tích.
+- **Writing Workspace** – không gian luyện viết, gửi bài và nhận feedback tự động.
+- **Learning Dashboard** – trang tổng quan theo dõi tiến độ học tập hằng ngày.
+- **Flashcard System** – tạo, xem và ôn tập flashcards cá nhân.
+- **Learning Route Viewer** – giao diện hiển thị lộ trình học được cá nhân hóa.
+- **Authentication Pages** – đăng ký, đăng nhập, quên mật khẩu, reset password.
+- **RTK Query API Integration** – kết nối backend qua Redux Toolkit Query, caching tự động.
+- **Responsive UI** – giao diện tối ưu cho mobile, tablet, desktop.
+- **Resource Browser** – xem danh sách và chi tiết bài báo/video học tiếng Anh.
+- **Exam Interfaces** – giao diện thực hiện các bài thi Speaking, Writing, Listening–Reading.
+- **Notification Center** – hiển thị thông báo cá nhân & đánh dấu đã đọc.
+- **Payment Pages** – xem lịch sử thanh toán và giao diện tạo thanh toán.
 
 ## ✨ Screenshots
 
