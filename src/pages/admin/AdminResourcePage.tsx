@@ -18,7 +18,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { Header } from '@/components/layout/Header';
 import { useResourceManagement } from '@/features/resource/hooks/useResourceManagement';
 import UnifiedResourceList from '@/features/resource/components/UnifiedResourceList';
 import {

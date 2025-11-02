@@ -103,6 +103,7 @@ function App() {
           <Route path="/quiz" element={<QuizRouteWrapper />} />
           <Route path="/tests" element={<AllTestsPage />} />
           <Route path="/recordings" element={<RecordingsPage />} />
+          <Route path="/flashcards" element={<FlashcardPage />} />
 
           {/* TEST TAKING & EXAMS */}
           <Route
@@ -154,7 +155,6 @@ function App() {
           {/* TEST RESULTS & ANALYSIS */}
           <Route path="/test-exam/:testId" element={<TestExam />} />
           <Route path="/test-exam" element={<TestExam />} />
-          <Route path="/flashcards" element={<FlashcardPage />} />
 
           <Route
             path="/me/tests/:attemptId/analysis"
