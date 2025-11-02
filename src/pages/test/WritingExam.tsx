@@ -670,7 +670,7 @@ const WritingExam = () => {
           onClose={() => setShowAffordabilityDialog(false)}
           featureType={FeaturePricingType.TEST_ANALYSIS_WRITING}
           onProceed={proceedWithSubmit}
-          onBuyCredits={() => navigate('/payment-history')}
+          onBuyCredits={() => navigate('/payment')}
           isPending={isSubmitting}
         />
       </div>

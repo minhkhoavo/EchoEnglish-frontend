@@ -69,12 +69,9 @@ const iconByPart: Record<BackendPart['questionType'], string> = {
 };
 
 // Default max score per question by part and index (fallbacks)
-function getQuestionMaxScore(
-  partType: BackendPart['questionType'],
-  idx: number
-): number {
-  switch (partType) {
-    case 'speaking_part5':
+function getQuestionMaxScore(partIndex: number): number {
+  switch (partIndex) {
+    case 5:
       return 5;
     default:
       return 3;
@@ -167,9 +164,10 @@ function transformSpeakingResult(input: BackendSpeakingResult): {
 } {
   const parts: SpeakingPartResult[] = input.parts.map((p) => {
     const filledQuestions = fillMissingScoresTemplate(p.questions);
+    console.log(`Viewing:::::`, p);
     const questions: SpeakingQuestionResult[] = filledQuestions.map(
       (q, idx) => {
-        const maxScore = getQuestionMaxScore(p.questionType, idx);
+        const maxScore = getQuestionMaxScore(p.partIndex);
         const scoresObj = extractScores(q);
         const score = scoresObj?.overallScore ?? 0;
         const pct = (score / maxScore) * 100;

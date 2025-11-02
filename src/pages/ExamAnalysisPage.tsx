@@ -229,7 +229,7 @@ export function ExamAnalysisPage() {
                 onClose={() => setShowAffordabilityDialog(false)}
                 featureType={FeaturePricingType.TEST_ANALYSIS_LR}
                 onProceed={handleRequestAnalysis}
-                onBuyCredits={() => navigate('/payment-history')}
+                onBuyCredits={() => navigate('/payment')}
                 isPending={isAnalyzing}
                 description="Get comprehensive analysis of your exam performance with detailed insights and personalized recommendations."
               />
