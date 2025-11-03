@@ -10,6 +10,7 @@ interface QuestionContentProps {
   content: string;
   resourceUrl?: string;
   isHtml?: boolean;
+  showCorrectAnswers?: boolean; // Only enable selection in review mode
 }
 
 const BLANK_HTML =
@@ -20,6 +21,7 @@ export const QuestionContent: React.FC<QuestionContentProps> = ({
   content,
   resourceUrl,
   isHtml = false,
+  showCorrectAnswers = false,
 }) => {
   const [selectedTranslation, setSelectedTranslation] = useState('');
   const [showFlashcardDialog, setShowFlashcardDialog] = useState(false);
@@ -73,8 +75,9 @@ export const QuestionContent: React.FC<QuestionContentProps> = ({
 
   const commonProps = {
     ref: containerRef as React.RefObject<HTMLDivElement>,
-    onMouseUp: handleMouseUp,
-    onMouseDown: handleMouseDown,
+    onMouseUp: showCorrectAnswers ? handleMouseUp : undefined,
+    onMouseDown: showCorrectAnswers ? handleMouseDown : undefined,
+    className: showCorrectAnswers ? 'select-text' : '',
   };
 
   return (
@@ -86,7 +89,7 @@ export const QuestionContent: React.FC<QuestionContentProps> = ({
           {isHtml ? (
             <div
               {...commonProps}
-              className="text-base leading-relaxed select-text prose prose-sm max-w-none dark:prose-invert"
+              className={`text-base leading-relaxed ${showCorrectAnswers ? 'select-text' : ''} prose prose-sm max-w-none dark:prose-invert`}
               dangerouslySetInnerHTML={{
                 __html: getHtmlWithBlanks(content),
               }}
@@ -94,7 +97,7 @@ export const QuestionContent: React.FC<QuestionContentProps> = ({
           ) : (
             <div
               {...commonProps}
-              className="text-base leading-relaxed select-text"
+              className={`text-base leading-relaxed ${showCorrectAnswers ? 'select-text' : ''}`}
             >
               {renderPlainWithBlanks(content)}
             </div>
@@ -102,8 +105,8 @@ export const QuestionContent: React.FC<QuestionContentProps> = ({
         </CardContent>
       </Card>
 
-      {/* Selection Menu */}
-      {selectedText && (
+      {/* Selection Menu - only in review mode */}
+      {showCorrectAnswers && selectedText && (
         <SelectionMenu
           selectedText={selectedText}
           position={selectionPosition}
@@ -112,8 +115,8 @@ export const QuestionContent: React.FC<QuestionContentProps> = ({
         />
       )}
 
-      {/* Flashcard Dialog */}
-      {showFlashcardDialog && (
+      {/* Flashcard Dialog - only in review mode */}
+      {showCorrectAnswers && showFlashcardDialog && (
         <CreateEditFlashcardDialog
           open={showFlashcardDialog}
           onOpenChange={setShowFlashcardDialog}

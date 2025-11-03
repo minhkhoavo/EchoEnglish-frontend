@@ -119,6 +119,7 @@ export const Part7Question = ({
                     content={group.groupContext?.passageHtml || ''}
                     resourceUrl={resourceUrl}
                     isHtml={true}
+                    showCorrectAnswers={showCorrectAnswers}
                   />
                 )}
 

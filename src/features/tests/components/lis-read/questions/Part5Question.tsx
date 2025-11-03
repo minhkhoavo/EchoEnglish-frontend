@@ -114,6 +114,7 @@ export const Part5Question = ({
                       )
                       .join('')}
                     resourceUrl={resourceUrl}
+                    showCorrectAnswers={showCorrectAnswers}
                   />
 
                   {/* Options - Vertical layout */}

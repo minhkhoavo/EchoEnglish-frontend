@@ -7,12 +7,14 @@ interface QuestionTextProps {
   text: string;
   resourceUrl?: string;
   className?: string;
+  showCorrectAnswers?: boolean; // Only enable selection in review mode
 }
 
 export const QuestionText: React.FC<QuestionTextProps> = ({
   text,
   resourceUrl,
   className = 'mb-4 font-medium text-base',
+  showCorrectAnswers = false,
 }) => {
   const [selectedTranslation, setSelectedTranslation] = useState('');
   const [showFlashcardDialog, setShowFlashcardDialog] = useState(false);
@@ -41,15 +43,15 @@ export const QuestionText: React.FC<QuestionTextProps> = ({
     <>
       <p
         ref={containerRef as React.RefObject<HTMLParagraphElement>}
-        onMouseUp={handleMouseUp}
-        onMouseDown={handleMouseDown}
-        className={`${className} select-text`}
+        onMouseUp={showCorrectAnswers ? handleMouseUp : undefined}
+        onMouseDown={showCorrectAnswers ? handleMouseDown : undefined}
+        className={`${className} ${showCorrectAnswers ? 'select-text' : ''}`}
       >
         {text}
       </p>
 
-      {/* Selection Menu */}
-      {selectedText && (
+      {/* Selection Menu - only in review mode */}
+      {showCorrectAnswers && selectedText && (
         <SelectionMenu
           selectedText={selectedText}
           position={selectionPosition}
@@ -58,8 +60,8 @@ export const QuestionText: React.FC<QuestionTextProps> = ({
         />
       )}
 
-      {/* Flashcard Dialog */}
-      {showFlashcardDialog && (
+      {/* Flashcard Dialog - only in review mode */}
+      {showCorrectAnswers && showFlashcardDialog && (
         <CreateEditFlashcardDialog
           open={showFlashcardDialog}
           onOpenChange={setShowFlashcardDialog}

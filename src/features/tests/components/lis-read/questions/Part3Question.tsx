@@ -152,6 +152,7 @@ export const Part3Question = ({
                           <QuestionText
                             text={question.questionText || ''}
                             resourceUrl={resourceUrl}
+                            showCorrectAnswers={showCorrectAnswers}
                           />
                           <AnswerOptions
                             options={question.options}
