@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,7 @@ import type {
   Flashcard,
   Category,
 } from '../../flashcard/types/flashcard.types';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface CreateEditFlashcardDialogProps {
   flashcard?: Flashcard;
@@ -54,6 +54,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
   resourceUrl,
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
+  const hasInitializedRef = useRef(false); // Track if we've initialized form
   const [formData, setFormData] = useState({
     front: '',
     back: '',
@@ -82,19 +83,19 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
     useUpdateFlashcardMutation();
   const [translateText, { isLoading: isTranslating }] =
     useTranslateTextMutation();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (categoriesError) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load categories. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to load categories. Please try again.');
     }
-  }, [categoriesError, toast]);
+  }, [categoriesError]);
 
+  // Initialize form only once when dialog opens
   useEffect(() => {
+    if (!dialogOpen || hasInitializedRef.current) return;
+
+    hasInitializedRef.current = true;
+
     if (isEdit && flashcard) {
       setFormData({
         front: flashcard.front,
@@ -117,16 +118,26 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
         isAIGenerated: false,
       });
     }
-  }, [isEdit, flashcard, selectedText, selectedTranslation, resourceUrl]);
+  }, [
+    dialogOpen,
+    isEdit,
+    flashcard,
+    selectedText,
+    selectedTranslation,
+    resourceUrl,
+  ]);
+
+  // Reset the ref when dialog closes
+  useEffect(() => {
+    if (!dialogOpen) {
+      hasInitializedRef.current = false;
+    }
+  }, [dialogOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.front.trim() || !formData.back.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields (Front, Back)',
-        variant: 'destructive',
-      });
+      toast.error('Please fill in all required fields (Front, Back)');
       return;
     }
 
@@ -136,26 +147,17 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
           id: flashcard._id || '',
           ...formData,
         }).unwrap();
-        toast({
-          title: 'Success',
-          description: 'Flashcard updated successfully',
-        });
+        toast.success('Flashcard updated successfully');
+        setDialogOpen(false);
+        onSuccess?.();
       } else {
         await createFlashcard(formData).unwrap();
-        toast({
-          title: 'Success',
-          description: 'Flashcard created successfully',
-        });
+        toast.success('Flashcard created successfully');
+        setDialogOpen(false);
+        onSuccess?.();
       }
-
-      setDialogOpen(false);
-      onSuccess?.();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: `Failed to ${isEdit ? 'update' : 'create'} flashcard`,
-        variant: 'destructive',
-      });
+      toast.error(`Failed to ${isEdit ? 'update' : 'create'} flashcard`);
     }
   };
 
@@ -185,11 +187,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
 
   const handleAutoTranslate = async () => {
     if (!formData.front.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Please enter the front side first',
-        variant: 'destructive',
-      });
+      toast.error('Please enter the front side first');
       return;
     }
 
@@ -202,24 +200,13 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
       const translation = response.data?.destinationText || '';
       if (translation) {
         setFormData((prev) => ({ ...prev, back: translation }));
-        toast({
-          title: 'Success',
-          description: 'Text translated successfully',
-        });
+        // toast.success('Text translated successfully');
       } else {
-        toast({
-          title: 'Translation Error',
-          description: 'No translation available',
-          variant: 'destructive',
-        });
+        toast.error('No translation available');
       }
     } catch (error) {
       console.error('Translation failed:', error);
-      toast({
-        title: 'Translation Error',
-        description: 'Failed to translate text. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to translate text. Please try again.');
     }
   };
 

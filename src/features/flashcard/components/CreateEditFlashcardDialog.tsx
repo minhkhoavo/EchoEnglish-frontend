@@ -24,7 +24,7 @@ import {
   useGetCategoriesQuery,
 } from '../services/flashcardApi';
 import type { Flashcard, Category } from '../types/flashcard.types';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface CreateEditFlashcardDialogProps {
   flashcard?: Flashcard;
@@ -60,17 +60,12 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
     useCreateFlashcardMutation();
   const [updateFlashcard, { isLoading: isUpdating }] =
     useUpdateFlashcardMutation();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (categoriesError) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load categories. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to load categories. Please try again.');
     }
-  }, [categoriesError, toast]);
+  }, [categoriesError]);
 
   useEffect(() => {
     if (isEdit && flashcard) {
@@ -100,11 +95,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.front.trim() || !formData.back.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields (Front, Back)',
-        variant: 'destructive',
-      });
+      toast.error('Please fill in all required fields (Front, Back)');
       return;
     }
 
@@ -114,26 +105,17 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
           id: flashcard._id || '',
           ...formData,
         }).unwrap();
-        toast({
-          title: 'Success',
-          description: 'Flashcard updated successfully',
-        });
+        toast.success('Flashcard updated successfully');
+        setOpen(false);
+        onSuccess?.();
       } else {
         await createFlashcard(formData).unwrap();
-        toast({
-          title: 'Success',
-          description: 'Flashcard created successfully',
-        });
+        toast.success('Flashcard created successfully');
+        setOpen(false);
+        onSuccess?.();
       }
-
-      setOpen(false);
-      onSuccess?.();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: `Failed to ${isEdit ? 'update' : 'create'} flashcard`,
-        variant: 'destructive',
-      });
+      toast.error(`Failed to ${isEdit ? 'update' : 'create'} flashcard`);
     }
   };
 
