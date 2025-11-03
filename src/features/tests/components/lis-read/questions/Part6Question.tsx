@@ -5,6 +5,7 @@ import { useTestSession } from '@/features/tests/hooks/useTestSession';
 import { QuestionHeader } from '../common/QuestionHeader';
 import { AnswerOptions } from '../common/AnswerOptions';
 import { ExplanationSection } from '../common/ExplanationSection';
+import { QuestionContent } from '../common/QuestionContent';
 import { Instructions } from '../common/Instructions';
 import { useExpanded } from '@/features/tests/hooks/useExpanded';
 import {
@@ -23,6 +24,7 @@ interface Part6QuestionProps {
     isCorrect: boolean;
     correctAnswer: string;
   }>;
+  resourceUrl?: string;
 }
 
 export const Part6Question = ({
@@ -30,6 +32,7 @@ export const Part6Question = ({
   showCorrectAnswers = false,
   userAnswers = {},
   reviewAnswers = [],
+  resourceUrl,
 }: Part6QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
@@ -94,19 +97,12 @@ export const Part6Question = ({
                 {/* Passage with blanks - only show if no images */}
                 {(!group.groupContext.imageUrls ||
                   group.groupContext.imageUrls.length === 0) && (
-                  <Card>
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-medium mb-4">
-                        Reading Passage
-                      </h3>
-                      <div
-                        dangerouslySetInnerHTML={{
-                          __html: group.groupContext?.passageHtml || '',
-                        }}
-                        className="prose prose-sm max-w-none dark:prose-invert leading-relaxed"
-                      />
-                    </CardContent>
-                  </Card>
+                  <QuestionContent
+                    title="Reading Passage"
+                    content={group.groupContext?.passageHtml || ''}
+                    resourceUrl={resourceUrl}
+                    isHtml={true}
+                  />
                 )}
 
                 {/* Translation Section */}
@@ -167,6 +163,7 @@ export const Part6Question = ({
                             label
                           )
                         }
+                        resourceUrl={resourceUrl}
                       />
                       {/* Explanation */}
                       {showCorrectAnswers && (
@@ -177,6 +174,7 @@ export const Part6Question = ({
                             toggleExpanded(question.questionNumber)
                           }
                           explanation={question.explanation}
+                          resourceUrl={resourceUrl}
                         />
                       )}
                     </div>

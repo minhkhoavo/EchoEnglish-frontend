@@ -6,6 +6,7 @@ import { useTestSession } from '@/features/tests/hooks/useTestSession';
 import { QuestionHeader } from '../common/QuestionHeader';
 import { AnswerOptions } from '../common/AnswerOptions';
 import { ExplanationSection } from '../common/ExplanationSection';
+import { QuestionText } from '../common/QuestionText';
 import { Instructions } from '../common/Instructions';
 import { useExpanded } from '@/features/tests/hooks/useExpanded';
 import {
@@ -24,6 +25,7 @@ interface Part3QuestionProps {
     isCorrect: boolean;
     correctAnswer: string;
   }>;
+  resourceUrl?: string;
 }
 
 export const Part3Question = ({
@@ -31,6 +33,7 @@ export const Part3Question = ({
   showCorrectAnswers = false,
   userAnswers = {},
   reviewAnswers = [],
+  resourceUrl,
 }: Part3QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
@@ -146,9 +149,10 @@ export const Part3Question = ({
                           <QuestionHeader
                             questionNumber={question.questionNumber}
                           />
-                          <p className="mb-4 font-medium">
-                            {question.questionText}
-                          </p>
+                          <QuestionText
+                            text={question.questionText || ''}
+                            resourceUrl={resourceUrl}
+                          />
                           <AnswerOptions
                             options={question.options}
                             userAnswer={userAnswer ?? undefined}
@@ -162,6 +166,7 @@ export const Part3Question = ({
                                 label
                               )
                             }
+                            resourceUrl={resourceUrl}
                           />
                           {/* Explanation */}
                           {showCorrectAnswers && (
@@ -172,6 +177,7 @@ export const Part3Question = ({
                                 toggleExplanation(question.questionNumber)
                               }
                               explanation={question.explanation}
+                              resourceUrl={resourceUrl}
                             />
                           )}
                         </CardContent>

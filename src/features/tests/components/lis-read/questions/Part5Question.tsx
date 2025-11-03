@@ -6,6 +6,7 @@ import { useTestSession } from '@/features/tests/hooks/useTestSession';
 import { QuestionHeader } from '../common/QuestionHeader';
 import { AnswerOptions } from '../common/AnswerOptions';
 import { ExplanationSection } from '../common/ExplanationSection';
+import { QuestionContent } from '../common/QuestionContent';
 import { Instructions } from '../common/Instructions';
 import { useExpanded } from '@/features/tests/hooks/useExpanded';
 import {
@@ -23,6 +24,7 @@ interface Part5QuestionProps {
     isCorrect: boolean;
     correctAnswer: string;
   }>;
+  resourceUrl?: string;
 }
 
 export const Part5Question = ({
@@ -30,6 +32,7 @@ export const Part5Question = ({
   showCorrectAnswers = false,
   userAnswers = {},
   reviewAnswers = [],
+  resourceUrl,
 }: Part5QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
@@ -93,6 +96,7 @@ export const Part5Question = ({
                         toggleExplanation(question.questionNumber)
                       }
                       explanation={question.explanation}
+                      resourceUrl={resourceUrl}
                     />
                   )}
                 </div>
@@ -100,27 +104,17 @@ export const Part5Question = ({
                 {/* Question and Options - Right side */}
                 <div className="space-y-4">
                   {/* Question Text */}
-                  <Card>
-                    <CardContent className="p-6">
-                      <h3 className="text-lg font-medium mb-4">
-                        Sentence Completion
-                      </h3>
-                      <div className="text-base leading-relaxed">
-                        {(question.questionText || '')
-                          .split('--')
-                          .map((part, index, array) => (
-                            <React.Fragment key={index}>
-                              {part}
-                              {index < array.length - 1 && (
-                                <span className="inline-block w-16 h-6 bg-yellow-200 dark:bg-yellow-800 border-b-2 border-yellow-600 mx-1 align-bottom">
-                                  ______
-                                </span>
-                              )}
-                            </React.Fragment>
-                          ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <QuestionContent
+                    title="Sentence Completion"
+                    content={(question.questionText || '')
+                      .split('--')
+                      .map(
+                        (part, index, array) =>
+                          part + (index < array.length - 1 ? ' ______ ' : '')
+                      )
+                      .join('')}
+                    resourceUrl={resourceUrl}
+                  />
 
                   {/* Options - Vertical layout */}
                   <AnswerOptions
@@ -136,6 +130,7 @@ export const Part5Question = ({
                         label
                       )
                     }
+                    resourceUrl={resourceUrl}
                   />
                 </div>
               </div>

@@ -24,6 +24,7 @@ interface Part1QuestionProps {
     isCorrect: boolean;
     correctAnswer: string;
   }>;
+  resourceUrl?: string;
 }
 
 export const Part1Question = ({
@@ -31,6 +32,7 @@ export const Part1Question = ({
   showCorrectAnswers = false,
   userAnswers = {},
   reviewAnswers = [],
+  resourceUrl,
 }: Part1QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
@@ -137,6 +139,7 @@ export const Part1Question = ({
                         toggleTranslation(question.questionNumber)
                       }
                       explanation={question.media.translation}
+                      resourceUrl={resourceUrl}
                     />
                   )}
 
@@ -147,6 +150,7 @@ export const Part1Question = ({
                       expanded={isExplanationExpanded}
                       onToggle={() => toggleExpanded(question.questionNumber)}
                       explanation={question.explanation}
+                      resourceUrl={resourceUrl}
                     />
                   )}
                 </div>
@@ -167,6 +171,7 @@ export const Part1Question = ({
                       )
                     }
                     listening={true}
+                    resourceUrl={resourceUrl}
                   />
                 </div>
               </div>
