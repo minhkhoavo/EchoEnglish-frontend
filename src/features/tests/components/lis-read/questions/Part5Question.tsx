@@ -97,6 +97,7 @@ export const Part5Question = ({
                       }
                       explanation={question.explanation}
                       resourceUrl={resourceUrl}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
                 </div>

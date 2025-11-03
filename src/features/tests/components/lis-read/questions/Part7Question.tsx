@@ -143,6 +143,7 @@ export const Part7Question = ({
                           ? fullText.substring(translationStart)
                           : fullText;
                       })()}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
               </div>
@@ -209,6 +210,7 @@ export const Part7Question = ({
                           }
                           explanation={question.explanation}
                           resourceUrl={resourceUrl}
+                          showCorrectAnswers={showCorrectAnswers}
                         />
                       )}
                     </div>

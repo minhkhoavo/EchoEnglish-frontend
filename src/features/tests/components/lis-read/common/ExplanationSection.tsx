@@ -17,6 +17,7 @@ interface ExplanationSectionProps {
   onToggle: () => void;
   explanation: string;
   resourceUrl?: string;
+  showCorrectAnswers?: boolean; // Only enable selection in review mode
 }
 
 export const ExplanationSection: React.FC<ExplanationSectionProps> = ({
@@ -25,6 +26,7 @@ export const ExplanationSection: React.FC<ExplanationSectionProps> = ({
   onToggle,
   explanation,
   resourceUrl,
+  showCorrectAnswers = false,
 }) => {
   const [selectedTranslation, setSelectedTranslation] = useState('');
   const [showFlashcardDialog, setShowFlashcardDialog] = useState(false);
@@ -66,35 +68,39 @@ export const ExplanationSection: React.FC<ExplanationSectionProps> = ({
           <CardContent className="p-4">
             <div
               ref={containerRef as React.RefObject<HTMLDivElement>}
-              onMouseUp={handleMouseUp}
-              onMouseDown={handleMouseDown}
+              onMouseUp={showCorrectAnswers ? handleMouseUp : undefined}
+              onMouseDown={showCorrectAnswers ? handleMouseDown : undefined}
               dangerouslySetInnerHTML={{ __html: explanation }}
-              className="prose prose-sm max-w-none dark:prose-invert select-text"
+              className={`prose prose-sm max-w-none dark:prose-invert ${showCorrectAnswers ? 'select-text' : ''}`}
             />
           </CardContent>
         </Card>
       </CollapsibleContent>
 
-      {/* Selection Menu */}
-      <SelectionMenu
-        selectedText={selectedText}
-        position={selectionPosition}
-        onSave={handleSaveFlashcard}
-        onClose={clearSelection}
-      />
+      {/* Selection Menu - only in review mode */}
+      {showCorrectAnswers && selectedText && (
+        <SelectionMenu
+          selectedText={selectedText}
+          position={selectionPosition}
+          onSave={handleSaveFlashcard}
+          onClose={clearSelection}
+        />
+      )}
 
-      {/* Flashcard Dialog */}
-      <CreateEditFlashcardDialog
-        open={showFlashcardDialog}
-        onOpenChange={setShowFlashcardDialog}
-        selectedText={selectedText}
-        selectedTranslation={selectedTranslation}
-        resourceUrl={resourceUrl}
-        onSuccess={() => {
-          handleCloseDialog();
-          setShowFlashcardDialog(false);
-        }}
-      />
+      {/* Flashcard Dialog - only in review mode */}
+      {showCorrectAnswers && showFlashcardDialog && (
+        <CreateEditFlashcardDialog
+          open={showFlashcardDialog}
+          onOpenChange={setShowFlashcardDialog}
+          selectedText={selectedText}
+          selectedTranslation={selectedTranslation}
+          resourceUrl={resourceUrl}
+          onSuccess={() => {
+            handleCloseDialog();
+            setShowFlashcardDialog(false);
+          }}
+        />
+      )}
     </Collapsible>
   );
 };

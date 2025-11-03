@@ -56,8 +56,8 @@ export const AnswerOptions: React.FC<AnswerOptionsProps> = ({
       <div
         className="space-y-3 mb-2"
         ref={containerRef as React.RefObject<HTMLDivElement>}
-        onMouseUp={handleMouseUp}
-        onMouseDown={handleMouseDown}
+        onMouseUp={showCorrectAnswers ? handleMouseUp : undefined}
+        onMouseDown={showCorrectAnswers ? handleMouseDown : undefined}
       >
         {options.map((option) => {
           const isSelected = userAnswer === option.label;
@@ -65,7 +65,7 @@ export const AnswerOptions: React.FC<AnswerOptionsProps> = ({
           return (
             <div
               key={option.label}
-              className={`p-3 rounded-lg border-2 transition-colors select-text ${
+              className={`p-3 rounded-lg border-2 transition-colors ${showCorrectAnswers ? 'select-text' : ''} ${
                 showCorrectAnswers && isCorrect && isSelected
                   ? 'border-green-500 bg-green-50 dark:bg-green-950' // User chọn đúng
                   : showCorrectAnswers && isCorrect && !isSelected
@@ -126,26 +126,30 @@ export const AnswerOptions: React.FC<AnswerOptionsProps> = ({
         })}
       </div>
 
-      {/* Selection Menu */}
-      <SelectionMenu
-        selectedText={selectedText}
-        position={selectionPosition}
-        onSave={handleSaveFlashcard}
-        onClose={clearSelection}
-      />
+      {/* Selection Menu - only in review mode */}
+      {showCorrectAnswers && selectedText && (
+        <SelectionMenu
+          selectedText={selectedText}
+          position={selectionPosition}
+          onSave={handleSaveFlashcard}
+          onClose={clearSelection}
+        />
+      )}
 
-      {/* Flashcard Dialog */}
-      <CreateEditFlashcardDialog
-        open={showFlashcardDialog}
-        onOpenChange={setShowFlashcardDialog}
-        selectedText={selectedText}
-        selectedTranslation={selectedTranslation}
-        resourceUrl={resourceUrl}
-        onSuccess={() => {
-          handleCloseDialog();
-          setShowFlashcardDialog(false);
-        }}
-      />
+      {/* Flashcard Dialog - only in review mode */}
+      {showCorrectAnswers && showFlashcardDialog && (
+        <CreateEditFlashcardDialog
+          open={showFlashcardDialog}
+          onOpenChange={setShowFlashcardDialog}
+          selectedText={selectedText}
+          selectedTranslation={selectedTranslation}
+          resourceUrl={resourceUrl}
+          onSuccess={() => {
+            handleCloseDialog();
+            setShowFlashcardDialog(false);
+          }}
+        />
+      )}
     </>
   );
 };

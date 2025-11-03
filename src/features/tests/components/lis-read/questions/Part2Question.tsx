@@ -116,6 +116,7 @@ export const Part2Question = ({
                       onToggle={() => toggleTranscript(question.questionNumber)}
                       explanation={question.media?.transcript || ''}
                       resourceUrl={resourceUrl}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
 
@@ -129,6 +130,7 @@ export const Part2Question = ({
                       }
                       explanation={question.explanation}
                       resourceUrl={resourceUrl}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
 
@@ -142,6 +144,7 @@ export const Part2Question = ({
                       }
                       explanation={question.media?.translation || ''}
                       resourceUrl={resourceUrl}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
 

@@ -126,6 +126,7 @@ export const Part1Question = ({
                       expanded={isTranscriptExpanded}
                       onToggle={() => toggleTranscript(question.questionNumber)}
                       explanation={question.media?.transcript || ''}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
 
@@ -140,6 +141,7 @@ export const Part1Question = ({
                       }
                       explanation={question.media.translation}
                       resourceUrl={resourceUrl}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
 
@@ -151,6 +153,7 @@ export const Part1Question = ({
                       onToggle={() => toggleExpanded(question.questionNumber)}
                       explanation={question.explanation}
                       resourceUrl={resourceUrl}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
                 </div>

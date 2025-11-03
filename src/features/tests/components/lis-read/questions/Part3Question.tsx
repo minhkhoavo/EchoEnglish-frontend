@@ -113,6 +113,7 @@ export const Part3Question = ({
                       expanded={isTranscriptExpanded}
                       onToggle={() => toggleTranscript(groupIndex)}
                       explanation={group.groupContext?.transcript || ''}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
 
@@ -123,6 +124,7 @@ export const Part3Question = ({
                       expanded={isTranslationExpanded}
                       onToggle={() => toggleTranslation(groupIndex)}
                       explanation={group.groupContext?.translation || ''}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
                 </div>
@@ -179,6 +181,7 @@ export const Part3Question = ({
                               }
                               explanation={question.explanation}
                               resourceUrl={resourceUrl}
+                              showCorrectAnswers={showCorrectAnswers}
                             />
                           )}
                         </CardContent>

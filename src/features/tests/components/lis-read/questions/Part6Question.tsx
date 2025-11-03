@@ -119,6 +119,7 @@ export const Part6Question = ({
                         group.groupContext?.transcript ||
                         ''
                       }
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
               </div>
@@ -176,6 +177,7 @@ export const Part6Question = ({
                           }
                           explanation={question.explanation}
                           resourceUrl={resourceUrl}
+                          showCorrectAnswers={showCorrectAnswers}
                         />
                       )}
                     </div>
