@@ -1,10 +1,15 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from 'react-router-dom';
 import { Toaster } from './components/ui/sonner';
-import { useLocation } from 'react-router-dom';
 
 // Layout
 import { Layout } from './components/layout/Layout';
 import { NoHeaderLayout } from './components/layout/NoHeaderLayout';
+import { AdminLayout } from './components/layout/AdminLayout';
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -76,6 +81,18 @@ const QuizRouteWrapper = () => {
   return <QuizInterface onClose={() => {}} fileId={fileId} />;
 };
 
+const ChatbotWrapper = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Don't show chatbot on admin routes
+  if (isAdminRoute) {
+    return null;
+  }
+
+  return <ChatbotContainer className="bottom-4 right-4" />;
+};
+
 function App() {
   return (
     <Router>
@@ -135,17 +152,21 @@ function App() {
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/payment/history" element={<PaymentHistoryPage />} />
 
-          {/* ADMIN ROUTES */}
+          {/* RESOURCES */}
+          <Route path="/resources" element={<ResourcePage />} />
+          <Route path="/resources/:id" element={<ResourceDetailPage />} />
+        </Route>
+
+        {/* ================================================================== */}
+        {/* ADMIN ROUTES - With AdminLayout (Admin Header + Admin Sidebar) */}
+        {/* ================================================================== */}
+        <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route
             path="/admin/notification"
             element={<AdminNotificationPage />}
           />
           <Route path="/admin/resources" element={<AdminResourcePage />} />
-
-          {/* RESOURCES */}
-          <Route path="/resources" element={<ResourcePage />} />
-          <Route path="/resources/:id" element={<ResourceDetailPage />} />
         </Route>
 
         {/* ================================================================== */}
@@ -180,8 +201,8 @@ function App() {
       </Routes>
       <Toaster />
 
-      {/* AI Chatbot - Available on all pages */}
-      <ChatbotContainer className="bottom-4 right-4" />
+      {/* AI Chatbot - Available on all pages except admin */}
+      <ChatbotWrapper />
     </Router>
   );
 }

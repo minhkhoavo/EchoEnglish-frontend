@@ -8,15 +8,17 @@ const AdminNotificationPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Main Content - Centered and balanced */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center">
-          <div className="w-full max-w-5xl">
-            <AdminPanel onSendNotification={handleSendNotification} />
-          </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Notification Management</h1>
+          <p className="text-muted-foreground">
+            Send push notifications to users across the platform
+          </p>
         </div>
       </div>
+
+      <AdminPanel onSendNotification={handleSendNotification} />
     </div>
   );
 };

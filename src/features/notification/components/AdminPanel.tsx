@@ -155,32 +155,16 @@ export const AdminPanel = ({ onSendNotification }: AdminPanelProps) => {
   const TypeIcon = typeIcons[formData.type];
 
   return (
-    <Card className="w-full max-w-5xl mx-auto shadow-lg">
-      <CardHeader className="pb-6 mb-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b">
-        <CardTitle className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-md">
-            <Send className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">
-              Send Notification
-            </h2>
-            <p className="text-sm text-muted-foreground font-normal mt-1">
-              Create and send notifications to users across the platform
-            </p>
-          </div>
-        </CardTitle>
-      </CardHeader>
-
-      <CardContent className="px-8 py-6">
+    <Card className="w-full shadow-sm">
+      <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             {/* Left Column - Recipients Selection (3/5 width) */}
             <div className="lg:col-span-3 space-y-6">
               {/* Recipient Selection */}
-              <div className="space-y-4 p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
-                <label className="text-lg font-semibold flex items-center gap-3 text-gray-900">
-                  <Users className="h-5 w-5 text-blue-600" />
+              <div className="space-y-4 p-5 bg-muted/30 rounded-lg border">
+                <label className="text-sm font-semibold flex items-center gap-2">
+                  <Users className="h-4 w-4" />
                   Recipients
                 </label>
                 <div className="flex gap-2">
@@ -377,17 +361,18 @@ export const AdminPanel = ({ onSendNotification }: AdminPanelProps) => {
           </div>
 
           {/* Submit Button */}
-          <div className="pt-4  border-t border-gray-200">
+          <div className="pt-6 border-t">
             <Button
               type="submit"
-              className="w-full h-12 text-base font-semibold"
+              size="lg"
+              className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
               disabled={
                 isLoading ||
                 (formData.recipientType === 'specific' &&
                   formData.userIds.length === 0)
               }
             >
-              <Send className="h-5 w-5 mr-2" />
+              <Send className="h-4 w-4 mr-2" />
               {isLoading ? 'Sending...' : 'Send Notification'}
             </Button>
           </div>
