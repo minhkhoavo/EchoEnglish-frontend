@@ -9,22 +9,14 @@ import { Button } from '../components/ui/button';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { PaymentHistoryTable } from '../features/payment/components/PaymentHistoryTable';
 import { TransactionFiltersComponent } from '../features/payment/components/TransactionFilters';
+import { UserPaymentStats } from '../features/payment/components/UserPaymentStats';
 import { useGetTransactionHistoryQuery } from '../features/payment/services/paymentApi';
+import CustomPagination from '../components/ui/custom-pagination';
 import type {
   TransactionFilters,
   Transaction,
 } from '../features/payment/types';
-import {
-  History,
-  RefreshCw,
-  Download,
-  AlertCircle,
-  DollarSign,
-  Plus,
-  Minus,
-  CheckCircle,
-  BarChart3,
-} from 'lucide-react';
+import { History, RefreshCw, Download, AlertCircle } from 'lucide-react';
 
 export const PaymentHistoryPage: React.FC = () => {
   // State management
@@ -146,39 +138,22 @@ export const PaymentHistoryPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  // Get summary statistics
-  const getSummaryStats = () => {
-    if (!transactions.length) return null;
-
-    const purchaseTransactions = transactions.filter(
-      (t) => t.type === 'purchase'
-    );
-    const successfulPurchases = purchaseTransactions.filter(
-      (t) => t.status === 'SUCCEEDED'
-    );
-
-    const totalSpent = successfulPurchases.reduce(
-      (sum, t) => sum + t.amount,
-      0
-    );
-    const totalCreditsEarned = successfulPurchases.reduce(
-      (sum, t) => sum + t.tokens,
-      0
-    );
-    const totalCreditsUsed = transactions
+  // Get summary statistics for UserPaymentStats
+  const stats = {
+    totalSpent: transactions
+      .filter((t) => t.type === 'purchase' && t.status === 'SUCCEEDED')
+      .reduce((sum, t) => sum + t.amount, 0),
+    totalCreditsEarned: transactions
+      .filter((t) => t.type === 'purchase' && t.status === 'SUCCEEDED')
+      .reduce((sum, t) => sum + t.tokens, 0),
+    totalCreditsUsed: transactions
       .filter((t) => t.type === 'deduction' && t.status === 'SUCCEEDED')
-      .reduce((sum, t) => sum + t.tokens, 0);
-
-    return {
-      totalSpent,
-      totalCreditsEarned,
-      totalCreditsUsed,
-      successfulPurchases: successfulPurchases.length,
-      totalTransactions: transactions.length,
-    };
+      .reduce((sum, t) => sum + t.tokens, 0),
+    successfulPurchases: transactions.filter(
+      (t) => t.type === 'purchase' && t.status === 'SUCCEEDED'
+    ).length,
+    totalTransactions: transactions.length,
   };
-
-  const stats = getSummaryStats();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -227,82 +202,7 @@ export const PaymentHistoryPage: React.FC = () => {
         </div>
 
         {/* Summary Statistics */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-medium text-gray-600">
-                    Total Spent
-                  </p>
-                  <DollarSign className="h-3 w-3 text-green-600" />
-                </div>
-                <div className="text-lg font-bold text-green-600">
-                  {new Intl.NumberFormat('vi-VN', {
-                    style: 'currency',
-                    currency: 'VND',
-                  }).format(stats.totalSpent)}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-medium text-gray-600">
-                    Credits Purchased
-                  </p>
-                  <Plus className="h-3 w-3 text-blue-600" />
-                </div>
-                <div className="text-lg font-bold text-blue-600">
-                  +{stats.totalCreditsEarned.toLocaleString()}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-medium text-gray-600">
-                    Credits Used
-                  </p>
-                  <Minus className="h-3 w-3 text-orange-600" />
-                </div>
-                <div className="text-lg font-bold text-orange-600">
-                  -{stats.totalCreditsUsed.toLocaleString()}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-medium text-gray-600">
-                    Successful
-                  </p>
-                  <CheckCircle className="h-3 w-3 text-green-600" />
-                </div>
-                <div className="text-lg font-bold text-green-600">
-                  {stats.successfulPurchases}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-medium text-gray-600">
-                    Total Transactions
-                  </p>
-                  <BarChart3 className="h-3 w-3 text-purple-600" />
-                </div>
-                <div className="text-lg font-bold text-gray-800">
-                  {stats.totalTransactions}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        <UserPaymentStats stats={stats} />
 
         {/* Error Alert */}
         {error && (
@@ -333,54 +233,14 @@ export const PaymentHistoryPage: React.FC = () => {
         />
 
         {/* Pagination */}
-        {transactions.length > 0 && pagination && (
-          <Card className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg">
-            <CardContent className="py-4">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                {/* Pagination Info */}
-                <div className="text-sm text-gray-600">
-                  Showing{' '}
-                  <span className="font-semibold text-gray-900">
-                    {transactions.length}
-                  </span>{' '}
-                  of{' '}
-                  <span className="font-semibold text-gray-900">
-                    {pagination.total}
-                  </span>{' '}
-                  transactions
-                </div>
-
-                {/* Pagination Controls */}
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => handlePageChange((filters.page || 1) - 1)}
-                    disabled={!filters.page || filters.page <= 1 || isLoading}
-                    className="bg-white/80 backdrop-blur-sm border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ← Previous
-                  </Button>
-                  <div className="flex items-center gap-2">
-                    <span className="px-4 py-2 text-sm font-medium text-gray-700 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg border border-blue-200">
-                      Page {filters.page || 1} of {pagination.totalPages}
-                    </span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => handlePageChange((filters.page || 1) + 1)}
-                    disabled={
-                      !pagination.totalPages ||
-                      (filters.page || 1) >= pagination.totalPages ||
-                      isLoading
-                    }
-                    className="bg-white/80 backdrop-blur-sm border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next →
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {transactions.length > 0 && pagination && pagination.totalPages > 1 && (
+          <div className="flex justify-center pt-8">
+            <CustomPagination
+              currentPage={filters.page || 1}
+              totalPages={pagination.totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
         )}
       </div>
     </div>

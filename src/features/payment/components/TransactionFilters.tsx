@@ -47,14 +47,20 @@ export const TransactionFiltersComponent: React.FC<TransactionFiltersProps> = ({
   defaultExpanded = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [tempFilters, setTempFilters] = useState<TransactionFilters>(filters);
+
   const handleFilterChange = (
     key: keyof TransactionFilters,
     value: string | number | undefined
   ) => {
-    onFiltersChange({
-      ...filters,
+    setTempFilters({
+      ...tempFilters,
       [key]: value === 'all' || value === '' ? undefined : value,
     });
+  };
+
+  const applyFilters = () => {
+    onFiltersChange(tempFilters);
   };
 
   const hasActiveFilters = Object.values(filters).some(
@@ -269,7 +275,7 @@ export const TransactionFiltersComponent: React.FC<TransactionFiltersProps> = ({
   }
 
   return (
-    <Card className="mb-6 shadow-sm border-gray-200">
+    <Card className="mb-6 bg-white/80 backdrop-blur-sm border-white/50 shadow-lg">
       <CardHeader className="pb-3">
         <div
           className="flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors rounded-lg p-2 -m-2"
@@ -284,25 +290,17 @@ export const TransactionFiltersComponent: React.FC<TransactionFiltersProps> = ({
               </Badge>
             )}
           </CardTitle>
-          <div className="flex items-center gap-2">
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClearFilters();
-                }}
-                size="sm"
-                className="text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Clear All
-              </Button>
-            )}
+          <div className="flex items-center gap-1">
             {isExpanded ? (
-              <ChevronUp className="h-5 w-5 text-gray-400" />
+              <>
+                <ChevronUp className="w-4 h-4" />
+                <span className="text-sm">Hide</span>
+              </>
             ) : (
-              <ChevronDown className="h-5 w-5 text-gray-400" />
+              <>
+                <ChevronDown className="h-4 w-4" />
+                <span className="text-sm">Show</span>
+              </>
             )}
           </div>
         </div>
@@ -320,7 +318,7 @@ export const TransactionFiltersComponent: React.FC<TransactionFiltersProps> = ({
                 Transaction Type
               </Label>
               <Select
-                value={filters.type || 'all'}
+                value={tempFilters.type || 'all'}
                 onValueChange={(value) => handleFilterChange('type', value)}
               >
                 <SelectTrigger
@@ -357,7 +355,7 @@ export const TransactionFiltersComponent: React.FC<TransactionFiltersProps> = ({
                 Payment Gateway
               </Label>
               <Select
-                value={filters.paymentGateway || 'all'}
+                value={tempFilters.paymentGateway || 'all'}
                 onValueChange={(value) =>
                   handleFilterChange('paymentGateway', value)
                 }
@@ -396,7 +394,7 @@ export const TransactionFiltersComponent: React.FC<TransactionFiltersProps> = ({
                 Status
               </Label>
               <Select
-                value={filters.status || 'all'}
+                value={tempFilters.status || 'all'}
                 onValueChange={(value) => handleFilterChange('status', value)}
               >
                 <SelectTrigger
@@ -444,7 +442,7 @@ export const TransactionFiltersComponent: React.FC<TransactionFiltersProps> = ({
                 Records per page
               </Label>
               <Select
-                value={filters.limit?.toString() || '20'}
+                value={tempFilters.limit?.toString() || '20'}
                 onValueChange={(value) =>
                   handleFilterChange('limit', parseInt(value))
                 }
@@ -479,7 +477,7 @@ export const TransactionFiltersComponent: React.FC<TransactionFiltersProps> = ({
                 <Input
                   id="date-from"
                   type="date"
-                  value={filters.dateFrom || ''}
+                  value={tempFilters.dateFrom || ''}
                   onChange={(e) =>
                     handleFilterChange('dateFrom', e.target.value)
                   }
@@ -493,12 +491,29 @@ export const TransactionFiltersComponent: React.FC<TransactionFiltersProps> = ({
                 <Input
                   id="date-to"
                   type="date"
-                  value={filters.dateTo || ''}
+                  value={tempFilters.dateTo || ''}
                   onChange={(e) => handleFilterChange('dateTo', e.target.value)}
                   className="h-9 bg-white border-gray-300 hover:border-gray-400 transition-colors"
                 />
               </div>
             </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={onClearFilters}
+              className="bg-white/80 border-gray-200 hover:border-red-300 hover:bg-red-50 transition-all duration-200"
+            >
+              Clear All
+            </Button>
+            <Button
+              onClick={applyFilters}
+              className="bg-blue-600 hover:bg-blue-700 transition-all duration-200"
+            >
+              Apply Filters
+            </Button>
           </div>
         </CardContent>
       )}

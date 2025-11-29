@@ -28,6 +28,7 @@ import {
   Copy,
   CheckCircle2,
 } from 'lucide-react';
+import { formatDate, formatCurrency } from '@/lib/format.ts';
 
 interface PaymentHistoryTableProps {
   transactions: Transaction[];
@@ -43,25 +44,6 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
   onPaymentContinue,
 }) => {
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
-
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return 'Unknown';
-
-      const pad = (n: number) => n.toString().padStart(2, '0');
-      return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-    } catch {
-      return 'Unknown';
-    }
-  };
-
-  const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
-  };
 
   const getTransactionTypeInfo = (type: string) => {
     switch (type) {
@@ -195,7 +177,7 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
 
   if (!transactions.length) {
     return (
-      <Card className="bg-white/80 backdrop-blur-sm border-white/50 shadow-xl">
+      <Card className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg">
         <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-t-lg">
           <CardTitle className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg">
@@ -228,7 +210,7 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
   }
 
   return (
-    <Card className="border-gray-200">
+    <Card className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Calendar className="h-5 w-5 text-gray-600" />
@@ -241,8 +223,8 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
         <div className="overflow-x-auto">
           <Table className="table-fixed w-full">
             <TableHeader>
-              <TableRow className="bg-gradient-to-r from-gray-50/50 to-blue-50/50 hover:from-gray-100/50 hover:to-blue-100/50">
-                <TableHead className="w-[100px] font-semibold text-gray-700">
+              <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100">
+                <TableHead className="font-semibold text-gray-700">
                   Time
                 </TableHead>
                 <TableHead className="font-semibold text-gray-700">
@@ -288,7 +270,7 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
                         {transaction.expiredAt &&
                           transaction.status === 'INITIATED' && (
                             <span className="text-xs text-gray-500">
-                              Hết hạn: {formatDate(transaction.expiredAt)}
+                              Expires: {formatDate(transaction.expiredAt)}
                             </span>
                           )}
                       </div>
@@ -332,11 +314,11 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
                       {transaction.amount > 0 ? (
                         <div className="flex flex-col items-end">
                           <span className="font-medium">
-                            {formatAmount(transaction.amount)}
+                            {formatCurrency(transaction.amount)}
                           </span>
                           {transaction.discount > 0 && (
                             <span className="text-xs text-green-600">
-                              Giảm {formatAmount(transaction.discount)}
+                              Save {formatCurrency(transaction.discount)}
                             </span>
                           )}
                         </div>

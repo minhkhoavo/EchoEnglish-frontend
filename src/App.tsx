@@ -61,6 +61,8 @@ import PaymentCallbackPage from './pages/PaymentCallbackPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import AdminNotificationPage from './pages/admin/AdminNotificationPage';
 import AdminResourcePage from './pages/admin/AdminResourcePage';
+import { AdminPaymentPage } from './pages/admin/AdminPaymentPage';
+import { AdminPromotionPage } from './pages/admin/AdminPromotionPage';
 
 // Resources
 import ResourcePage from './pages/resource/ResourcePage';
@@ -167,6 +169,8 @@ function App() {
             element={<AdminNotificationPage />}
           />
           <Route path="/admin/resources" element={<AdminResourcePage />} />
+          <Route path="/admin/payments" element={<AdminPaymentPage />} />
+          <Route path="/admin/promotions" element={<AdminPromotionPage />} />
         </Route>
 
         {/* ================================================================== */}

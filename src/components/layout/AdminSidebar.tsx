@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Bell, Library } from 'lucide-react';
+import { LayoutDashboard, Bell, Library, CreditCard, Tag } from 'lucide-react';
 
 export type AdminNavItem = {
   path: string;
@@ -32,6 +32,18 @@ const adminNavigationItems: AdminNavItem[] = [
     name: 'Resources',
     icon: Library,
     description: 'Content Management',
+  },
+  {
+    path: '/admin/payments',
+    name: 'Payments',
+    icon: CreditCard,
+    description: 'Transaction Management',
+  },
+  {
+    path: '/admin/promotions',
+    name: 'Promotions',
+    icon: Tag,
+    description: 'Promo Code Management',
   },
 ];
 
