@@ -3,13 +3,23 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
 // Import dashboard components
-import { DashboardCards } from './DashboardCards';
-import { UserStatsChart } from './UserStatsChart';
-import { TestStatsChart, AvgScoreTable, TopUsers } from './TestStatsComponents';
-import { PaymentTimelineChart } from './PaymentTimelineChart';
-import { PaymentStatusTable, PaymentGatewayTable } from './PaymentTables';
-import { ResourceDomainChart } from './ResourceDomainChart';
-import { DateRangeSelector, DATE_RANGE_OPTIONS } from './DateRangeSelector';
+import { DashboardCards } from '@/features/admin-dashboard/components/DashboardCards';
+import { UserStatsChart } from '@/features/admin-dashboard/components/UserStatsChart';
+import {
+  TestStatsChart,
+  AvgScoreTable,
+  TopUsers,
+} from '@/features/admin-dashboard/components/TestStatsComponents';
+import { PaymentTimelineChart } from '@/features/admin-dashboard/components/PaymentTimelineChart';
+import {
+  PaymentStatusTable,
+  PaymentGatewayTable,
+} from '@/features/admin-dashboard/components/PaymentTables';
+import { ResourceDomainChart } from '@/features/admin-dashboard/components/ResourceDomainChart';
+import {
+  DateRangeSelector,
+  DATE_RANGE_OPTIONS,
+} from '@/features/admin-dashboard/components/DateRangeSelector';
 
 // Import API hooks
 import {
@@ -17,11 +27,11 @@ import {
   useGetTestStatsQuery,
   useGetPaymentStatsQuery,
   useGetResourceStatsQuery,
-} from '../services/dashboardApi';
+} from '@/features/admin-dashboard/services/dashboardApi';
 
-import type { DateRangeOption } from '../types/dashboard.types';
+import type { DateRangeOption } from '@/features/admin-dashboard/types/dashboard.types';
 
-export function AdminDashboard() {
+export function AdminDashboardPage() {
   const [selectedDateRange, setSelectedDateRange] = useState<DateRangeOption>(
     DATE_RANGE_OPTIONS.find((opt) => opt.value === 'last-30-days') ||
       DATE_RANGE_OPTIONS[2]
@@ -221,4 +231,4 @@ export function AdminDashboard() {
   );
 }
 
-export default AdminDashboard;
+export default AdminDashboardPage;

@@ -58,11 +58,12 @@ import ChatbotDemoPage from './pages/ChatbotDemoPage';
 import PaymentCallbackPage from './pages/PaymentCallbackPage';
 
 // Admin Routes
-import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import AdminNotificationPage from './pages/admin/AdminNotificationPage';
 import AdminResourcePage from './pages/admin/AdminResourcePage';
 import { AdminPaymentPage } from './pages/admin/AdminPaymentPage';
 import { AdminPromotionPage } from './pages/admin/AdminPromotionPage';
+import { AdminUserPage } from './pages/admin/AdminUserPage';
 
 // Resources
 import ResourcePage from './pages/resource/ResourcePage';
@@ -165,12 +166,13 @@ function App() {
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route
-            path="/admin/notification"
+            path="/admin/notifications"
             element={<AdminNotificationPage />}
           />
           <Route path="/admin/resources" element={<AdminResourcePage />} />
           <Route path="/admin/payments" element={<AdminPaymentPage />} />
           <Route path="/admin/promotions" element={<AdminPromotionPage />} />
+          <Route path="/admin/users" element={<AdminUserPage />} />
         </Route>
 
         {/* ================================================================== */}

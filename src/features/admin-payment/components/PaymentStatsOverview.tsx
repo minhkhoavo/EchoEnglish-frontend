@@ -1,9 +1,11 @@
-import { StatCard } from '@/components/ui/stat-card';
+import { StatCard } from '@/components/StatCard';
 import {
   ArrowUpCircle,
   ArrowDownCircle,
   CheckCircle2,
   XCircle,
+  BarChart3,
+  Receipt,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/format';
 
@@ -20,79 +22,65 @@ interface PaymentStatsOverviewProps {
 
 export const PaymentStatsOverview = ({ stats }: PaymentStatsOverviewProps) => {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       <StatCard
         label="Total Amount"
         value={formatCurrency(stats.totalAmount)}
-        icon={() => (
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-            <span className="text-blue-600 text-2xl font-semibold">₫</span>
-          </div>
-        )}
-        iconColor=""
-        valueColor="text-blue-700"
-        gradient="from-blue-50 to-white"
+        icon={BarChart3}
+        iconColor="text-blue-600"
+        iconBgColor="bg-blue-50"
         borderColor="border-blue-200"
-        size="md"
+        subtitle="Revenue"
       />
 
       <StatCard
         label="Transactions"
         value={stats.totalTransactions.toLocaleString()}
-        icon={() => (
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-            <span className="text-purple-600 text-2xl font-semibold">#</span>
-          </div>
-        )}
-        iconColor=""
-        valueColor="text-purple-700"
-        gradient="from-purple-50 to-white"
+        icon={Receipt}
+        iconColor="text-purple-600"
+        iconBgColor="bg-purple-50"
         borderColor="border-purple-200"
-        size="md"
+        subtitle="Total"
       />
 
       <StatCard
         label="Succeeded"
-        value={stats.succeeded}
+        value={stats.succeeded.toLocaleString()}
         icon={CheckCircle2}
-        iconColor="text-green-500"
-        valueColor="text-green-700"
-        gradient="from-green-50 to-white"
+        iconColor="text-green-600"
+        iconBgColor="bg-green-50"
         borderColor="border-green-200"
-        size="md"
+        subtitle="Success"
       />
 
       <StatCard
         label="Failed"
-        value={stats.failed}
+        value={stats.failed.toLocaleString()}
         icon={XCircle}
-        iconColor="text-red-500"
-        valueColor="text-red-700"
-        gradient="from-red-50 to-white"
+        iconColor="text-red-600"
+        iconBgColor="bg-red-50"
         borderColor="border-red-200"
-        size="md"
+        subtitle="Errors"
       />
 
       <StatCard
         label="Purchased"
-        value={`${stats.purchased.toLocaleString()} tokens`}
+        value={stats.purchased.toLocaleString()}
         icon={ArrowUpCircle}
-        iconColor="text-emerald-500"
-        valueColor="text-emerald-700"
-        gradient="from-emerald-50 to-white"
+        iconColor="text-emerald-600"
+        iconBgColor="bg-emerald-50"
         borderColor="border-emerald-200"
-        size="md"
+        subtitle="tokens"
       />
 
       <StatCard
         label="Used"
-        value={`${stats.used.toLocaleString()} tokens`}
+        value={stats.used.toLocaleString()}
         icon={ArrowDownCircle}
-        iconColor="text-orange-500"
-        valueColor="text-orange-700"
-        gradient="from-orange-50 to-white"
+        iconColor="text-orange-600"
+        iconBgColor="bg-orange-50"
         borderColor="border-orange-200"
-        size="md"
+        subtitle="tokens"
       />
     </div>
   );

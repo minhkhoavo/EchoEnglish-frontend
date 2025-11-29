@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -10,48 +10,40 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronDown, ChevronUp, Search, Filter } from 'lucide-react';
-import type { PromoFilters } from '../types/promo.types';
+import { ChevronDown, ChevronUp, Filter, Search } from 'lucide-react';
+import type { ResourceFilters } from '../types/resource.types';
 
-interface PromoFilterCardProps {
-  filters: PromoFilters;
-  onFilter: (filters: PromoFilters) => void;
+interface ResourceFilterCardProps {
+  filters: ResourceFilters;
+  onFilter: (filters: ResourceFilters) => void;
 }
 
-const ACTIVE_STATUS_OPTIONS = [
-  { value: 'true', label: 'Active' },
-  { value: 'false', label: 'Inactive' },
+const RESOURCE_TYPES = [
+  { value: 'article', label: 'Article' },
+  { value: 'video', label: 'Video' },
 ];
 
-const STATUS_OPTIONS = [
-  { value: 'valid', label: 'Valid' },
-  { value: 'expired', label: 'Expired' },
-];
-
-const AVAILABILITY_OPTIONS = [
-  { value: 'available', label: 'Available' },
-  { value: 'out', label: 'Out of Stock' },
+const SUITABLE_STATUS = [
+  { value: 'true', label: 'Suitable for Learners' },
+  { value: 'false', label: 'Not Suitable' },
 ];
 
 const SORT_OPTIONS = [
-  { value: 'desc', label: 'Latest First' },
-  { value: 'asc', label: 'Oldest First' },
+  { value: 'newest', label: 'Newest First' },
+  { value: 'oldest', label: 'Oldest First' },
 ];
 
-const ITEMS_PER_PAGE = [10, 20, 50, 100];
+const ITEMS_PER_PAGE = [5, 10, 20, 50];
 
-export const PromoFilterCard = ({
+export const ResourceFilterCard = ({
   filters,
   onFilter,
-}: PromoFilterCardProps) => {
-  const [showFilters, setShowFilters] = useState<boolean>(false);
-  const [tempFilters, setTempFilters] = useState<PromoFilters>(filters);
+}: ResourceFilterCardProps) => {
+  const [showFilters, setShowFilters] = useState(false);
+  const [tempFilters, setTempFilters] = useState<ResourceFilters>(filters);
   const [resetKey, setResetKey] = useState(0);
 
-  const handleChange = (
-    key: keyof PromoFilters,
-    value: string | boolean | number
-  ) => {
+  const handleChange = (key: keyof ResourceFilters, value: string | number) => {
     setTempFilters({ ...tempFilters, [key]: value });
   };
 
@@ -59,19 +51,8 @@ export const PromoFilterCard = ({
     onFilter(tempFilters);
   };
 
-  // Don't auto-apply on every change, only when Apply button is clicked
-
   const clearFilters = () => {
-    const emptyFilters: PromoFilters = {
-      search: '',
-      active: '',
-      minDiscount: '',
-      maxDiscount: '',
-      sort: 'desc',
-      status: '',
-      availability: '',
-      limit: 10,
-    };
+    const emptyFilters: ResourceFilters = { limit: 5, sort: 'newest' };
     setTempFilters(emptyFilters);
     onFilter(emptyFilters);
     setResetKey((prev) => prev + 1);
@@ -87,7 +68,7 @@ export const PromoFilterCard = ({
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-blue-600" />
             <CardTitle className="text-lg font-semibold">
-              Promotion Filters
+              Resource Filters
             </CardTitle>
           </div>
           <div className="flex items-center gap-1">
@@ -105,119 +86,75 @@ export const PromoFilterCard = ({
           </div>
         </div>
       </CardHeader>
-
       {showFilters && (
         <CardContent className="pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div>
-              <Label className="mb-2 block">Search Code</Label>
+              <Label className="mb-2 block">Search</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="Search by code..."
-                  value={tempFilters.search || ''}
-                  onChange={(e) => handleChange('search', e.target.value)}
+                  placeholder="Search resources..."
+                  value={tempFilters.q || ''}
+                  onChange={(e) => handleChange('q', e.target.value)}
                   className="pl-9"
                 />
               </div>
             </div>
 
-            {/* Active Status */}
+            {/* Resource Type */}
             <div>
-              <Label className="mb-2 block">Active Status</Label>
+              <Label className="mb-2 block">Resource Type</Label>
               <Select
-                key={`active-${resetKey}`}
-                value={tempFilters.active ? String(tempFilters.active) : ''}
-                onValueChange={(v) => handleChange('active', v)}
+                key={`type-${resetKey}`}
+                value={tempFilters.type || ''}
+                onValueChange={(v) => handleChange('type', v)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All" />
+                  <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ACTIVE_STATUS_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                  {RESOURCE_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Status */}
+            {/* Suitable Status */}
             <div>
               <Label className="mb-2 block">Status</Label>
               <Select
-                key={`status-${resetKey}`}
-                value={tempFilters.status || ''}
-                onValueChange={(v) => handleChange('status', v)}
+                key={`suitable-${resetKey}`}
+                value={tempFilters.suitableForLearners || ''}
+                onValueChange={(v) => handleChange('suitableForLearners', v)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All" />
+                  <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  {STATUS_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                  {SUITABLE_STATUS.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Availability */}
-            <div>
-              <Label className="mb-2 block">Availability</Label>
-              <Select
-                key={`availability-${resetKey}`}
-                value={tempFilters.availability || ''}
-                onValueChange={(v) => handleChange('availability', v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  {AVAILABILITY_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Min Discount */}
-            <div>
-              <Label className="mb-2 block">Min Discount (%)</Label>
-              <Input
-                type="number"
-                placeholder="0"
-                value={tempFilters.minDiscount || ''}
-                onChange={(e) => handleChange('minDiscount', e.target.value)}
-              />
-            </div>
-
-            {/* Max Discount */}
-            <div>
-              <Label className="mb-2 block">Max Discount (%)</Label>
-              <Input
-                type="number"
-                placeholder="100"
-                value={tempFilters.maxDiscount || ''}
-                onChange={(e) => handleChange('maxDiscount', e.target.value)}
-              />
-            </div>
-
-            {/* Sort */}
+            {/* Sort Order */}
             <div>
               <Label className="mb-2 block">Sort Order</Label>
               <Select
                 key={`sort-${resetKey}`}
-                value={tempFilters.sort || 'desc'}
+                value={tempFilters.sort || 'newest'}
                 onValueChange={(v) => handleChange('sort', v)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Latest First" />
+                  <SelectValue placeholder="Newest First" />
                 </SelectTrigger>
                 <SelectContent>
                   {SORT_OPTIONS.map((option) => (
@@ -238,7 +175,7 @@ export const PromoFilterCard = ({
               </Label>
               <Select
                 key={`limit-${resetKey}`}
-                value={String(tempFilters.limit || 10)}
+                value={String(tempFilters.limit || 5)}
                 onValueChange={(v) => handleChange('limit', Number(v))}
               >
                 <SelectTrigger className="w-32">

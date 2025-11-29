@@ -46,7 +46,6 @@ const ResourcePage = () => {
           isLoading={isLoading}
           totalPages={totalPages}
           totalCounts={totalCounts}
-          isAdmin={false}
         />
       </div>
     </div>

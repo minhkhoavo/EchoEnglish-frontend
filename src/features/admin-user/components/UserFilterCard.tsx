@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -10,67 +10,55 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronDown, ChevronUp, Search, Filter } from 'lucide-react';
-import type { PromoFilters } from '../types/promo.types';
+import { ChevronDown, ChevronUp, Filter, Search } from 'lucide-react';
+import type { UserFilters } from '../types/user.types';
 
-interface PromoFilterCardProps {
-  filters: PromoFilters;
-  onFilter: (filters: PromoFilters) => void;
+interface UserFilterCardProps {
+  filters: UserFilters;
+  onFilter: (filters: UserFilters) => void;
 }
 
-const ACTIVE_STATUS_OPTIONS = [
-  { value: 'true', label: 'Active' },
-  { value: 'false', label: 'Inactive' },
+const GENDER_OPTIONS = [
+  { value: 'Male', label: 'Male' },
+  { value: 'Female', label: 'Female' },
+  { value: 'Other', label: 'Other' },
 ];
 
-const STATUS_OPTIONS = [
-  { value: 'valid', label: 'Valid' },
-  { value: 'expired', label: 'Expired' },
-];
-
-const AVAILABILITY_OPTIONS = [
-  { value: 'available', label: 'Available' },
-  { value: 'out', label: 'Out of Stock' },
+const DELETED_OPTIONS = [
+  { value: 'all', label: 'Active Users' },
+  { value: 'true', label: 'Deleted Users' },
 ];
 
 const SORT_OPTIONS = [
-  { value: 'desc', label: 'Latest First' },
-  { value: 'asc', label: 'Oldest First' },
+  { value: 'date_desc', label: 'Newest First' },
+  { value: 'date_asc', label: 'Oldest First' },
+  { value: 'name_asc', label: 'Name A-Z' },
+  { value: 'name_desc', label: 'Name Z-A' },
+  { value: 'credits_desc', label: 'Credits High-Low' },
+  { value: 'credits_asc', label: 'Credits Low-High' },
 ];
 
 const ITEMS_PER_PAGE = [10, 20, 50, 100];
 
-export const PromoFilterCard = ({
-  filters,
-  onFilter,
-}: PromoFilterCardProps) => {
-  const [showFilters, setShowFilters] = useState<boolean>(false);
-  const [tempFilters, setTempFilters] = useState<PromoFilters>(filters);
+export const UserFilterCard = ({ filters, onFilter }: UserFilterCardProps) => {
+  const [showFilters, setShowFilters] = useState(false);
+  const [tempFilters, setTempFilters] = useState<UserFilters>(filters);
   const [resetKey, setResetKey] = useState(0);
 
-  const handleChange = (
-    key: keyof PromoFilters,
-    value: string | boolean | number
-  ) => {
+  const handleChange = (key: keyof UserFilters, value: string | number) => {
     setTempFilters({ ...tempFilters, [key]: value });
   };
 
   const applyFilters = () => {
-    onFilter(tempFilters);
+    const filtersToApply = { ...tempFilters, page: 1 };
+    onFilter(filtersToApply);
   };
 
-  // Don't auto-apply on every change, only when Apply button is clicked
-
   const clearFilters = () => {
-    const emptyFilters: PromoFilters = {
-      search: '',
-      active: '',
-      minDiscount: '',
-      maxDiscount: '',
-      sort: 'desc',
-      status: '',
-      availability: '',
+    const emptyFilters: UserFilters = {
       limit: 10,
+      sortBy: 'date_desc',
+      page: 1,
     };
     setTempFilters(emptyFilters);
     onFilter(emptyFilters);
@@ -87,7 +75,7 @@ export const PromoFilterCard = ({
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-blue-600" />
             <CardTitle className="text-lg font-semibold">
-              Promotion Filters
+              User Filters
             </CardTitle>
           </div>
           <div className="flex items-center gap-1">
@@ -105,17 +93,16 @@ export const PromoFilterCard = ({
           </div>
         </div>
       </CardHeader>
-
       {showFilters && (
         <CardContent className="pt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
             <div>
-              <Label className="mb-2 block">Search Code</Label>
+              <Label className="mb-2 block">Search</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="Search by code..."
+                  placeholder="Search by name or email..."
                   value={tempFilters.search || ''}
                   onChange={(e) => handleChange('search', e.target.value)}
                   className="pl-9"
@@ -123,19 +110,19 @@ export const PromoFilterCard = ({
               </div>
             </div>
 
-            {/* Active Status */}
+            {/* Gender */}
             <div>
-              <Label className="mb-2 block">Active Status</Label>
+              <Label className="mb-2 block">Gender</Label>
               <Select
-                key={`active-${resetKey}`}
-                value={tempFilters.active ? String(tempFilters.active) : ''}
-                onValueChange={(v) => handleChange('active', v)}
+                key={`gender-${resetKey}`}
+                value={tempFilters.gender || ''}
+                onValueChange={(v) => handleChange('gender', v)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All" />
+                  <SelectValue placeholder="All Genders" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ACTIVE_STATUS_OPTIONS.map((option) => (
+                  {GENDER_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -144,19 +131,22 @@ export const PromoFilterCard = ({
               </Select>
             </div>
 
-            {/* Status */}
+            {/* Deleted Status */}
             <div>
-              <Label className="mb-2 block">Status</Label>
+              <Label className="mb-2 block">User Type</Label>
               <Select
-                key={`status-${resetKey}`}
-                value={tempFilters.status || ''}
-                onValueChange={(v) => handleChange('status', v)}
+                key={`deleted-${resetKey}`}
+                value={tempFilters.includeDeleted || 'all'}
+                onValueChange={(v) => {
+                  const newValue = v === 'all' ? undefined : v;
+                  handleChange('includeDeleted', newValue as string);
+                }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All" />
+                  <SelectValue placeholder="Active Users" />
                 </SelectTrigger>
                 <SelectContent>
-                  {STATUS_OPTIONS.map((option) => (
+                  {DELETED_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -165,59 +155,16 @@ export const PromoFilterCard = ({
               </Select>
             </div>
 
-            {/* Availability */}
+            {/* Sort Order */}
             <div>
-              <Label className="mb-2 block">Availability</Label>
-              <Select
-                key={`availability-${resetKey}`}
-                value={tempFilters.availability || ''}
-                onValueChange={(v) => handleChange('availability', v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  {AVAILABILITY_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Min Discount */}
-            <div>
-              <Label className="mb-2 block">Min Discount (%)</Label>
-              <Input
-                type="number"
-                placeholder="0"
-                value={tempFilters.minDiscount || ''}
-                onChange={(e) => handleChange('minDiscount', e.target.value)}
-              />
-            </div>
-
-            {/* Max Discount */}
-            <div>
-              <Label className="mb-2 block">Max Discount (%)</Label>
-              <Input
-                type="number"
-                placeholder="100"
-                value={tempFilters.maxDiscount || ''}
-                onChange={(e) => handleChange('maxDiscount', e.target.value)}
-              />
-            </div>
-
-            {/* Sort */}
-            <div>
-              <Label className="mb-2 block">Sort Order</Label>
+              <Label className="mb-2 block">Sort By</Label>
               <Select
                 key={`sort-${resetKey}`}
-                value={tempFilters.sort || 'desc'}
-                onValueChange={(v) => handleChange('sort', v)}
+                value={tempFilters.sortBy || 'date_desc'}
+                onValueChange={(v) => handleChange('sortBy', v)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Latest First" />
+                  <SelectValue placeholder="Newest First" />
                 </SelectTrigger>
                 <SelectContent>
                   {SORT_OPTIONS.map((option) => (

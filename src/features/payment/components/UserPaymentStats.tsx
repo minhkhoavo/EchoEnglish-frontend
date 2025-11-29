@@ -1,5 +1,5 @@
-import { StatCard } from '@/components/ui/stat-card';
-import { DollarSign, Plus, Minus, CheckCircle, BarChart3 } from 'lucide-react';
+import { StatCard } from '@/components/StatCard';
+import { Plus, Minus, CheckCircle, BarChart3, Receipt } from 'lucide-react';
 import { formatCurrency } from '@/lib/format';
 
 interface UserPaymentStatsProps {
@@ -14,64 +14,55 @@ interface UserPaymentStatsProps {
 
 export const UserPaymentStats = ({ stats }: UserPaymentStatsProps) => {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
       <StatCard
         label="Total Spent"
         value={formatCurrency(stats.totalSpent)}
-        icon={() => (
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-            <span className="text-blue-600 text-2xl font-semibold">₫</span>
-          </div>
-        )}
+        icon={BarChart3}
         iconColor="text-blue-600"
-        valueColor="text-blue-700"
-        gradient="from-blue-50 to-white"
+        iconBgColor="bg-blue-50"
         borderColor="border-blue-200"
-        size="md"
-      />
-
-      <StatCard
-        label="Credits Purchased"
-        value={`${stats.totalCreditsEarned.toLocaleString()} tokens`}
-        icon={Plus}
-        iconColor="text-emerald-500"
-        valueColor="text-emerald-700"
-        gradient="from-emerald-50 to-white"
-        borderColor="border-emerald-200"
-        size="md"
-      />
-
-      <StatCard
-        label="Credits Used"
-        value={`${stats.totalCreditsUsed.toLocaleString()} tokens`}
-        icon={Minus}
-        iconColor="text-orange-500"
-        valueColor="text-orange-700"
-        gradient="from-orange-50 to-white"
-        borderColor="border-orange-200"
-        size="md"
-      />
-
-      <StatCard
-        label="Successful"
-        value={stats.successfulPurchases}
-        icon={CheckCircle}
-        iconColor="text-green-500"
-        valueColor="text-green-700"
-        gradient="from-green-50 to-white"
-        borderColor="border-green-200"
-        size="md"
+        subtitle="VND"
       />
 
       <StatCard
         label="Total Transactions"
-        value={stats.totalTransactions}
-        icon={BarChart3}
+        value={stats.totalTransactions.toLocaleString()}
+        icon={Receipt}
         iconColor="text-purple-600"
-        valueColor="text-purple-700"
-        gradient="from-purple-50 to-white"
+        iconBgColor="bg-purple-50"
         borderColor="border-purple-200"
-        size="md"
+        subtitle="all time"
+      />
+
+      <StatCard
+        label="Credits Purchased"
+        value={`${stats.totalCreditsEarned.toLocaleString()}`}
+        icon={Plus}
+        iconColor="text-emerald-600"
+        iconBgColor="bg-emerald-50"
+        borderColor="border-emerald-200"
+        subtitle="tokens"
+      />
+
+      <StatCard
+        label="Credits Used"
+        value={`${stats.totalCreditsUsed.toLocaleString()}`}
+        icon={Minus}
+        iconColor="text-orange-600"
+        iconBgColor="bg-orange-50"
+        borderColor="border-orange-200"
+        subtitle="tokens"
+      />
+
+      <StatCard
+        label="Successful"
+        value={stats.successfulPurchases.toLocaleString()}
+        icon={CheckCircle}
+        iconColor="text-green-600"
+        iconBgColor="bg-green-50"
+        borderColor="border-green-200"
+        subtitle="purchases"
       />
     </div>
   );

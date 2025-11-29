@@ -1,41 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
-  Loader2,
-  FileText,
-  Play,
-  Eye,
-  EyeOff,
-  ExternalLink,
-  Trash2,
-  Search,
-} from 'lucide-react';
+import { Loader2, FileText, Play, Search } from 'lucide-react';
 import CustomPagination from '@/components/ui/custom-pagination';
-import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { ResourceType, type Resource } from '../types/resource.type';
 import {
   setSearchQuery,
   setActiveTab,
   setCurrentPage,
-  setSuitableFilter,
 } from '../slices/resourceSlice';
 import type { RootState } from '@/core/store/store';
 import ResourceCard from './ResourceCard';
-import ResourceListItem from './ResourceListItem';
 
-interface BaseResourceListProps {
+interface UnifiedResourceListProps {
   resources: Resource[];
   onResourceSelect: (resource: Resource) => void;
   isLoading?: boolean;
@@ -43,42 +21,15 @@ interface BaseResourceListProps {
   totalCounts?: Record<string, number>;
 }
 
-interface AdminResourceListProps extends BaseResourceListProps {
-  isAdmin: true;
-  onApprove: (resource: Resource) => void;
-  onReject: (resource: Resource) => void;
-  onDelete: (resource: Resource) => void;
-  isUpdating?: boolean;
-  isDeleting?: boolean;
-}
-
-interface UserResourceListProps extends BaseResourceListProps {
-  isAdmin?: false;
-  onApprove?: never;
-  onReject?: never;
-  onDelete?: never;
-  isUpdating?: never;
-  isDeleting?: never;
-}
-
-type UnifiedResourceListProps = AdminResourceListProps | UserResourceListProps;
-
-/**
- * Unified ResourceList component cho cả user và admin
- * Tự quản lý search, filter, pagination thông qua Redux
- */
-const UnifiedResourceList: React.FC<UnifiedResourceListProps> = (props) => {
-  const {
-    resources,
-    onResourceSelect,
-    isLoading = false,
-    totalPages,
-    totalCounts,
-    isAdmin = false,
-  } = props;
-
+const UnifiedResourceList: React.FC<UnifiedResourceListProps> = ({
+  resources,
+  onResourceSelect,
+  isLoading = false,
+  totalPages,
+  totalCounts,
+}) => {
   const dispatch = useDispatch();
-  const { searchQuery, activeTab, currentPage, suitableFilter } = useSelector(
+  const { searchQuery, activeTab, currentPage } = useSelector(
     (state: RootState) => state.resource
   );
 
@@ -155,7 +106,7 @@ const UnifiedResourceList: React.FC<UnifiedResourceListProps> = (props) => {
 
       {/* Controls */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        {/* Tabs - unified for both admin and user */}
+        {/* Tabs */}
         <Tabs
           value={activeTab}
           onValueChange={(value) =>
@@ -174,79 +125,21 @@ const UnifiedResourceList: React.FC<UnifiedResourceListProps> = (props) => {
             </TabsTrigger>
           </TabsList>
         </Tabs>
-
-        {/* Admin Controls */}
-        {isAdmin && (
-          <div className="flex gap-4">
-            <Select
-              value={suitableFilter}
-              onValueChange={(value) =>
-                dispatch(setSuitableFilter(value as 'all' | 'true' | 'false'))
-              }
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Resources</SelectItem>
-                <SelectItem value="true">Suitable for Learners</SelectItem>
-                <SelectItem value="false">Not Suitable</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
       </div>
 
       {/* Resource Content */}
       {resources.length > 0 ? (
         <>
-          {isAdmin ? (
-            /* Admin Table View */
-            <div className="space-y-4">
-              {resources.map((resource) => {
-                const handleApprove =
-                  'onApprove' in props && typeof props.onApprove === 'function'
-                    ? props.onApprove
-                    : undefined;
-                const handleReject =
-                  'onReject' in props && typeof props.onReject === 'function'
-                    ? props.onReject
-                    : undefined;
-                const handleDelete =
-                  'onDelete' in props && typeof props.onDelete === 'function'
-                    ? props.onDelete
-                    : undefined;
-
-                const isUpdating =
-                  'isUpdating' in props ? props.isUpdating : false;
-                const isDeleting =
-                  'isDeleting' in props ? props.isDeleting : false;
-
-                return (
-                  <ResourceListItem
-                    key={resource._id}
-                    resource={resource}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                    onDelete={handleDelete}
-                    isUpdating={isUpdating}
-                    isDeleting={isDeleting}
-                  />
-                );
-              })}
-            </div>
-          ) : (
-            /* User Grid View */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {resources.map((resource) => (
-                <ResourceCard
-                  key={resource._id}
-                  resource={resource}
-                  onRead={onResourceSelect}
-                />
-              ))}
-            </div>
-          )}
+          {/* User Grid View */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {resources.map((resource) => (
+              <ResourceCard
+                key={resource._id}
+                resource={resource}
+                onRead={onResourceSelect}
+              />
+            ))}
+          </div>
 
           {/* Pagination */}
           {totalPages > 1 && (

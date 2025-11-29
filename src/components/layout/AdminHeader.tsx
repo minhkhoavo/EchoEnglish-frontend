@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Menu, X, User, LogOut, Shield, Bell } from 'lucide-react';
+import { UserAvatar } from '@/components/UserAvatar';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
@@ -189,18 +190,16 @@ export const AdminHeader = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative h-9 w-9 rounded-full p-0 shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-r from-purple-200 to-pink-200"
+                  className="relative rounded-full"
                 >
-                  <span className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-300 to-pink-300 opacity-70" />
-                  <img
-                    src={
-                      user?.image ||
-                      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
-                    }
+                  <UserAvatar
+                    src={user?.image}
                     alt="Admin Avatar"
-                    className="h-7 w-7 rounded-full object-cover relative z-10 border border-white dark:border-gray-900"
+                    fallbackText={user?.fullName || 'A'}
+                    size="xs"
+                    showOnlineIndicator
+                    className="relative z-10"
                   />
-                  <span className="absolute bottom-1 right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 shadow z-20" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>

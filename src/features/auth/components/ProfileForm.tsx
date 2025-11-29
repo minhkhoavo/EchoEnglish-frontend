@@ -24,6 +24,7 @@ import {
 } from '../services/authApi';
 import { setUser, setLoading, setError } from '../slices/authSlice';
 import { User, Mail, Calendar, Phone, MapPin, Camera } from 'lucide-react';
+import { UserAvatar } from '@/components/UserAvatar';
 
 const ProfileForm: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -201,13 +202,12 @@ const ProfileForm: React.FC = () => {
         {/* Profile Avatar */}
         <div className="flex justify-center mb-6">
           <div className="relative">
-            <img
-              src={
-                formData.image ||
-                'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=96&h=96&fit=crop&crop=face'
-              }
+            <UserAvatar
+              src={formData.image}
               alt="Profile Avatar"
-              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+              fallbackText={formData.fullName || 'U'}
+              size="xl"
+              ringClassName="ring-0"
             />
             <button
               type="button"

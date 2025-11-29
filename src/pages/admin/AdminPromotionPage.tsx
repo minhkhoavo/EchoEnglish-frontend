@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -7,24 +7,20 @@ import { PromoFilterCard } from '@/features/admin-promotion/components/PromoFilt
 import { PromoTable } from '@/features/admin-promotion/components/PromoTable';
 import { PromoDialogForm } from '@/features/admin-promotion/components/PromoDialogForm';
 import {
-  getPromos,
-  createPromo,
-  updatePromo,
-  deletePromo,
+  useGetPromosQuery,
+  useCreatePromoMutation,
+  useUpdatePromoMutation,
+  useDeletePromoMutation,
 } from '@/features/admin-promotion/services/promoApi';
 import type {
   PromoCode,
   PromoFilters,
   PromoFormData,
-  PaginationInfo,
 } from '@/features/admin-promotion/types/promo.types';
 import { useConfirmationDialog } from '@/hooks/useConfirmationDialog';
 
 export const AdminPromotionPage = () => {
-  const [promos, setPromos] = useState<PromoCode[]>([]);
   const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
-  const [loading, setLoading] = useState(false);
   const { confirm, ConfirmDialog } = useConfirmationDialog();
 
   const [filters, setFilters] = useState<PromoFilters>({
@@ -40,25 +36,18 @@ export const AdminPromotionPage = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
 
-  const fetchPromos = async () => {
-    setLoading(true);
-    try {
-      const limit = filters.limit || 10;
-      const res = await getPromos(page, limit, filters);
-      setPromos(res.data.data || []);
-      setPagination(res.data.pagination || null);
-    } catch (error) {
-      toast.error('Failed to load promotions');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: response, isLoading } = useGetPromosQuery({
+    page,
+    limit: filters.limit || 10,
+    ...filters,
+  });
 
-  useEffect(() => {
-    fetchPromos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, filters]);
+  const [createPromo] = useCreatePromoMutation();
+  const [updatePromo] = useUpdatePromoMutation();
+  const [deletePromo] = useDeletePromoMutation();
+
+  const promos = response?.data.data || [];
+  const pagination = response?.data.pagination;
 
   const handleSave = async (form: PromoFormData) => {
     try {
@@ -80,16 +69,15 @@ export const AdminPromotionPage = () => {
       };
 
       if (editingPromo) {
-        await updatePromo(editingPromo._id!, payload);
+        await updatePromo({ id: editingPromo._id!, data: payload }).unwrap();
         toast.success('Promotion updated successfully');
       } else {
-        await createPromo(payload);
+        await createPromo(payload).unwrap();
         toast.success('Promotion created successfully');
       }
 
       setOpenDialog(false);
       setEditingPromo(null);
-      fetchPromos();
     } catch (error) {
       toast.error('Failed to save promotion');
       console.error(error);
@@ -104,9 +92,8 @@ export const AdminPromotionPage = () => {
       variant: 'destructive',
       onConfirm: async () => {
         try {
-          await deletePromo(id);
+          await deletePromo(id).unwrap();
           toast.success('Promotion deleted successfully');
-          fetchPromos();
         } catch (error) {
           toast.error('Failed to delete promotion');
           console.error(error);
@@ -171,7 +158,7 @@ export const AdminPromotionPage = () => {
         />{' '}
         <PromoTable
           promos={promos}
-          loading={loading}
+          loading={isLoading}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />

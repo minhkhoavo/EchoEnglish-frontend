@@ -1,5 +1,5 @@
-import type { NotificationFormData } from '@/features/notification/types/notification.type';
-import { AdminPanel } from '@/features/notification/components/AdminPanel';
+import { AdminNotificationPanel } from '@/features/admin-notification';
+import type { NotificationFormData } from '@/features/admin-notification';
 
 const AdminNotificationPage = () => {
   const handleSendNotification = (data: NotificationFormData) => {
@@ -39,7 +39,7 @@ const AdminNotificationPage = () => {
           </div>
         </div>
 
-        <AdminPanel onSendNotification={handleSendNotification} />
+        <AdminNotificationPanel onSendNotification={handleSendNotification} />
       </div>
     </div>
   );

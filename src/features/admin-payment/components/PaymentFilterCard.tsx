@@ -18,6 +18,32 @@ interface PaymentFilterCardProps {
   onFilter: (filters: PaymentFilters) => void;
 }
 
+const TRANSACTION_TYPES = [
+  { value: 'purchase', label: 'Purchase' },
+  { value: 'deduction', label: 'Deduction' },
+];
+
+const PAYMENT_GATEWAYS = [
+  { value: 'VNPAY', label: 'VNPay' },
+  { value: 'STRIPE', label: 'Stripe' },
+];
+
+const PAYMENT_STATUS = [
+  { value: 'INITIATED', label: 'Initiated' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'SUCCEEDED', label: 'Succeeded' },
+  { value: 'FAILED', label: 'Failed' },
+  { value: 'EXPIRED', label: 'Expired' },
+  { value: 'CANCELED', label: 'Canceled' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'desc', label: 'Latest First' },
+  { value: 'asc', label: 'Oldest First' },
+];
+
+const ITEMS_PER_PAGE = [10, 20, 50, 100];
+
 export const PaymentFilterCard = ({
   filters,
   onFilter,
@@ -84,8 +110,11 @@ export const PaymentFilterCard = ({
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="purchase">Purchase</SelectItem>
-                  <SelectItem value="deduction">Deduction</SelectItem>
+                  {TRANSACTION_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -98,11 +127,14 @@ export const PaymentFilterCard = ({
                 onValueChange={(v) => handleChange('gateway', v)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Stripe" />
+                  <SelectValue placeholder="All Gateways" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="VNPAY">VNPay</SelectItem>
-                  <SelectItem value="STRIPE">Stripe</SelectItem>
+                  {PAYMENT_GATEWAYS.map((gateway) => (
+                    <SelectItem key={gateway.value} value={gateway.value}>
+                      {gateway.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -118,12 +150,11 @@ export const PaymentFilterCard = ({
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="INITIATED">Initiated</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="SUCCEEDED">Succeeded</SelectItem>
-                  <SelectItem value="FAILED">Failed</SelectItem>
-                  <SelectItem value="EXPIRED">Expired</SelectItem>
-                  <SelectItem value="CANCELED">Canceled</SelectItem>
+                  {PAYMENT_STATUS.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -171,8 +202,11 @@ export const PaymentFilterCard = ({
                   <SelectValue placeholder="Latest First" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="desc">Latest First</SelectItem>
-                  <SelectItem value="asc">Oldest First</SelectItem>
+                  {SORT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -193,10 +227,11 @@ export const PaymentFilterCard = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
+                  {ITEMS_PER_PAGE.map((count) => (
+                    <SelectItem key={count} value={String(count)}>
+                      {count}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

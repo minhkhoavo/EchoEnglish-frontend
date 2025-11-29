@@ -1,6 +1,13 @@
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Bell, Library, CreditCard, Tag } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Bell,
+  Library,
+  CreditCard,
+  Tag,
+  User,
+} from 'lucide-react';
 
 export type AdminNavItem = {
   path: string;
@@ -22,7 +29,7 @@ const adminNavigationItems: AdminNavItem[] = [
     description: 'Overview & Analytics',
   },
   {
-    path: '/admin/notification',
+    path: '/admin/notifications',
     name: 'Notifications',
     icon: Bell,
     description: 'Push Notifications',
@@ -44,6 +51,12 @@ const adminNavigationItems: AdminNavItem[] = [
     name: 'Promotions',
     icon: Tag,
     description: 'Promo Code Management',
+  },
+  {
+    path: '/admin/users',
+    name: 'Users',
+    icon: User,
+    description: 'User Management',
   },
 ];
 

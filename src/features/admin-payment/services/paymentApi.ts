@@ -1,43 +1,47 @@
-import axios from '@/core/api/axios';
+import { api } from '@/core/api/api';
 import type {
   Payment,
   PaymentFilters,
   PaymentResponse,
 } from '../types/payment.types';
 
-export interface ApiResponse<T> {
-  message: string;
-  data: T;
+interface GetPaymentsParams extends PaymentFilters {
+  page?: number;
+  limit?: number;
 }
 
-// Get all payments with filters and pagination (for admin)
-export const getPayments = async (
-  page: number = 1,
-  limit: number = 10,
-  filters?: PaymentFilters
-): Promise<ApiResponse<PaymentResponse>> => {
-  const params: Record<string, unknown> = { page, limit, ...filters };
+export const adminPaymentApi = api.injectEndpoints({
+  endpoints: (builder) => ({
+    getPayments: builder.query<
+      { message: string; data: PaymentResponse },
+      GetPaymentsParams
+    >({
+      query: (params) => {
+        // Remove empty filter values
+        const cleanParams = Object.fromEntries(
+          Object.entries(params).filter(
+            ([_, v]) => v !== '' && v !== undefined && v !== null
+          )
+        );
+        return {
+          url: '/payments/admin/all',
+          method: 'GET',
+          params: cleanParams,
+        };
+      },
+    }),
+    getPaymentById: builder.query<{ message: string; data: Payment }, string>({
+      query: (id) => ({
+        url: `/payments/${id}`,
+        method: 'GET',
+      }),
+    }),
+  }),
+});
 
-  // Remove empty filter values
-  Object.keys(params).forEach(
-    (k) =>
-      (params[k] === '' || params[k] === undefined || params[k] === null) &&
-      delete params[k]
-  );
+export const { useGetPaymentsQuery, useGetPaymentByIdQuery } = adminPaymentApi;
 
-  const response = await axios.get('/payments/admin/all', { params });
-  return response.data;
-};
-
-// Get payment by ID
-export const getPaymentById = async (
-  id: string
-): Promise<ApiResponse<Payment>> => {
-  const response = await axios.get(`/payments/${id}`);
-  return response.data;
-};
-
-// Export payment stats helper
+// Payment stats helper
 export const calculatePaymentStats = (payments: Payment[] = []) => {
   return {
     totalAmount: payments.reduce((sum, p) => sum + (p.amount || 0), 0),

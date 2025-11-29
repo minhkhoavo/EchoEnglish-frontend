@@ -1,6 +1,5 @@
 // Main Dashboard Component
-export { AdminDashboard } from './components/AdminDashboard';
-export { default } from './components/AdminDashboard';
+export { default } from '../../pages/admin/AdminDashboardPage';
 
 // Individual Components
 export { DashboardCards } from './components/DashboardCards';
