@@ -4,7 +4,14 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, BookOpen } from 'lucide-react';
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  BookOpen,
+  FileText,
+  Download,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   useGetTranscriptMutation,
@@ -181,7 +188,10 @@ export default function ResourceDetailPage() {
   }
 
   const isVideo = resource.type === ResourceType.YOUTUBE;
-  const isArticle = resource.type === ResourceType.WEB_RSS;
+  const isArticle =
+    resource.type === ResourceType.WEB_RSS ||
+    resource.type === ResourceType.ARTICLE ||
+    resource.isArticle;
 
   return (
     <div className="min-h-screen bg-gray-50" onMouseUp={handleTextSelection}>
@@ -286,6 +296,38 @@ export default function ResourceDetailPage() {
         ) : (
           /* Article layout full width */
           <div className="space-y-6 pb-16 max-w-4xl mx-auto">
+            {/* Attachment download card */}
+            {resource.attachmentUrl && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-8 h-8 text-blue-600" />
+                      <div>
+                        <h3 className="font-medium text-gray-900">
+                          {resource.attachmentName || 'Attached Document'}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Download the attached file to read offline
+                        </p>
+                      </div>
+                    </div>
+                    <a
+                      href={resource.attachmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                    >
+                      <Button variant="outline" className="gap-2">
+                        <Download className="w-4 h-4" />
+                        Download
+                      </Button>
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Article Content */}
             <Card>
               <CardContent className="p-8">

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { ChatbotAction } from '../types';
+import { useNavigate } from 'react-router-dom';
+import type { ChatbotAction, Citation } from '../types';
 
 // ActionButtons - Reusable button group component
 interface ActionButtonsProps {
@@ -45,6 +46,93 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   );
 };
 
+// CitationLink - Renders citation markers as clickable links
+interface CitationLinkProps {
+  citationId: number;
+  citations?: Citation[];
+}
+
+const CitationLink: React.FC<CitationLinkProps> = ({
+  citationId,
+  citations,
+}) => {
+  const navigate = useNavigate();
+  const citation = citations?.find((c) => c.id === citationId);
+
+  if (!citation) {
+    return <span className="text-blue-600">[{citationId}]</span>;
+  }
+
+  return (
+    <button
+      onClick={() => navigate(citation.url)}
+      className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 text-xs font-semibold text-blue-600 bg-blue-100 hover:bg-blue-200 rounded transition-colors cursor-pointer"
+      title={citation.title}
+    >
+      {citationId}
+    </button>
+  );
+};
+
+// Citations display component
+interface CitationsDisplayProps {
+  citations: Citation[];
+}
+
+export const CitationsDisplay: React.FC<CitationsDisplayProps> = ({
+  citations,
+}) => {
+  const navigate = useNavigate();
+
+  if (!citations || citations.length === 0) return null;
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100">
+      <p className="text-xs text-gray-500 mb-2 font-medium">📚 Sources:</p>
+      <div className="space-y-1.5">
+        {citations.map((citation) => (
+          <button
+            key={citation.id}
+            onClick={() => navigate(citation.url)}
+            className="flex items-start gap-2 w-full text-left p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+          >
+            <span className="flex-shrink-0 inline-flex items-center justify-center w-5 h-5 text-xs font-semibold text-blue-600 bg-blue-100 group-hover:bg-blue-200 rounded transition-colors">
+              {citation.id}
+            </span>
+            <span className="text-sm text-gray-700 group-hover:text-blue-600 truncate transition-colors">
+              {citation.title}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Helper function to parse text with citation markers
+const parseTextWithCitations = (
+  text: string,
+  citations?: Citation[]
+): React.ReactNode[] => {
+  // Match [1], [2], etc.
+  const parts = text.split(/(\[\d+\])/g);
+
+  return parts.map((part, index) => {
+    const match = part.match(/^\[(\d+)\]$/);
+    if (match) {
+      const citationId = parseInt(match[1], 10);
+      return (
+        <CitationLink
+          key={index}
+          citationId={citationId}
+          citations={citations}
+        />
+      );
+    }
+    return part;
+  });
+};
+
 // MessageContent - Handles message rendering with markdown support
 interface MessageContentProps {
   content: string;
@@ -52,6 +140,7 @@ interface MessageContentProps {
   images?: string[];
   variant?: 'user' | 'assistant';
   className?: string;
+  citations?: Citation[];
 }
 
 export const MessageContent: React.FC<MessageContentProps> = ({
@@ -60,6 +149,7 @@ export const MessageContent: React.FC<MessageContentProps> = ({
   images,
   variant = 'assistant',
   className,
+  citations,
 }) => {
   return (
     <div className={cn('space-y-3', className)}>
@@ -84,11 +174,11 @@ export const MessageContent: React.FC<MessageContentProps> = ({
                           key={partIndex}
                           className="font-semibold text-gray-900"
                         >
-                          {part.slice(2, -2)}
+                          {parseTextWithCitations(part.slice(2, -2), citations)}
                         </strong>
                       );
                     }
-                    return part;
+                    return parseTextWithCitations(part, citations);
                   })}
                 </p>
               );
@@ -100,7 +190,10 @@ export const MessageContent: React.FC<MessageContentProps> = ({
                 <div key={index} className="flex items-start gap-2 mb-1">
                   <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                   <span className="text-gray-700 leading-relaxed">
-                    {line.trim().substring(1).trim()}
+                    {parseTextWithCitations(
+                      line.trim().substring(1).trim(),
+                      citations
+                    )}
                   </span>
                 </div>
               );
@@ -115,7 +208,9 @@ export const MessageContent: React.FC<MessageContentProps> = ({
                   <span className="flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold flex-shrink-0 mt-0.5">
                     {number}
                   </span>
-                  <span className="text-gray-700 leading-relaxed">{text}</span>
+                  <span className="text-gray-700 leading-relaxed">
+                    {parseTextWithCitations(text, citations)}
+                  </span>
                 </div>
               );
             }
@@ -124,7 +219,7 @@ export const MessageContent: React.FC<MessageContentProps> = ({
             if (line.trim()) {
               return (
                 <p key={index} className="mb-2 leading-relaxed">
-                  {line}
+                  {parseTextWithCitations(line, citations)}
                 </p>
               );
             }
@@ -185,6 +280,11 @@ export const MessageContent: React.FC<MessageContentProps> = ({
             </div>
           ))}
         </div>
+      )}
+
+      {/* Citations Display */}
+      {citations && citations.length > 0 && (
+        <CitationsDisplay citations={citations} />
       )}
     </div>
   );

@@ -50,11 +50,13 @@ export function ResourceDomainChart({
   isLoading = false,
 }: ResourceDomainProps) {
   const pieData =
-    data?.map((item, index) => ({
-      domain: item.domain.replace('_', ' ').toUpperCase(),
-      value: item.total,
-      fill: DOMAIN_COLORS[index % DOMAIN_COLORS.length],
-    })) || [];
+    data
+      ?.filter((item) => item.domain) // Filter out null domains
+      ?.map((item, index) => ({
+        domain: (item.domain || 'Unknown').replace('_', ' ').toUpperCase(),
+        value: item.total,
+        fill: DOMAIN_COLORS[index % DOMAIN_COLORS.length],
+      })) || [];
 
   if (isLoading) {
     return (
@@ -179,7 +181,7 @@ export function ResourceDomainChart({
                         ? (item.approvedCount / item.total) * 100
                         : 0;
                     return (
-                      <TableRow key={item.domain}>
+                      <TableRow key={item.domain || `domain-${index}`}>
                         <TableCell className="font-medium">
                           <div className="flex items-center space-x-2">
                             <div
@@ -190,7 +192,9 @@ export function ResourceDomainChart({
                               }}
                             />
                             <span>
-                              {item.domain.replace('_', ' ').toUpperCase()}
+                              {(item.domain || 'Unknown')
+                                .replace('_', ' ')
+                                .toUpperCase()}
                             </span>
                           </div>
                         </TableCell>

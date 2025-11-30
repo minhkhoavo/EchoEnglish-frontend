@@ -9,6 +9,10 @@ import {
   Trash2,
   FileText,
   Play,
+  Edit,
+  Rss,
+  Youtube,
+  Database,
 } from 'lucide-react';
 import { ResourceType, type Resource } from '../types/resource.types';
 
@@ -17,15 +21,31 @@ interface AdminResourceListProps {
   onApprove: (resource: Resource) => void;
   onReject: (resource: Resource) => void;
   onDelete: (resource: Resource) => void;
+  onEdit?: (resource: Resource) => void;
   isUpdating?: boolean;
   isDeleting?: boolean;
 }
+
+const getResourceIcon = (resource: Resource) => {
+  if (resource.isArticle) return <FileText className="h-4 w-4" />;
+  if (resource.type === 'youtube') return <Youtube className="h-4 w-4" />;
+  if (resource.type === 'web_rss') return <Rss className="h-4 w-4" />;
+  return <FileText className="h-4 w-4" />;
+};
+
+const getResourceLabel = (resource: Resource) => {
+  if (resource.isArticle) return 'Article';
+  if (resource.type === 'youtube') return 'YouTube';
+  if (resource.type === 'web_rss') return 'RSS';
+  return 'Resource';
+};
 
 export const AdminResourceList = ({
   resources,
   onApprove,
   onReject,
   onDelete,
+  onEdit,
   isUpdating,
   isDeleting,
 }: AdminResourceListProps) => {
@@ -51,8 +71,9 @@ export const AdminResourceList = ({
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary">
-                  {resource.type === ResourceType.VIDEO ? 'Video' : 'Article'}
+                <Badge variant="outline" className="flex items-center gap-1">
+                  {getResourceIcon(resource)}
+                  {getResourceLabel(resource)}
                 </Badge>
                 <Badge
                   variant={
@@ -61,6 +82,15 @@ export const AdminResourceList = ({
                 >
                   {resource.suitableForLearners ? 'Approved' : 'Pending'}
                 </Badge>
+                {resource.isArticle && resource.isIndexed && (
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    <Database className="h-3 w-3" />
+                    Indexed
+                  </Badge>
+                )}
               </div>
 
               <h4 className="font-medium mb-1 line-clamp-2">
@@ -82,11 +112,28 @@ export const AdminResourceList = ({
                 {resource.labels?.domain && (
                   <span className="capitalize">{resource.labels.domain}</span>
                 )}
+                {resource.labels?.cefr && (
+                  <Badge variant="outline" className="text-xs">
+                    {resource.labels.cefr}
+                  </Badge>
+                )}
               </div>
             </div>
 
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
+                {/* Edit button for articles */}
+                {resource.isArticle && onEdit && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onEdit(resource)}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                )}
+
                 {!resource.suitableForLearners ? (
                   <Button
                     size="sm"
@@ -124,16 +171,18 @@ export const AdminResourceList = ({
             </div>
 
             {/* External link positioned bottom-right */}
-            <div className="absolute bottom-3 right-3">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => window.open(resource.url, '_blank')}
-                className="text-blue-600 hover:text-blue-700"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </div>
+            {resource.url && (
+              <div className="absolute bottom-3 right-3">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(resource.url, '_blank')}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </Card>
       ))}
