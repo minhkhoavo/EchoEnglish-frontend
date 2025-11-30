@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import CustomPagination from '@/components/ui/custom-pagination';
+import CustomPagination from '@/components/CustomPagination.tsx';
 import FlashcardItem from './FlashcardItem';
 import CategorySidebar from './CategorySidebar.tsx';
 import CreateEditFlashcardDialog from './CreateEditFlashcardDialog';

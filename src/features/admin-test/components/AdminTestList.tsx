@@ -15,9 +15,8 @@ import {
   Layers,
   Calendar,
   FileText,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
+import CustomPagination from '@/components/CustomPagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,14 +81,10 @@ const TestCard = ({
   };
 
   return (
-    <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-slate-50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
-      {/* Decorative gradient border */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <div className="absolute inset-[2px] bg-gradient-to-br from-white to-slate-50 rounded-lg" />
-
+    <Card className="group relative overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
       <div className="relative">
-        {/* Header with gradient */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+        {/* Header */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600" />
 
         <CardHeader className="pb-3 pt-5">
           <div className="flex items-start justify-between">
@@ -99,7 +94,7 @@ const TestCard = ({
               </CardTitle>
               <Badge
                 variant="secondary"
-                className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-0 font-medium"
+                className="bg-blue-100 text-blue-700 border-0 font-medium"
               >
                 <FileText className="w-3 h-3 mr-1" />
                 {test.type === 'listening-reading'
@@ -164,26 +159,26 @@ const TestCard = ({
         <CardContent className="pt-0 pb-5">
           {/* Stats Grid */}
           <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="flex flex-col items-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+            <div className="flex flex-col items-center p-3 bg-blue-50 rounded-xl">
               <Clock className="h-5 w-5 text-blue-600 mb-1" />
               <span className="text-lg font-bold text-blue-700">
                 {test.duration}
               </span>
               <span className="text-xs text-blue-600">min</span>
             </div>
-            <div className="flex flex-col items-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
+            <div className="flex flex-col items-center p-3 bg-purple-50 rounded-xl">
               <HelpCircle className="h-5 w-5 text-purple-600 mb-1" />
               <span className="text-lg font-bold text-purple-700">
                 {test.number_of_questions}
               </span>
               <span className="text-xs text-purple-600">questions</span>
             </div>
-            <div className="flex flex-col items-center p-3 bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl">
-              <Layers className="h-5 w-5 text-pink-600 mb-1" />
-              <span className="text-lg font-bold text-pink-700">
+            <div className="flex flex-col items-center p-3 bg-green-50 rounded-xl">
+              <Layers className="h-5 w-5 text-green-600 mb-1" />
+              <span className="text-lg font-bold text-green-700">
                 {test.number_of_parts}
               </span>
-              <span className="text-xs text-pink-600">parts</span>
+              <span className="text-xs text-green-600">parts</span>
             </div>
           </div>
 
@@ -389,38 +384,31 @@ export const AdminTestList = () => {
   const pagination = data?.pagination;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg shadow-blue-500/30">
-                <FileSpreadsheet className="h-8 w-8 text-white" />
+              <div className="p-3 bg-blue-600 rounded-lg">
+                <FileSpreadsheet className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold text-gray-900">
                   TOEIC Test Management
                 </h1>
-                <p className="text-slate-500 mt-1">
+                <p className="text-gray-600 mt-1">
                   Create, edit and manage Listening & Reading tests
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <Button
-                variant="outline"
-                onClick={handleDownloadTemplate}
-                className="border-2 hover:bg-slate-50"
-              >
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={handleDownloadTemplate}>
                 <Download className="h-4 w-4 mr-2" />
                 Download Template
               </Button>
-              <Button
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/30"
-              >
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Test
               </Button>
@@ -437,13 +425,16 @@ export const AdminTestList = () => {
                 placeholder="Search tests..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-12 h-12 bg-white border-2 border-slate-200 focus:border-blue-400 rounded-xl shadow-sm"
+                className="pl-12 h-12 bg-white border-slate-200 rounded-lg border-2"
               />
             </div>
 
             {pagination && (
               <div className="flex items-center gap-2 text-sm text-slate-500">
-                <Badge variant="secondary" className="px-3 py-1 bg-white">
+                <Badge
+                  variant="secondary"
+                  className="px-3 py-1 bg-slate-100 text-slate-700"
+                >
                   Total: {pagination.total} tests
                 </Badge>
               </div>
@@ -469,10 +460,7 @@ export const AdminTestList = () => {
             <p className="text-slate-500 mb-6 text-center max-w-md">
               Start by creating a new test or import from an Excel file
             </p>
-            <Button
-              onClick={() => setIsCreateDialogOpen(true)}
-              className="bg-gradient-to-r from-blue-500 to-purple-600"
-            >
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create Your First Test
             </Button>
@@ -505,57 +493,12 @@ export const AdminTestList = () => {
 
         {/* Pagination */}
         {pagination && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="h-10 w-10"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
-                .filter(
-                  (p) =>
-                    p === 1 ||
-                    p === pagination.totalPages ||
-                    Math.abs(p - page) <= 2
-                )
-                .map((p, idx, arr) => (
-                  <div key={p} className="flex items-center">
-                    {idx > 0 && arr[idx - 1] !== p - 1 && (
-                      <span className="px-2 text-slate-400">...</span>
-                    )}
-                    <Button
-                      variant={page === p ? 'default' : 'outline'}
-                      size="icon"
-                      onClick={() => setPage(p)}
-                      className={`h-10 w-10 ${
-                        page === p
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-600'
-                          : ''
-                      }`}
-                    >
-                      {p}
-                    </Button>
-                  </div>
-                ))}
-            </div>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() =>
-                setPage((p) => Math.min(pagination.totalPages, p + 1))
-              }
-              disabled={page === pagination.totalPages}
-              className="h-10 w-10"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+          <div className="flex justify-center pt-8">
+            <CustomPagination
+              currentPage={page}
+              totalPages={pagination.totalPages}
+              onPageChange={setPage}
+            />
           </div>
         )}
 
@@ -564,7 +507,7 @@ export const AdminTestList = () => {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                <div className="p-2 bg-blue-600 rounded-lg">
                   <Plus className="h-5 w-5 text-white" />
                 </div>
                 Create New Test
@@ -609,11 +552,7 @@ export const AdminTestList = () => {
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleCreate}
-                disabled={isCreating}
-                className="bg-gradient-to-r from-blue-500 to-purple-600"
-              >
+              <Button onClick={handleCreate} disabled={isCreating}>
                 {isCreating ? 'Creating...' : 'Create Test'}
               </Button>
             </DialogFooter>
@@ -654,7 +593,7 @@ export const AdminTestList = () => {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
+                <div className="p-2 bg-green-600 rounded-lg">
                   <Upload className="h-5 w-5 text-white" />
                 </div>
                 Import Questions from Excel
@@ -726,7 +665,6 @@ export const AdminTestList = () => {
               <Button
                 onClick={handleImport}
                 disabled={!importFile || isImporting}
-                className="bg-gradient-to-r from-green-500 to-emerald-600"
               >
                 {isImporting ? 'Importing...' : 'Import'}
               </Button>

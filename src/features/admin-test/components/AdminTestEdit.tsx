@@ -80,7 +80,7 @@ const QuestionEditor = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <GripVertical className="h-5 w-5 text-slate-400" />
-                <Badge className="bg-gradient-to-r from-blue-500 to-purple-600">
+                <Badge className="bg-blue-600 text-white">
                   Question {question.questionNumber}
                 </Badge>
                 <span className="text-sm text-slate-500 truncate max-w-md">
@@ -338,7 +338,7 @@ const GroupEditor = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <GripVertical className="h-5 w-5 text-slate-400" />
-                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
+                <Badge className="bg-purple-600 text-white">
                   Group {groupIndex + 1} ({group.questions.length} questions)
                 </Badge>
               </div>
@@ -708,7 +708,7 @@ export const AdminTestEdit = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-slate-500">Loading...</p>
@@ -719,7 +719,7 @@ export const AdminTestEdit = () => {
 
   if (error || !test) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <HelpCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-slate-800 mb-2">
@@ -735,7 +735,7 @@ export const AdminTestEdit = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -759,11 +759,7 @@ export const AdminTestEdit = () => {
                 Unsaved Changes
               </Badge>
             )}
-            <Button
-              onClick={handleSave}
-              disabled={isSaving || !hasChanges}
-              className="bg-gradient-to-r from-blue-500 to-purple-600"
-            >
+            <Button onClick={handleSave} disabled={isSaving || !hasChanges}>
               <Save className="h-4 w-4 mr-2" />
               {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
@@ -896,7 +892,6 @@ export const AdminTestEdit = () => {
                   setShowUnsavedDialog(false);
                   navigate('/admin/tests');
                 }}
-                className="bg-gradient-to-r from-blue-500 to-purple-600"
               >
                 Save and Exit
               </Button>

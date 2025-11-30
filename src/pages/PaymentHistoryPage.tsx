@@ -11,7 +11,7 @@ import { PaymentHistoryTable } from '../features/payment/components/PaymentHisto
 import { TransactionFiltersComponent } from '../features/payment/components/TransactionFilters';
 import { UserPaymentStats } from '../features/payment/components/UserPaymentStats';
 import { useGetTransactionHistoryQuery } from '../features/payment/services/paymentApi';
-import CustomPagination from '../components/ui/custom-pagination';
+import CustomPagination from '../components/CustomPagination';
 import type {
   TransactionFilters,
   Transaction,

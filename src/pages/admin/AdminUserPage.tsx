@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import CustomPagination from '@/components/ui/custom-pagination';
+import CustomPagination from '@/components/CustomPagination';
 import {
   UserFilterCard,
   UserTable,
