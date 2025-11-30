@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Loader2, FileText, Play, Search } from 'lucide-react';
-import CustomPagination from '@/components/ui/custom-pagination';
+import CustomPagination from '@/components/CustomPagination';
 import { ResourceType, type Resource } from '../types/resource.type';
 import {
   setSearchQuery,

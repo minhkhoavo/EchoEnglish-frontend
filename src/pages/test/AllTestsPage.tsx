@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import CustomPagination from '@/components/ui/custom-pagination';
+import CustomPagination from '@/components/CustomPagination';
 import { UserSidebar } from '@/features/tests/components/UserSidebar';
 import { UnifiedTestCard } from '@/features/tests/components/UnifiedTestCard';
 import { useGetTOEICTestsQuery } from '@/features/tests/services/listeningReadingTestAPI';

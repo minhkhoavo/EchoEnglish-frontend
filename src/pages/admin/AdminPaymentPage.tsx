@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import CustomPagination from '@/components/ui/custom-pagination';
+import CustomPagination from '@/components/CustomPagination';
 import { PaymentFilterCard } from '@/features/admin-payment/components/PaymentFilterCard';
 import { PaymentTable } from '@/features/admin-payment/components/PaymentTable';
 import { PaymentStatsOverview } from '@/features/admin-payment/components/PaymentStatsOverview';

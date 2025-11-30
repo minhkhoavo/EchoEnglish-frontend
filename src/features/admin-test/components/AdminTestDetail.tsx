@@ -48,7 +48,7 @@ const QuestionCard = ({
       <CardContent className="p-5">
         {/* Question Header */}
         <div className="flex items-start gap-4 mb-4">
-          <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-sm">
+          <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-blue-600 text-white font-bold text-sm">
             {question.questionNumber}
           </div>
           <div className="flex-1">
@@ -193,9 +193,9 @@ const QuestionGroupCard = ({
   return (
     <Card className="border-2 border-slate-200 shadow-md overflow-hidden">
       {/* Group Context */}
-      <div className="bg-gradient-to-r from-slate-50 to-slate-100 p-5 border-b border-slate-200">
+      <div className="bg-slate-50 p-5 border-b border-slate-200">
         <div className="flex items-center justify-between mb-3">
-          <Badge className="bg-gradient-to-r from-blue-500 to-purple-600">
+          <Badge className="bg-blue-600 text-white">
             Questions {group.questions[0]?.questionNumber} -{' '}
             {group.questions[group.questions.length - 1]?.questionNumber}
           </Badge>
@@ -311,9 +311,9 @@ const PartSection = ({ part }: { part: TestPart }) => {
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
       <div className="mb-6">
         <CollapsibleTrigger asChild>
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-100 to-slate-50 rounded-xl cursor-pointer hover:from-slate-200 hover:to-slate-100 transition-colors">
+          <div className="flex items-center justify-between p-4 bg-slate-100 rounded-xl cursor-pointer hover:bg-slate-200 transition-colors">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+              <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold">
                 {partNumber}
               </div>
               <div>
@@ -390,7 +390,7 @@ export const AdminTestDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-slate-500">Loading test information...</p>
@@ -401,7 +401,7 @@ export const AdminTestDetail = () => {
 
   if (error || !test) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-slate-800 mb-2">
@@ -430,7 +430,7 @@ export const AdminTestDetail = () => {
   }, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -448,7 +448,7 @@ export const AdminTestDetail = () => {
               <h1 className="text-3xl font-bold text-slate-800 mb-2">
                 {test.testTitle}
               </h1>
-              <Badge className="bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-0">
+              <Badge className="bg-blue-100 text-blue-700 border-0">
                 <FileText className="w-3 h-3 mr-1" />
                 Listening & Reading
               </Badge>
@@ -465,7 +465,7 @@ export const AdminTestDetail = () => {
               </Button>
               <Button
                 onClick={() => navigate(`/admin/tests/${id}/edit`)}
-                className="bg-gradient-to-r from-blue-500 to-purple-600"
+                className="bg-blue-600 text-white"
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
@@ -476,7 +476,7 @@ export const AdminTestDetail = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <Card className="border-0 shadow-lg bg-blue-600 text-white">
             <CardContent className="p-5 flex items-center gap-4">
               <div className="p-3 bg-white/20 rounded-xl">
                 <Clock className="h-6 w-6" />
@@ -488,7 +488,7 @@ export const AdminTestDetail = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+          <Card className="border-0 shadow-lg bg-purple-600 text-white">
             <CardContent className="p-5 flex items-center gap-4">
               <div className="p-3 bg-white/20 rounded-xl">
                 <HelpCircle className="h-6 w-6" />
@@ -500,13 +500,13 @@ export const AdminTestDetail = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-pink-500 to-pink-600 text-white">
+          <Card className="border-0 shadow-lg bg-green-600 text-white">
             <CardContent className="p-5 flex items-center gap-4">
               <div className="p-3 bg-white/20 rounded-xl">
                 <Layers className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-pink-100 text-sm">Parts</p>
+                <p className="text-green-100 text-sm">Parts</p>
                 <p className="text-2xl font-bold">{test.parts.length}</p>
               </div>
             </CardContent>
@@ -518,7 +518,7 @@ export const AdminTestDetail = () => {
           <TabsList className="bg-white shadow-md p-1 h-auto flex-wrap">
             <TabsTrigger
               value="all"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white"
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
               All
             </TabsTrigger>
@@ -526,7 +526,7 @@ export const AdminTestDetail = () => {
               <TabsTrigger
                 key={part.partName}
                 value={part.partName}
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white"
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
               >
                 {part.partName}
               </TabsTrigger>

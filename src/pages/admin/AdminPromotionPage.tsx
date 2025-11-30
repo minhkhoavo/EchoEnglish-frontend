@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import CustomPagination from '@/components/ui/custom-pagination';
+import CustomPagination from '@/components/CustomPagination';
 import { PromoFilterCard } from '@/features/admin-promotion/components/PromoFilterCard';
 import { PromoTable } from '@/features/admin-promotion/components/PromoTable';
 import { PromoDialogForm } from '@/features/admin-promotion/components/PromoDialogForm';
