@@ -65,6 +65,9 @@ import AdminResourcePage from './pages/admin/AdminResourcePage';
 import { AdminPaymentPage } from './pages/admin/AdminPaymentPage';
 import { AdminPromotionPage } from './pages/admin/AdminPromotionPage';
 import { AdminUserPage } from './pages/admin/AdminUserPage';
+import AdminTestPage from './pages/admin/AdminTestPage';
+import AdminTestDetailPage from './pages/admin/AdminTestDetailPage';
+import AdminTestEditPage from './pages/admin/AdminTestEditPage';
 
 // Resources
 import ResourcePage from './pages/resource/ResourcePage';
@@ -178,6 +181,9 @@ function App() {
           <Route path="/admin/payments" element={<AdminPaymentPage />} />
           <Route path="/admin/promotions" element={<AdminPromotionPage />} />
           <Route path="/admin/users" element={<AdminUserPage />} />
+          <Route path="/admin/tests" element={<AdminTestPage />} />
+          <Route path="/admin/tests/:id" element={<AdminTestDetailPage />} />
+          <Route path="/admin/tests/:id/edit" element={<AdminTestEditPage />} />
         </Route>
 
         {/* ================================================================== */}

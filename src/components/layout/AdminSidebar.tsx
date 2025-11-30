@@ -7,6 +7,7 @@ import {
   CreditCard,
   Tag,
   User,
+  FileText,
 } from 'lucide-react';
 
 export type AdminNavItem = {
@@ -27,6 +28,12 @@ const adminNavigationItems: AdminNavItem[] = [
     name: 'Dashboard',
     icon: LayoutDashboard,
     description: 'Overview & Analytics',
+  },
+  {
+    path: '/admin/tests',
+    name: 'TOEIC Tests',
+    icon: FileText,
+    description: 'Test Management',
   },
   {
     path: '/admin/notifications',
