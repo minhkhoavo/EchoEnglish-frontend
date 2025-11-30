@@ -13,6 +13,7 @@ import chatbotReducer from '../../features/chatbot/slices/chatbotSlice';
 import notificationReducer from '../../features/notification/slices/notificationSlice';
 import resourceReducer from '../../features/resource/slices/resourceSlice';
 import dashboardReducer from '../../features/user-dashboard/slices/dashboardSlice';
+import conversationPracticeReducer from '../../features/conversation-practice/slices/conversationPracticeSlice';
 import { api } from '../api/api';
 import { quizApi } from '../../features/quiz/services/quizApi';
 import { useDispatch, useSelector } from 'react-redux';
@@ -34,6 +35,7 @@ export const store = configureStore({
     notification: notificationReducer,
     resource: resourceReducer,
     dashboard: dashboardReducer,
+    conversationPractice: conversationPracticeReducer,
     [api.reducerPath]: api.reducer,
     [quizApi.reducerPath]: quizApi.reducer,
   },

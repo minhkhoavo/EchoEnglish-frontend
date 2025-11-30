@@ -49,6 +49,7 @@ import WritingResultPage from './pages/WritingResultPage';
 // Learning & Practice
 import { PersonalizedLearningSetup } from './features/learning-plan-setup';
 import PracticeDrillPage from './pages/PracticeDrillPage';
+import ConversationPracticePage from './pages/ConversationPracticePage';
 
 // Payment
 import PaymentPage from './features/payment/pages/PaymentPage';
@@ -150,6 +151,10 @@ function App() {
             element={<PersonalizedLearningSetup />}
           />
           <Route path="/practice-drill" element={<PracticeDrillPage />} />
+          <Route
+            path="/conversation-practice"
+            element={<ConversationPracticePage />}
+          />
 
           {/* PAYMENT & CREDITS */}
           <Route path="/payment" element={<PaymentPage />} />
