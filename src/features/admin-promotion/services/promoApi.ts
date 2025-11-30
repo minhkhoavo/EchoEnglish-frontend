@@ -30,12 +30,14 @@ export const adminPromoApi = api.injectEndpoints({
           params: cleanParams,
         };
       },
+      providesTags: ['Promo'],
     }),
     getPromoById: builder.query<{ message: string; data: PromoCode }, string>({
       query: (id) => ({
         url: `/promo/${id}`,
         method: 'GET',
       }),
+      providesTags: ['Promo'],
     }),
     createPromo: builder.mutation<
       { message: string; data: PromoCode },
@@ -46,6 +48,7 @@ export const adminPromoApi = api.injectEndpoints({
         method: 'POST',
         data,
       }),
+      invalidatesTags: ['Promo'],
     }),
     updatePromo: builder.mutation<
       { message: string; data: PromoCode },
@@ -56,12 +59,14 @@ export const adminPromoApi = api.injectEndpoints({
         method: 'PUT',
         data,
       }),
+      invalidatesTags: ['Promo'],
     }),
     deletePromo: builder.mutation<{ message: string }, string>({
       query: (id) => ({
         url: `/promo/${id}`,
         method: 'DELETE',
       }),
+      invalidatesTags: ['Promo'],
     }),
   }),
 });

@@ -17,11 +17,10 @@ import type {
   PromoFilters,
   PromoFormData,
 } from '@/features/admin-promotion/types/promo.types';
-import { useConfirmationDialog } from '@/hooks/useConfirmationDialog';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 
 export const AdminPromotionPage = () => {
   const [page, setPage] = useState(1);
-  const { confirm, ConfirmDialog } = useConfirmationDialog();
 
   const [filters, setFilters] = useState<PromoFilters>({
     search: '',
@@ -84,22 +83,14 @@ export const AdminPromotionPage = () => {
     }
   };
 
-  const handleDelete = (id: string) => {
-    confirm({
-      title: 'Delete Promotion',
-      description:
-        'Are you sure you want to delete this promotion code? This action cannot be undone.',
-      variant: 'destructive',
-      onConfirm: async () => {
-        try {
-          await deletePromo(id).unwrap();
-          toast.success('Promotion deleted successfully');
-        } catch (error) {
-          toast.error('Failed to delete promotion');
-          console.error(error);
-        }
-      },
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      await deletePromo(id).unwrap();
+      toast.success('Promotion deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete promotion');
+      console.error(error);
+    }
   };
 
   const handleEdit = (promo: PromoCode) => {
@@ -177,7 +168,6 @@ export const AdminPromotionPage = () => {
           editingPromo={editingPromo}
           onSave={handleSave}
         />
-        {ConfirmDialog}
       </div>
     </div>
   );

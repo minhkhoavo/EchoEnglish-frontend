@@ -34,14 +34,13 @@ import {
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TestPartSidebar } from '@/features/tests/components/speak-write/TestPartSidebar';
-import { useConfirmationDialog } from '@/hooks/useConfirmationDialog';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 
 const SpeakingExam = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
-  const { confirm, ConfirmDialog } = useConfirmationDialog();
 
   // Redux state - controls navigation in exam mode
   const {
@@ -391,23 +390,21 @@ const SpeakingExam = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
           <div className="flex items-center gap-2 xl:gap-4 min-w-0 flex-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                confirm({
-                  title: 'Exit Exam?',
-                  description:
-                    'Are you sure you want to exit the exam? Your progress will be saved.',
-                  variant: 'destructive',
-                  onConfirm: () => navigate('/'),
-                });
-              }}
-              className="flex items-center gap-1 xl:gap-2 flex-shrink-0"
+            <ConfirmationDialog
+              title="Exit Exam?"
+              description="Are you sure you want to exit the exam? Your progress will be saved."
+              variant="destructive"
+              onConfirm={() => navigate('/')}
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Exit</span>
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1 xl:gap-2 flex-shrink-0"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Exit</span>
+              </Button>
+            </ConfirmationDialog>
             <div className="min-w-0 flex-1">
               <h1 className="text-lg xl:text-2xl font-bold text-foreground truncate">
                 {mergedTestData.testTitle}
@@ -768,7 +765,6 @@ const SpeakingExam = () => {
           </div>
         </div>
       </div>
-      {ConfirmDialog}
     </div>
   );
 };

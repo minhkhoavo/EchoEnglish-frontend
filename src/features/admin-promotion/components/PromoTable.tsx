@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2, Calendar, TrendingUp } from 'lucide-react';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import type { PromoCode } from '../types/promo.types';
 
 interface PromoTableProps {
@@ -108,23 +109,26 @@ export const PromoTable = ({
                         )}
                       </div>
                     </td>
-                    <td className="p-3 text-center space-x-2">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => onEdit(promo)}
-                        className="h-8 w-8"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        onClick={() => onDelete(promo._id!)}
-                        className="h-8 w-8"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                    <td className="p-3 text-center">
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onEdit(promo)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <ConfirmationDialog
+                          title="Delete Promotion"
+                          description="Are you sure you want to delete this promotion code? This action cannot be undone."
+                          variant="destructive"
+                          onConfirm={() => onDelete(promo._id!)}
+                        >
+                          <Button size="sm" variant="destructive">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </ConfirmationDialog>
+                      </div>
                     </td>
                   </tr>
                 );

@@ -360,7 +360,7 @@ const FlashcardBoard: React.FC = () => {
                   </Button>
                 }
               />
-              <Button
+              {/* <Button
                 variant="outline"
                 className="gap-2 border-slate-300 text-slate-700 hover:bg-slate-50"
               >
@@ -373,7 +373,7 @@ const FlashcardBoard: React.FC = () => {
               >
                 <Download className="h-4 w-4" />
                 Export
-              </Button>
+              </Button> */}
             </div>
           </div>
 

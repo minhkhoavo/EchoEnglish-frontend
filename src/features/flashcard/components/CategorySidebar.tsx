@@ -21,7 +21,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useConfirmationDialog } from '@/hooks/useConfirmationDialog';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 
 interface CategorySidebarProps {
   selectedCategory: string | null;
@@ -101,36 +101,23 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
     }
   }, [showCategoryOptions]);
 
-  const { confirm, ConfirmDialog } = useConfirmationDialog();
-
   const handleDeleteCategory = async (categoryId: string) => {
-    confirm({
-      title: 'Delete Category',
-      description:
-        'Are you sure you want to delete this category? All flashcards in this category will also be affected.',
-      variant: 'destructive',
-      onConfirm: async () => {
-        try {
-          await deleteCategory(categoryId).unwrap();
-          toast({
-            title: 'Success',
-            description: 'Category deleted successfully',
-          });
-          if (selectedCategory === categoryId) {
-            onCategorySelect(null);
-          }
-        } catch (error) {
-          toast({
-            title: 'Error',
-            description: 'Failed to delete category',
-            variant: 'destructive',
-          });
-        }
-      },
-      onCancel: () => {
-        // keep options menu open? close it explicitly where caller triggers it
-      },
-    });
+    try {
+      await deleteCategory(categoryId).unwrap();
+      toast({
+        title: 'Success',
+        description: 'Category deleted successfully',
+      });
+      if (selectedCategory === categoryId) {
+        onCategorySelect(null);
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete category',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getCategoryIcon = (category: Category) => {
@@ -165,7 +152,6 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
 
   return (
     <>
-      {ConfirmDialog}
       <div
         className={`${isCollapsed ? 'w-16' : 'w-80'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300`}
       >
@@ -362,19 +348,24 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
                                     </button>
                                   }
                                 />
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
+                                <ConfirmationDialog
+                                  title="Delete Category"
+                                  description="Are you sure you want to delete this category? All flashcards in this category will also be affected."
+                                  variant="destructive"
+                                  onConfirm={() => {
                                     if (category._id) {
                                       handleDeleteCategory(category._id);
                                     }
                                     setShowCategoryOptions(null);
                                   }}
-                                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 text-red-600 flex items-center gap-2"
                                 >
-                                  <Trash2 className="h-3 w-3" />
-                                  Delete
-                                </button>
+                                  <div className="w-full">
+                                    <button className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 text-red-600 flex items-center gap-2">
+                                      <Trash2 className="h-3 w-3" />
+                                      Delete
+                                    </button>
+                                  </div>
+                                </ConfirmationDialog>
                               </div>
                             )}
                           </div>
