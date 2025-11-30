@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   Heart,
   Sparkles,
+  Plus,
 } from 'lucide-react';
 import type { ConversationCategory, ConversationTopic } from '../types';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ import { cn } from '@/lib/utils';
 interface TopicSelectionProps {
   categories: ConversationCategory[];
   onSelectTopic: (topic: ConversationTopic) => void;
+  onCustomConversation: () => void;
   isLoading: boolean;
 }
 
@@ -100,6 +102,7 @@ const getDefaultCategoryConfig = (index: number) => {
 const TopicSelection: React.FC<TopicSelectionProps> = ({
   categories,
   onSelectTopic,
+  onCustomConversation,
   isLoading,
 }) => {
   if (isLoading) {
@@ -149,10 +152,20 @@ const TopicSelection: React.FC<TopicSelectionProps> = ({
             <h1 className="text-3xl font-bold text-slate-900 mb-3">
               Choose a Topic to Practice
             </h1>
-            <p className="text-slate-500 max-w-xl mx-auto">
+            <p className="text-slate-500 max-w-xl mx-auto mb-6">
               Select a conversation scenario below and practice speaking English
               with our AI assistant.
             </p>
+
+            {/* Custom Conversation Button */}
+            <button
+              onClick={onCustomConversation}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-medium shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-200"
+            >
+              <Sparkles className="w-5 h-5" />
+              Create Custom Conversation
+              <Plus className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Categories */}

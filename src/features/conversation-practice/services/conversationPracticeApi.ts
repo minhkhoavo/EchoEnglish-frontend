@@ -20,12 +20,15 @@ export const conversationPracticeApi = api.injectEndpoints({
       providesTags: ['ConversationPractice'],
     }),
 
-    // Start a conversation with a specific topic
-    startConversation: builder.mutation<StartConversationResponse, string>({
-      query: (topicId: string) => ({
+    // Start a conversation with a specific topic or custom prompt
+    startConversation: builder.mutation<
+      StartConversationResponse,
+      { topicId?: string; userPrompt?: string }
+    >({
+      query: (body: { topicId?: string; userPrompt?: string }) => ({
         url: '/conversation-practice/start',
         method: 'POST',
-        data: { topicId },
+        data: body,
       }),
       transformResponse: (response: ApiResponse<StartConversationResponse>) =>
         response.data,

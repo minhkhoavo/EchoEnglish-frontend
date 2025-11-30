@@ -25,6 +25,7 @@ import TopicSelection from './TopicSelection';
 import ChatInterface from './ChatInterface';
 import SettingsPanel from './SettingsPanel';
 import CongratulationModal from './CongratulationModal';
+import CustomPromptModal from './CustomPromptModal';
 
 // SpeechRecognition types
 interface ISpeechRecognition extends EventTarget {
@@ -79,6 +80,7 @@ const ConversationPracticeContainer: React.FC = () => {
   // Local state
   const [showCongrats, setShowCongrats] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const [showCustomPrompt, setShowCustomPrompt] = useState(false);
 
   // API hooks
   const { data: categories, isLoading: isLoadingTopics } =
@@ -132,7 +134,9 @@ const ConversationPracticeContainer: React.FC = () => {
     async (topic: ConversationTopic) => {
       setIsStarting(true);
       try {
-        const response = await startConversationApi(topic.id).unwrap();
+        const response = await startConversationApi({
+          topicId: topic.id,
+        }).unwrap();
         dispatch(
           startConversation({
             topic: response.topic,
@@ -144,6 +148,38 @@ const ConversationPracticeContainer: React.FC = () => {
       } catch (error) {
         console.error('Failed to start conversation:', error);
         toast.error('Failed to start conversation. Please try again.');
+      } finally {
+        setIsStarting(false);
+      }
+    },
+    [dispatch, startConversationApi]
+  );
+
+  // Handle custom conversation
+  const handleCustomConversation = useCallback(() => {
+    setShowCustomPrompt(true);
+  }, []);
+
+  // Handle custom prompt submit
+  const handleCustomPromptSubmit = useCallback(
+    async (prompt: string) => {
+      setIsStarting(true);
+      setShowCustomPrompt(false);
+      try {
+        const response = await startConversationApi({
+          userPrompt: prompt,
+        }).unwrap();
+        dispatch(
+          startConversation({
+            topic: response.topic,
+            starterMessage: response.starterMessage,
+            checklist: response.checklist,
+            totalTasksCount: response.totalTasksCount,
+          })
+        );
+      } catch (error) {
+        console.error('Failed to start custom conversation:', error);
+        toast.error('Failed to start custom conversation. Please try again.');
       } finally {
         setIsStarting(false);
       }
@@ -290,7 +326,14 @@ const ConversationPracticeContainer: React.FC = () => {
         <TopicSelection
           categories={categories || []}
           onSelectTopic={handleSelectTopic}
+          onCustomConversation={handleCustomConversation}
           isLoading={isLoadingTopics || isStarting}
+        />
+        <CustomPromptModal
+          isOpen={showCustomPrompt}
+          onClose={() => setShowCustomPrompt(false)}
+          onSubmit={handleCustomPromptSubmit}
+          isLoading={isStarting}
         />
       </div>
     );

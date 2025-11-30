@@ -3,6 +3,7 @@ export { default as TopicSelection } from './components/TopicSelection';
 export { default as ChatInterface } from './components/ChatInterface';
 export { default as SettingsPanel } from './components/SettingsPanel';
 export { default as CongratulationModal } from './components/CongratulationModal';
+export { default as CustomPromptModal } from './components/CustomPromptModal';
 
 export * from './types';
 export * from './services/conversationPracticeApi';

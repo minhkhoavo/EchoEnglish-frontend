@@ -38,6 +38,12 @@ export interface ChatMessage {
   timestamp?: string;
 }
 
+// Start conversation request
+export interface StartConversationRequest {
+  topicId?: string;
+  userPrompt?: string;
+}
+
 // Start conversation response
 export interface StartConversationResponse {
   topic: ConversationTopic;
