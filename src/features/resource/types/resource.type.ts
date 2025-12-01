@@ -65,6 +65,7 @@ export interface TranscriptSegment {
   start: number;
   duration: number;
   text: string;
+  end?: number;
 }
 
 export interface ResourceSearchParams {

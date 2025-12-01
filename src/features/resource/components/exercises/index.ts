@@ -1,0 +1,1 @@
+export { SyncedExercisePanel } from './SyncedExercisePanel';
