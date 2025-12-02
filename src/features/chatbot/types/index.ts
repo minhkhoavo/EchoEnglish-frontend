@@ -15,6 +15,14 @@ export type ChatbotAction =
       confirm?: boolean;
     };
 
+// Citation for knowledge base references
+export interface Citation {
+  id: number;
+  resourceId: string;
+  title: string;
+  url: string;
+}
+
 export interface ChatbotResponse {
   intent: string;
   layout: 'notice' | 'list' | 'detail' | 'result' | 'html_embed';
@@ -26,6 +34,7 @@ export interface ChatbotResponse {
     | DetailPayload
     | ResultPayload
     | HtmlEmbedPayload;
+  citations?: Citation[];
 }
 
 export interface NoticePayload {

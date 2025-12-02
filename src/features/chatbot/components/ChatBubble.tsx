@@ -545,6 +545,7 @@ const ChatMessageComponent: React.FC<ChatMessageComponentProps> = ({
               html={message.html}
               images={message.images}
               variant={message.type}
+              citations={message.response?.citations}
             />
           </div>
 

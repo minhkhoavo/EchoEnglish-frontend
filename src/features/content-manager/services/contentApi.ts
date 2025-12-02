@@ -74,18 +74,21 @@ export const contentApi = api.injectEndpoints({
       queryFn: async ({ file }, { signal }) => {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('user_id', '88');
 
         try {
-          const response = await axiosInstance.post('/uploadfile/', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-            signal,
-            onUploadProgress: () => {
-              // Progress tracking if needed
-            },
-          });
+          const response = await axiosInstance.post(
+            '/files/upload-analyze',
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+              signal,
+              onUploadProgress: () => {
+                // Progress tracking if needed
+              },
+            }
+          );
           return { data: response.data };
         } catch (axiosError) {
           const err = axiosError as {

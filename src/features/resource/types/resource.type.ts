@@ -1,4 +1,5 @@
 export const ResourceType = {
+  ARTICLE: 'article',
   WEB_RSS: 'web_rss',
   YOUTUBE: 'youtube',
 } as const;
@@ -40,8 +41,13 @@ export interface ResourceLabels {
 export interface Resource {
   _id: string;
   type: ResourceType;
-  url: string;
+  url?: string;
+  isArticle?: boolean;
+  attachmentUrl?: string;
+  attachmentName?: string;
+  isIndexed?: boolean;
   title?: string;
+  thumbnail?: string;
   publishedAt?: string;
   lang?: string;
   summary?: string;
@@ -50,6 +56,7 @@ export interface Resource {
   labels?: ResourceLabels;
   suitableForLearners: boolean;
   moderationNotes?: string;
+  createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -58,6 +65,7 @@ export interface TranscriptSegment {
   start: number;
   duration: number;
   text: string;
+  end?: number;
 }
 
 export interface ResourceSearchParams {
