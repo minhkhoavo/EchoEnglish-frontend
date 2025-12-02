@@ -19,7 +19,10 @@ interface ConfirmationDialogProps {
   icon?: React.ReactNode;
   onConfirm: () => void;
   onCancel?: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  // Controlled mode props
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -32,8 +35,15 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   onConfirm,
   onCancel,
   children,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+
+  // Use controlled state if provided, otherwise use uncontrolled
+  const isOpen =
+    controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
+  const setIsOpen = controlledOnOpenChange || setUncontrolledOpen;
 
   const handleConfirm = () => {
     onConfirm();
@@ -47,7 +57,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <div onClick={() => setIsOpen(true)}>{children}</div>
+      {children && <div onClick={() => setIsOpen(true)}>{children}</div>}
       {/* children được render ở vị trí trên header vì mục đích của nó 
       là làm trigger (nút, icon, text, v.v.) để mở dialog xác nhận. Khi
        bạn click vào phần tử này, dialog mới hiện ra */}

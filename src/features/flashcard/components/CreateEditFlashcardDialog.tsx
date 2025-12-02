@@ -17,14 +17,26 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, X, Hash } from 'lucide-react';
+import {
+  Plus,
+  Edit2,
+  X,
+  Hash,
+  Volume2,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import {
   useCreateFlashcardMutation,
   useUpdateFlashcardMutation,
   useGetCategoriesQuery,
+  useTranslateTextMutation,
 } from '../services/flashcardApi';
+import { useLazyGetPhoneticsQuery } from '../../vocabulary/services/vocabularyApi';
 import type { Flashcard, Category } from '../types/flashcard.types';
 import { toast } from 'sonner';
+import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 
 interface CreateEditFlashcardDialogProps {
   flashcard?: Flashcard;
@@ -47,9 +59,16 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
     difficulty: 'Medium' as 'Easy' | 'Medium' | 'Hard',
     tags: [] as string[],
     source: '',
+    phonetic: '',
     isAIGenerated: false,
   });
   const [newTag, setNewTag] = useState('');
+  const [phonetics, setPhonetics] = useState<
+    { text: string; audio?: string }[]
+  >([]);
+  const [showPhonetics, setShowPhonetics] = useState(false);
+  const [phoneticsExpanded, setPhoneticsExpanded] = useState(false);
+  const { speak } = useSpeechSynthesis();
 
   const {
     data: categories = [],
@@ -60,6 +79,10 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
     useCreateFlashcardMutation();
   const [updateFlashcard, { isLoading: isUpdating }] =
     useUpdateFlashcardMutation();
+  const [translateText, { isLoading: isTranslating }] =
+    useTranslateTextMutation();
+  const [fetchPhonetics, { isLoading: fetchingPhonetics }] =
+    useLazyGetPhoneticsQuery();
 
   useEffect(() => {
     if (categoriesError) {
@@ -76,8 +99,14 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
         difficulty: flashcard.difficulty,
         tags: flashcard.tags,
         source: flashcard.source || '',
+        phonetic: flashcard.phonetic
+          ? `/${flashcard.phonetic.replace(/^\/+|\/+$/g, '')}/`
+          : '',
         isAIGenerated: flashcard.isAIGenerated,
       });
+      if (flashcard.phonetic) {
+        setShowPhonetics(false); // Don't auto-load phonetics
+      }
       setOpen(true); // Auto open when editing
     } else {
       setFormData({
@@ -87,8 +116,10 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
         difficulty: 'Medium',
         tags: [],
         source: '',
+        phonetic: '',
         isAIGenerated: false,
       });
+      setShowPhonetics(false);
     }
   }, [isEdit, flashcard]);
 
@@ -99,17 +130,25 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
       return;
     }
 
+    // Clean phonetic data before sending to backend (remove slashes)
+    const cleanFormData = {
+      ...formData,
+      phonetic: formData.phonetic
+        ? formData.phonetic.replace(/^\/+|\/+$/g, '')
+        : '',
+    };
+
     try {
       if (isEdit && flashcard) {
         await updateFlashcard({
           id: flashcard._id || '',
-          ...formData,
+          ...cleanFormData,
         }).unwrap();
         toast.success('Flashcard updated successfully');
         setOpen(false);
         onSuccess?.();
       } else {
-        await createFlashcard(formData).unwrap();
+        await createFlashcard(cleanFormData).unwrap();
         toast.success('Flashcard created successfully');
         setOpen(false);
         onSuccess?.();
@@ -143,6 +182,85 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
     }
   };
 
+  const handleFetchPhonetics = async () => {
+    const word = formData.front.trim();
+    // Only fetch if it's a single word in English (no spaces, Vietnamese chars)
+    if (
+      !word ||
+      word.includes(' ') ||
+      /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(
+        word
+      )
+    ) {
+      setShowPhonetics(false);
+      return;
+    }
+
+    try {
+      const result = await fetchPhonetics(word).unwrap();
+      if (result?.phonetics && result.phonetics.length > 0) {
+        setPhonetics(result.phonetics);
+        setShowPhonetics(true);
+        setPhoneticsExpanded(true); // Auto-expand when results loaded
+      } else {
+        setShowPhonetics(false);
+        setPhoneticsExpanded(false);
+      }
+    } catch (error) {
+      setShowPhonetics(false);
+      setPhoneticsExpanded(false);
+    }
+  };
+
+  const insertPhonetic = (phoneticText: string) => {
+    // Remove any existing slashes and add proper formatting
+    const cleanText = phoneticText.replace(/^\/+|\/+$/g, '');
+    setFormData((prev) => ({ ...prev, phonetic: `/${cleanText}/` }));
+    toast.success(`Phonetic added: /${cleanText}/`);
+  };
+
+  const playPronunciation = (audioUrl?: string, text?: string) => {
+    if (audioUrl) {
+      // Play audio from URL if available
+      const audio = new Audio(audioUrl);
+      audio.play().catch((error) => {
+        console.warn('Failed to play audio from URL:', error);
+        // Fallback to Web Speech API
+        if (text) {
+          speak(text, 'en-US');
+        }
+      });
+    } else if (text) {
+      // Fallback to Web Speech API
+      speak(text, 'en-US');
+    }
+  };
+
+  const handleAutoTranslate = async () => {
+    if (!formData.front.trim()) {
+      toast.error('Please enter the front side first');
+      return;
+    }
+
+    try {
+      const response = await translateText({
+        sourceText: formData.front,
+        destinationLanguage: 'vi',
+      }).unwrap();
+
+      const translation = response.data?.destinationText || '';
+      if (translation) {
+        setFormData((prev) => ({ ...prev, back: translation }));
+        // toast.success('Text translated successfully');
+      } else {
+        toast.error('No translation available');
+      }
+    } catch (error) {
+      console.error('Translation failed:', error);
+      toast.error('Failed to translate text. Please try again.');
+    }
+  };
+
   return (
     <>
       {/* Trigger Button */}
@@ -157,9 +275,12 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
               difficulty: 'Medium',
               tags: [],
               source: '',
+              phonetic: '',
               isAIGenerated: false,
             });
             setNewTag('');
+            setShowPhonetics(false);
+            setPhoneticsExpanded(false);
           }
           setOpen(true);
         }}
@@ -186,9 +307,12 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                 difficulty: 'Medium',
                 tags: [],
                 source: '',
+                phonetic: '',
                 isAIGenerated: false,
               });
               setNewTag('');
+              setShowPhonetics(false);
+              setPhoneticsExpanded(false);
             }
             if (isEdit) {
               onSuccess?.();
@@ -219,19 +343,37 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                   id="front"
                   placeholder="Enter the question or prompt..."
                   value={formData.front}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, front: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, front: e.target.value }));
+                    setShowPhonetics(false);
+                    setPhoneticsExpanded(false);
+                  }}
+                  onBlur={handleFetchPhonetics}
                   className="resize-none min-h-[100px]"
                   rows={4}
                   required
+                  autoFocus
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="back" className="text-sm font-medium">
-                  Back Side
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="back" className="text-sm font-medium">
+                    Back Side
+                  </Label>
+                  {formData.front && !formData.back && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAutoTranslate}
+                      disabled={isTranslating}
+                      className="h-7 text-xs"
+                    >
+                      {isTranslating ? 'Translating...' : 'Auto Translate'}
+                    </Button>
+                  )}
+                </div>
                 <Textarea
                   id="back"
                   placeholder="Enter the answer or explanation..."
@@ -243,6 +385,78 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                   rows={4}
                   required
                 />
+              </div>
+
+              {/* Phonetics Section - Collapsible to prevent layout shift */}
+              <div className="col-span-1 md:col-span-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setPhoneticsExpanded(!phoneticsExpanded);
+                    if (!phoneticsExpanded && !showPhonetics) {
+                      handleFetchPhonetics();
+                    }
+                  }}
+                  className="w-full justify-between"
+                  disabled={fetchingPhonetics}
+                >
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    {fetchingPhonetics
+                      ? 'Fetching phonetics...'
+                      : 'Phonetics Helper'}
+                  </span>
+                  {phoneticsExpanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+
+                {phoneticsExpanded && showPhonetics && phonetics.length > 0 && (
+                  <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg space-y-2">
+                    <div className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                      Click to add phonetic
+                    </div>
+                    <div className="space-y-1.5">
+                      {phonetics.map((phonetic, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => insertPhonetic(phonetic.text)}
+                          className="w-full flex items-center justify-between gap-2 p-2 bg-white dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-900 rounded border border-blue-200 dark:border-blue-700 transition-colors text-left"
+                        >
+                          <span className="text-sm font-mono text-slate-700 dark:text-slate-300">
+                            {phonetic.text}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const phoneticWithAudio = phonetics.find(
+                                  (p) => p.audio
+                                );
+                                playPronunciation(
+                                  phoneticWithAudio?.audio,
+                                  formData.front
+                                );
+                              }}
+                            >
+                              <Volume2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                            </Button>
+                            <Plus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -308,25 +522,46 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="difficulty" className="text-sm font-medium">
-                Difficulty
-              </Label>
-              <Select
-                value={formData.difficulty}
-                onValueChange={(value: 'Easy' | 'Medium' | 'Hard') =>
-                  setFormData((prev) => ({ ...prev, difficulty: value }))
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Easy">Easy</SelectItem>
-                  <SelectItem value="Medium">Medium</SelectItem>
-                  <SelectItem value="Hard">Hard</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Phonetic and Difficulty in a row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phonetic" className="text-sm font-medium">
+                  Phonetic (Optional)
+                </Label>
+                <Input
+                  id="phonetic"
+                  placeholder="e.g. /həˈloʊ/"
+                  value={formData.phonetic}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      phonetic: e.target.value,
+                    }))
+                  }
+                  className="font-mono"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="difficulty" className="text-sm font-medium">
+                  Difficulty
+                </Label>
+                <Select
+                  value={formData.difficulty}
+                  onValueChange={(value: 'Easy' | 'Medium' | 'Hard') =>
+                    setFormData((prev) => ({ ...prev, difficulty: value }))
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Easy">Easy</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="Hard">Hard</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">

@@ -16,6 +16,7 @@ import type { Flashcard } from '@/features/flashcard/types/flashcard.types';
 import CreateEditFlashcardDialog from './CreateEditFlashcardDialog';
 import { useDeleteFlashcardMutation } from '@/features/flashcard/services/flashcardApi';
 import { useToast } from '@/hooks/use-toast';
+import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 
 interface VocabularySheetProps {
   flashcards: Flashcard[];
@@ -30,12 +31,7 @@ const VocabularySheet: React.FC<VocabularySheetProps> = ({
   onRefetch,
   onDelete,
 }) => {
-  const playAudio = (text: string, language: 'en' | 'vi' = 'en') => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language === 'en' ? 'en-US' : 'vi-VN';
-    speechSynthesis.speak(utterance);
-  };
-
+  const { speak } = useSpeechSynthesis();
   const { toast } = useToast();
   const [deleteFlashcard] = useDeleteFlashcardMutation();
 
@@ -133,7 +129,7 @@ const VocabularySheet: React.FC<VocabularySheetProps> = ({
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                playAudio(flashcard.front, 'en');
+                                speak(flashcard.front, 'en-US');
                               }}
                               className="h-8 w-8 p-0 hover:bg-blue-50"
                             >
@@ -158,7 +154,7 @@ const VocabularySheet: React.FC<VocabularySheetProps> = ({
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                playAudio(flashcard.back, 'vi');
+                                speak(flashcard.back, 'vi-VN');
                               }}
                               className="h-8 w-8 p-0 hover:bg-blue-100"
                             >

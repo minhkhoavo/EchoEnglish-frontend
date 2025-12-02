@@ -12,6 +12,7 @@ import {
   Layers,
   LayoutDashboard,
   ClipboardCheck,
+  BookText,
 } from 'lucide-react';
 
 export type NavItem = {
@@ -44,6 +45,12 @@ const navigationItems: NavItem[] = [
     name: 'Flashcards',
     icon: Layers,
     description: 'Spaced vocab flashcards',
+  },
+  {
+    path: '/vocabulary',
+    name: 'Vocabulary',
+    icon: BookText,
+    description: 'Browse & import words',
   },
   {
     path: '/recordings',

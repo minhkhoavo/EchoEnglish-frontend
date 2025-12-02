@@ -12,6 +12,8 @@ import {
   useGetFlashcardsQuery,
   useDeleteFlashcardMutation,
   useGetCategoriesQuery,
+  useBulkUpdateFlashcardsMutation,
+  useBulkDeleteFlashcardsMutation,
 } from '../services/flashcardApi';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -29,6 +31,8 @@ import FlashcardItem from './FlashcardItem';
 import CategorySidebar from './CategorySidebar.tsx';
 import CreateEditFlashcardDialog from './CreateEditFlashcardDialog';
 import CreateEditCategoryDialog from './CreateEditCategoryDialog';
+import { BulkMoveDialog } from './BulkMoveDialog';
+import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import {
   Search,
   Filter,
@@ -46,6 +50,8 @@ import {
   Sparkles,
   LayoutGrid,
   AlertCircle,
+  CheckSquare,
+  FolderInput,
 } from 'lucide-react';
 import { sortOptions } from '../types/flashcard.types';
 import type { Flashcard, Category } from '../types/flashcard.types';
@@ -60,6 +66,8 @@ const FlashcardBoard: React.FC = () => {
   const { data: flashcards = [], isLoading, error } = useGetFlashcardsQuery();
   const { data: categories = [] } = useGetCategoriesQuery();
   const [deleteFlashcard] = useDeleteFlashcardMutation();
+  const [bulkUpdateFlashcards] = useBulkUpdateFlashcardsMutation();
+  const [bulkDeleteFlashcards] = useBulkDeleteFlashcardsMutation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -67,6 +75,10 @@ const FlashcardBoard: React.FC = () => {
   const [editingFlashcard, setEditingFlashcard] = useState<Flashcard | null>(
     null
   );
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedCards, setSelectedCards] = useState<Set<string>>(new Set());
+  const [bulkMoveOpen, setBulkMoveOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -231,6 +243,79 @@ const FlashcardBoard: React.FC = () => {
     }
   };
 
+  const handleSelectCard = (id: string, checked: boolean) => {
+    setSelectedCards((prev) => {
+      const next = new Set(prev);
+      if (checked) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    const currentPageCardIds = paginatedFlashcards
+      .filter((card) => card._id)
+      .map((card) => card._id!);
+
+    if (selectedCards.size === currentPageCardIds.length) {
+      setSelectedCards(new Set());
+    } else {
+      setSelectedCards(new Set(currentPageCardIds));
+    }
+  };
+
+  const handleBulkMove = async (targetCategoryId: string) => {
+    try {
+      const updates = Array.from(selectedCards).map((id) => ({
+        id,
+        category: targetCategoryId,
+      }));
+
+      await bulkUpdateFlashcards({ updates }).unwrap();
+
+      toast({
+        title: 'Success',
+        description: `Moved ${selectedCards.size} flashcard${selectedCards.size > 1 ? 's' : ''} successfully.`,
+      });
+
+      setSelectedCards(new Set());
+      setSelectionMode(false);
+      setBulkMoveOpen(false);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to move flashcards.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const result = await bulkDeleteFlashcards({
+        flashcardIds: Array.from(selectedCards),
+      }).unwrap();
+
+      toast({
+        title: 'Success',
+        description: `Deleted ${result.deletedCount} flashcard${result.deletedCount > 1 ? 's' : ''} successfully.`,
+      });
+
+      setSelectedCards(new Set());
+      setSelectionMode(false);
+      setBulkDeleteOpen(false);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete flashcards.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Show skeleton loading during initial load
   if (isLoading && flashcards.length === 0) {
     return (
@@ -296,7 +381,7 @@ const FlashcardBoard: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-full bg-slate-50">
       {/* Sidebar */}
       <CategorySidebar
         selectedCategory={selectedCategory}
@@ -318,10 +403,10 @@ const FlashcardBoard: React.FC = () => {
                   )}
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-slate-900">
+                  <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
                     {selectedCategoryName || 'All Flashcards'}
                   </h1>
-                  <p className="text-slate-600 text-sm">
+                  <p className="text-slate-600 dark:text-slate-400 text-sm">
                     {filteredFlashcards.length} flashcard
                     {filteredFlashcards.length !== 1 ? 's' : ''}
                     {selectedCategoryName && ` in ${selectedCategoryName}`}
@@ -331,49 +416,101 @@ const FlashcardBoard: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <CreateEditFlashcardDialog
-                trigger={
-                  <Button
-                    className="gap-2 bg-slate-900 hover:bg-slate-800 text-white"
-                    disabled={isServerDisconnected}
-                    title={
-                      isServerDisconnected ? 'Server unavailable' : undefined
+              {!selectionMode ? (
+                <>
+                  <CreateEditFlashcardDialog
+                    trigger={
+                      <Button
+                        className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                        disabled={isServerDisconnected}
+                        title={
+                          isServerDisconnected
+                            ? 'Server unavailable'
+                            : undefined
+                        }
+                      >
+                        <Plus size={16} />
+                        Create Flashcard
+                      </Button>
                     }
-                  >
-                    <Plus size={16} />
-                    Create Flashcard
-                  </Button>
-                }
-              />
-              <CreateEditCategoryDialog
-                trigger={
+                  />
+                  <CreateEditCategoryDialog
+                    trigger={
+                      <Button
+                        variant="outline"
+                        className="gap-2 border-slate-300 text-slate-700 hover:bg-slate-50"
+                        disabled={isServerDisconnected}
+                        title={
+                          isServerDisconnected
+                            ? 'Server unavailable'
+                            : undefined
+                        }
+                      >
+                        <FolderPlus size={16} />
+                        New Category
+                      </Button>
+                    }
+                  />
                   <Button
                     variant="outline"
                     className="gap-2 border-slate-300 text-slate-700 hover:bg-slate-50"
-                    disabled={isServerDisconnected}
-                    title={
-                      isServerDisconnected ? 'Server unavailable' : undefined
+                    onClick={() => setSelectionMode(true)}
+                    disabled={
+                      isServerDisconnected || filteredFlashcards.length === 0
                     }
                   >
-                    <FolderPlus size={16} />
-                    New Category
+                    <CheckSquare size={16} />
+                    Select
                   </Button>
-                }
-              />
-              {/* <Button
-                variant="outline"
-                className="gap-2 border-slate-300 text-slate-700 hover:bg-slate-50"
-              >
-                <Upload className="h-4 w-4" />
-                Import
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-2 border-slate-300 text-slate-700 hover:bg-slate-50"
-              >
-                <Download className="h-4 w-4" />
-                Export
-              </Button> */}
+                </>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <Badge variant="secondary" className="text-sm px-3 py-1.5">
+                      {selectedCards.size} selected
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAll}
+                    >
+                      {selectedCards.size === paginatedFlashcards.length
+                        ? 'Deselect All'
+                        : 'Select All'}
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => setBulkMoveOpen(true)}
+                      disabled={selectedCards.size === 0}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <FolderInput className="h-4 w-4 mr-2" />
+                      Move to Category
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setBulkDeleteOpen(true)}
+                      disabled={selectedCards.size === 0}
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Delete Selected
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectionMode(false);
+                        setSelectedCards(new Set());
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -428,7 +565,7 @@ const FlashcardBoard: React.FC = () => {
               </Button>
 
               <div className="border-l border-slate-300 pl-2 ml-2">
-                <div className="flex rounded-lg border border-slate-300 bg-white overflow-hidden">
+                <div className="flex rounded-lg border border-slate-300 bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
@@ -436,8 +573,8 @@ const FlashcardBoard: React.FC = () => {
                     className={cn(
                       'rounded-none border-0',
                       viewMode === 'grid'
-                        ? 'bg-slate-900 text-white hover:bg-slate-800'
-                        : 'text-slate-600 hover:bg-slate-50'
+                        ? 'bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                     )}
                   >
                     <Grid3X3 className="h-4 w-4" />
@@ -447,10 +584,10 @@ const FlashcardBoard: React.FC = () => {
                     size="sm"
                     onClick={() => dispatch(setViewMode('list'))}
                     className={cn(
-                      'rounded-none border-0 border-l border-slate-300',
+                      'rounded-none border-0 border-l border-slate-300 dark:border-slate-600',
                       viewMode === 'list'
-                        ? 'bg-slate-900 text-white hover:bg-slate-800'
-                        : 'text-slate-600 hover:bg-slate-50'
+                        ? 'bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                     )}
                   >
                     <List className="h-4 w-4" />
@@ -597,6 +734,11 @@ const FlashcardBoard: React.FC = () => {
                     onEdit={setEditingFlashcard}
                     onDelete={handleDeleteFlashcard}
                     viewMode={viewMode}
+                    selectionMode={selectionMode}
+                    isSelected={
+                      flashcard._id ? selectedCards.has(flashcard._id) : false
+                    }
+                    onSelect={handleSelectCard}
                   />
                 ))}
               </div>
@@ -624,6 +766,24 @@ const FlashcardBoard: React.FC = () => {
           onSuccess={() => setEditingFlashcard(null)}
         />
       )}
+
+      {/* Bulk Move Dialog */}
+      <BulkMoveDialog
+        open={bulkMoveOpen}
+        onOpenChange={setBulkMoveOpen}
+        selectedCount={selectedCards.size}
+        onConfirm={handleBulkMove}
+      />
+
+      {/* Bulk Delete Confirmation */}
+      <ConfirmationDialog
+        title="Delete Selected Flashcards"
+        description={`Are you sure you want to delete ${selectedCards.size} flashcard${selectedCards.size > 1 ? 's' : ''}? This action cannot be undone.`}
+        variant="destructive"
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        onConfirm={handleBulkDelete}
+      />
     </div>
   );
 };

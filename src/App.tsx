@@ -26,7 +26,8 @@ import { UserDashboardPage } from './features/user-dashboard/pages/UserDashboard
 import ProfilePage from './pages/auth/ProfilePage';
 
 // Learning Features
-import FlashcardPage from './pages/FlashcardPage';
+import FlashcardsPage from './pages/FlashcardsPage';
+import VocabularyBrowsePage from './pages/VocabularyBrowsePage';
 import AllTestsPage from './pages/test/AllTestsPage';
 import { QuizInterface } from './features/quiz/QuizInterface';
 import RecordingsPage from './pages/RecordingsPage';
@@ -127,7 +128,8 @@ function App() {
           <Route path="/quiz" element={<QuizRouteWrapper />} />
           <Route path="/tests" element={<AllTestsPage />} />
           <Route path="/recordings" element={<RecordingsPage />} />
-          <Route path="/flashcards" element={<FlashcardPage />} />
+          <Route path="/flashcards" element={<FlashcardsPage />} />
+          <Route path="/vocabulary" element={<VocabularyBrowsePage />} />
 
           {/* TEST TAKING & EXAMS */}
           <Route

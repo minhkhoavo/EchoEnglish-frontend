@@ -72,6 +72,7 @@ export const flashcardApi = api.injectEndpoints({
         difficulty: 'Easy' | 'Medium' | 'Hard';
         tags: string[];
         source?: string;
+        phonetic?: string;
         isAIGenerated: boolean;
       }
     >({
@@ -89,9 +90,11 @@ export const flashcardApi = api.injectEndpoints({
         id: string;
         front: string;
         back: string;
+        category: string;
         difficulty: 'Easy' | 'Medium' | 'Hard';
         tags: string[];
         source?: string;
+        phonetic?: string;
         isAIGenerated: boolean;
       }
     >({
@@ -151,6 +154,36 @@ export const flashcardApi = api.injectEndpoints({
         data: body,
       }),
     }),
+    // Bulk update flashcards
+    bulkUpdateFlashcards: builder.mutation<
+      { flashcards: Flashcard[]; count: number },
+      { updates: Array<{ id: string; category: string }> }
+    >({
+      query: (body) => ({
+        url: '/flashcards/bulk',
+        method: 'PUT',
+        data: body,
+      }),
+      transformResponse: (
+        response: ApiResponse<{ flashcards: Flashcard[]; count: number }>
+      ) => response.data,
+      invalidatesTags: [{ type: 'Category' }, { type: 'Flashcard' }],
+    }),
+    // Bulk delete flashcards
+    bulkDeleteFlashcards: builder.mutation<
+      { deletedCount: number; requestedCount: number },
+      { flashcardIds: string[] }
+    >({
+      query: (body) => ({
+        url: '/flashcards/bulk',
+        method: 'DELETE',
+        data: body,
+      }),
+      transformResponse: (
+        response: ApiResponse<{ deletedCount: number; requestedCount: number }>
+      ) => response.data,
+      invalidatesTags: [{ type: 'Category' }, { type: 'Flashcard' }],
+    }),
   }),
 });
 
@@ -166,4 +199,6 @@ export const {
   useGetFlashcardsByCategoryQuery,
   useGetFlashcardsBySourceQuery,
   useTranslateTextMutation,
+  useBulkUpdateFlashcardsMutation,
+  useBulkDeleteFlashcardsMutation,
 } = flashcardApi;

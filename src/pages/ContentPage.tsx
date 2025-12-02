@@ -11,7 +11,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ContentManager } from '@/features/content-manager/ContentManager';
-import FlashcardPage from './FlashcardPage';
+import FlashcardsPage from './FlashcardsPage';
 import AllTestsPage from './test/AllTestsPage';
 import NewResourcePage from './resource/ResourcePage';
 import { ToeicTestDetail } from '@/features/tests/components/lis-read/TOEICTestDetail';
@@ -56,7 +56,7 @@ const ContentPage = () => {
       case 'resources':
         return <NewResourcePage />;
       case 'flashcards':
-        return <FlashcardPage />;
+        return <FlashcardsPage />;
       case 'tests':
         if (showTestDetail && selectedTestId) {
           return (
