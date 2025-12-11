@@ -1,7 +1,7 @@
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { PracticeDrill } from '../features/practice-drill/components/PracticeDrill';
 import { useCompletePracticeDrillMutation } from '../features/user-dashboard/services/dashboardApi';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const PracticeDrillPage = () => {
   const location = useLocation();
@@ -42,24 +42,19 @@ const PracticeDrillPage = () => {
           score: (result.correctAnswers / result.totalQuestions) * 100,
         }).unwrap();
 
-        toast({
-          title: '🎉 Congratulations!',
-          description: `You passed the drill with ${result.correctAnswers}/${result.totalQuestions} correct answers!`,
-        });
+        toast.success(
+          `🎉 Congratulations! You passed the drill with ${result.correctAnswers}/${result.totalQuestions} correct answers!`
+        );
       } catch (error) {
         console.error('Failed to complete practice drill:', error);
-        toast({
-          title: 'Completion tracking failed',
-          description: 'Your progress may not be saved.',
-          variant: 'destructive',
-        });
+        toast.error(
+          'Completion tracking failed: Your progress may not be saved.'
+        );
       }
     } else if (!result.passed && drillConfig) {
-      toast({
-        title: 'Keep practicing!',
-        description: `You need ${drillConfig.minScore} correct answers to pass. You got ${result.correctAnswers}/${result.totalQuestions}. Try again!`,
-        variant: 'destructive',
-      });
+      toast.error(
+        `Keep practicing! You need ${drillConfig.minScore} correct answers to pass. You got ${result.correctAnswers}/${result.totalQuestions}. Try again!`
+      );
     }
   };
 

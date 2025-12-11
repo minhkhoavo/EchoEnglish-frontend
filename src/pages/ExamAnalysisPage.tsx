@@ -35,7 +35,7 @@ import {
   UnlockAnalysisDialog,
 } from '@/features/lr-analyze/components';
 import { AffordabilityDialog } from '@/features/lr-analyze/components/AffordabilityDialog';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import { useLazyCheckCanAffordFeatureQuery } from '@/features/auth/services/creditsApi';
 import { FeaturePricingType } from '@/features/auth/services/creditsApi';
@@ -67,22 +67,17 @@ export function ExamAnalysisPage() {
     try {
       const result = await requestAnalysis(attemptId || '').unwrap();
       setShowAffordabilityDialog(false);
-      toast({
-        title: 'Analysis Complete!',
-        description: `Deep analysis unlocked. ${result.creditsUsed} credits used.`,
-        variant: 'default',
-      });
+      toast.success(
+        `Analysis Complete! Deep analysis unlocked. ${result.creditsUsed} credits used.`
+      );
       refetch();
     } catch (error: unknown) {
       console.error('Failed to request analysis:', error);
-      toast({
-        title: 'Analysis Failed',
-        description:
-          error && typeof error === 'object' && 'data' in error
-            ? JSON.stringify(error.data)
-            : 'Unable to process your analysis request. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error(
+        error && typeof error === 'object' && 'data' in error
+          ? `Analysis Failed: ${JSON.stringify(error.data)}`
+          : 'Analysis Failed: Unable to process your analysis request. Please try again.'
+      );
     }
   };
 

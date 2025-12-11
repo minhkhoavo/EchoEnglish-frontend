@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import type { LearningResource } from '../types/analysis';
 import { ResourceContentModal } from './ResourceContentModal';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 interface LearningResourceCardProps {
@@ -124,11 +124,9 @@ export function LearningResourceCard({
       return;
     }
 
-    toast({
-      title: 'Resource not available',
-      description: 'This resource type is not yet supported.',
-      variant: 'destructive',
-    });
+    toast.error(
+      'Resource not available: This resource type is not yet supported.'
+    );
   };
 
   const handleComplete = () => {

@@ -24,7 +24,7 @@ import {
   type SubmitTestResultRequest,
   type TestResultDetail,
 } from '@/features/tests/services/testResultAPI';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -141,11 +141,7 @@ const TestExam = () => {
         const result = await submitTestResult(submitData).unwrap();
 
         // Show success notification
-        toast({
-          title: 'Test Submitted Successfully!',
-          description: result.message,
-          variant: 'default',
-        });
+        toast.success(`Test Submitted Successfully! ${result.message}`);
 
         console.log('📤 Calling endTest to delete IndexedDB record');
         await endTest();
@@ -153,20 +149,13 @@ const TestExam = () => {
         navigate('/');
       } catch (error) {
         console.error('❌ Failed to submit test:', error);
-        toast({
-          title: 'Submission Failed',
-          description:
-            'There was an error submitting your test. Please try again.',
-          variant: 'destructive',
-        });
+        toast.error(
+          'Submission Failed: There was an error submitting your test. Please try again.'
+        );
       }
     } else {
       console.log('❌ No current session to submit');
-      toast({
-        title: 'No Test Session',
-        description: 'No active test session found to submit.',
-        variant: 'destructive',
-      });
+      toast.error('No Test Session: No active test session found to submit.');
     }
   };
 

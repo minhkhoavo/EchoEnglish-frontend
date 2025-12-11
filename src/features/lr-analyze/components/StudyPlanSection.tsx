@@ -31,7 +31,7 @@ import {
 import { ResourceContentModal } from './ResourceContentModal';
 import { DrillContentModal } from './DrillContentModal';
 import { LearningResourceCard } from '@/features/lr-analyze/components/LearningResourceCard';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface StudyPlanSectionProps {
   studyPlan: StudyPlanItem[];
@@ -71,10 +71,7 @@ export function StudyPlanSection({ studyPlan }: StudyPlanSectionProps) {
 
   // Handle start drill
   const handleStartDrill = (drillId: string) => {
-    toast({
-      title: 'Starting drill...',
-      description: `Drill ID: ${drillId}`,
-    });
+    toast(`Starting drill... Drill ID: ${drillId}`);
   };
 
   const getPriorityConfig = (priority: number) => {
