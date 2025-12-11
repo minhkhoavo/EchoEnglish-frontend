@@ -10,12 +10,7 @@ export function useGuestGuard() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const isAdmin = user.roles?.some((role: string | { name: string }) => {
-        if (typeof role === 'string') {
-          return role === 'ADMIN';
-        }
-        return role.name === 'ADMIN';
-      });
+      const isAdmin = user.role === 'ADMIN';
       navigate(isAdmin ? '/admin/dashboard' : '/dashboard');
     }
   }, [isAuthenticated, user, navigate]);

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import CustomPagination from '@/components/CustomPagination';
 import {
   UserFilterCard,
@@ -14,10 +15,8 @@ import {
   calculateUserStats,
 } from '@/features/admin-user';
 import type { User, UserFilters } from '@/features/admin-user';
-import { useToast } from '@/hooks/use-toast';
 
 export const AdminUserPage = () => {
-  const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<UserFilters>({
     limit: 10,
@@ -56,49 +55,34 @@ export const AdminUserPage = () => {
   const handleSaveUser = async (userId: string, data: Partial<User>) => {
     try {
       await updateUser({ id: userId, data }).unwrap();
-      toast({
-        title: 'Success',
-        description: 'User updated successfully',
-      });
+      toast.success('User updated successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update user',
-        variant: 'destructive',
-      });
+      toast.error('Failed to update user');
       throw error;
     }
   };
 
   const handleDelete = async (user: User) => {
     try {
-      await deleteUser({ id: user._id, hard: false }).unwrap();
-      toast({
-        title: 'Success',
-        description: 'User deleted successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete user',
-        variant: 'destructive',
-      });
+      const result = await deleteUser({ id: user._id }).unwrap();
+      toast.success(result.message || 'User deleted successfully');
+    } catch (error: unknown) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to delete user'
+      );
     }
   };
 
   const handleRestore = async (user: User) => {
     try {
-      await restoreUser(user._id).unwrap();
-      toast({
-        title: 'Success',
-        description: 'User restored successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to restore user',
-        variant: 'destructive',
-      });
+      const result = await restoreUser(user._id).unwrap();
+      toast.success(result.message || 'User restored successfully');
+    } catch (error: unknown) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to restore user'
+      );
     }
   };
 

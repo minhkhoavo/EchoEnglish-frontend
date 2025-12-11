@@ -15,7 +15,7 @@ import { BookOpen, Edit2, Trash2, Volume2, Plus } from 'lucide-react';
 import type { Flashcard } from '@/features/flashcard/types/flashcard.types';
 import CreateEditFlashcardDialog from './CreateEditFlashcardDialog';
 import { useDeleteFlashcardMutation } from '@/features/flashcard/services/flashcardApi';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 
 interface VocabularySheetProps {
@@ -32,31 +32,22 @@ const VocabularySheet: React.FC<VocabularySheetProps> = ({
   onDelete,
 }) => {
   const { speak } = useSpeechSynthesis();
-  const { toast } = useToast();
   const [deleteFlashcard] = useDeleteFlashcardMutation();
 
   const handleDelete = async (flashcard: Flashcard) => {
     if (!flashcard._id) {
-      toast({
-        title: 'Error',
-        description: 'Cannot delete flashcard: missing ID.',
-        variant: 'destructive',
-      });
+      toast.error('Cannot delete flashcard: missing ID.');
       return;
     }
 
     try {
       await deleteFlashcard(flashcard._id).unwrap();
-      toast({ title: 'Deleted', description: 'Flashcard deleted.' });
+      toast.success('Flashcard deleted.');
       // Let parent refetch if provided (keeps behavior consistent)
       if (onRefetch) onRefetch();
     } catch (error) {
       console.error('Failed to delete flashcard', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete flashcard. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to delete flashcard. Please try again.');
     }
   };
 

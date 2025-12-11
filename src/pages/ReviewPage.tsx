@@ -20,7 +20,7 @@ import {
   Zap,
   HelpCircle,
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import {
   useGetDueFlashcardsQuery,
@@ -49,7 +49,6 @@ export default function ReviewPage() {
   const [showInstructions, setShowInstructions] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [reviewLimit, setReviewLimit] = useState(20);
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   // RTK Query hooks
@@ -92,19 +91,13 @@ export default function ReviewPage() {
         setIsFlipped(false);
       }
 
-      toast({
-        title: result === 'remember' ? '✅ Great job!' : '📝 Will review soon',
-        description:
-          result === 'remember'
-            ? 'This card will appear in a few days'
-            : 'This card will appear again sooner',
-      });
+      toast.success(
+        result === 'remember'
+          ? 'Great job! This card will appear in a few days'
+          : 'Will review soon. This card will appear again sooner'
+      );
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to save review result',
-      });
+      toast.error('Failed to save review result');
     }
   };
 

@@ -36,7 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   useGetAdminTestByIdQuery,
   useUpdateTestMutation,
@@ -619,7 +619,6 @@ const PartEditor = ({
 export const AdminTestEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('info');
   const [hasChanges, setHasChanges] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
@@ -665,18 +664,11 @@ export const AdminTestEdit = () => {
         },
       }).unwrap();
 
-      toast({
-        title: 'Success',
-        description: 'Test saved successfully',
-      });
+      toast.success('Test saved successfully');
 
       setHasChanges(false);
     } catch (error) {
-      toast({
-        title: 'Lỗi',
-        description: 'Failed to save test',
-        variant: 'destructive',
-      });
+      toast.error('Failed to save test');
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import {
   Card,
@@ -10,6 +10,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp';
 import { toast } from 'sonner';
 import { useAppDispatch } from '@/core/store/store';
 import { useResetPasswordMutation } from '../services/authApi';
@@ -21,6 +26,7 @@ const ResetPasswordForm: React.FC = () => {
   const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email') || '';
+  const otpFromUrl = searchParams.get('otp') || '';
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -31,6 +37,13 @@ const ResetPasswordForm: React.FC = () => {
     newPassword: '',
     confirmPassword: '',
   });
+
+  // Auto-fill OTP from URL if present
+  useEffect(() => {
+    if (otpFromUrl && /^\d{6}$/.test(otpFromUrl)) {
+      setFormData((prev) => ({ ...prev, otp: otpFromUrl }));
+    }
+  }, [otpFromUrl]);
 
   // Form errors
   const [errors, setErrors] = useState({
@@ -82,17 +95,22 @@ const ResetPasswordForm: React.FC = () => {
     return isValid;
   };
 
-  // Handle input change
+  // Handle OTP input change
+  const handleOtpChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, otp: value }));
+    // Clear OTP error when user starts typing
+    if (errors.otp) {
+      setErrors((prev) => ({ ...prev, otp: '' }));
+    }
+  };
+
+  // Handle input change for other fields
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    // Special handling for OTP field
-    const newValue =
-      name === 'otp' ? value.replace(/\D/g, '').slice(0, 6) : value;
-
     setFormData((prev) => ({
       ...prev,
-      [name]: newValue,
+      [name]: value,
     }));
 
     // Clear error when user starts typing
@@ -167,17 +185,21 @@ const ResetPasswordForm: React.FC = () => {
             <Label htmlFor="otp" className="text-gray-700">
               OTP Code (6 digits)
             </Label>
-            <div className="mt-1">
-              <Input
-                id="otp"
-                name="otp"
-                type="text"
-                value={formData.otp}
-                onChange={handleInputChange}
-                placeholder="123456"
-                className="h-12 text-center text-lg font-mono tracking-widest border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+            <div className="mt-4 flex justify-center">
+              <InputOTP
                 maxLength={6}
-              />
+                value={formData.otp}
+                onChange={handleOtpChange}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
             </div>
             {errors.otp && (
               <p className="text-sm font-medium text-red-500 mt-1">

@@ -15,7 +15,7 @@ import {
   useUpdateCategoryMutation,
 } from '../services/flashcardApi';
 import type { Category } from '../types/flashcard.types';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface CreateEditCategoryDialogProps {
   category?: Category;
@@ -83,7 +83,6 @@ const CreateEditCategoryDialog: React.FC<CreateEditCategoryDialogProps> = ({
     useCreateCategoryMutation();
   const [updateCategory, { isLoading: isUpdating }] =
     useUpdateCategoryMutation();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (isEdit && category) {
@@ -107,11 +106,7 @@ const CreateEditCategoryDialog: React.FC<CreateEditCategoryDialogProps> = ({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Category name is required',
-        variant: 'destructive',
-      });
+      toast.error('Category name is required');
       return;
     }
 
@@ -124,10 +119,7 @@ const CreateEditCategoryDialog: React.FC<CreateEditCategoryDialogProps> = ({
           color: formData.color,
           icon: formData.icon,
         }).unwrap();
-        toast({
-          title: 'Success',
-          description: 'Category updated successfully',
-        });
+        toast.success('Category updated successfully');
       } else {
         await createCategory({
           name: formData.name,
@@ -135,20 +127,13 @@ const CreateEditCategoryDialog: React.FC<CreateEditCategoryDialogProps> = ({
           color: formData.color,
           icon: formData.icon,
         }).unwrap();
-        toast({
-          title: 'Success',
-          description: 'Category created successfully',
-        });
+        toast.success('Category created successfully');
       }
 
       setOpen(false);
       onSuccess?.();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: `Failed to ${isEdit ? 'update' : 'create'} category`,
-        variant: 'destructive',
-      });
+      toast.error(`Failed to ${isEdit ? 'update' : 'create'} category`);
     }
   };
 

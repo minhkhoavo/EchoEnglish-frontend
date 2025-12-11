@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { AdminResourceList } from './AdminResourceList';
 import { ArticleEditor } from './ArticleEditor';
@@ -24,7 +24,6 @@ export const AdminResourcePanel = ({
   isLoading,
   onRefetch,
 }: AdminResourcePanelProps) => {
-  const { toast } = useToast();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingResource, setEditingResource] = useState<
     Resource | undefined
@@ -39,64 +38,52 @@ export const AdminResourcePanel = ({
 
   const handleApproveResource = async (resource: Resource) => {
     try {
-      await updateResource({
+      const result = await updateResource({
         id: resource._id,
         data: { suitableForLearners: true },
       }).unwrap();
 
-      toast({
-        title: 'Success',
-        description: 'Resource approved successfully',
-      });
+      toast.success(result.message || 'Resource approved successfully');
 
       onRefetch();
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to approve resource',
-        variant: 'destructive',
-      });
+    } catch (error: unknown) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to approve resource'
+      );
     }
   };
 
   const handleRejectResource = async (resource: Resource) => {
     try {
-      await updateResource({
+      const result = await updateResource({
         id: resource._id,
         data: { suitableForLearners: false },
       }).unwrap();
 
-      toast({
-        title: 'Success',
-        description: 'Resource rejected successfully',
-      });
+      toast.success(result.message || 'Resource rejected successfully');
 
       onRefetch();
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to reject resource',
-        variant: 'destructive',
-      });
+    } catch (error: unknown) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to reject resource'
+      );
     }
   };
 
   const handleDeleteResource = async (resource: Resource) => {
     try {
-      await deleteResource(resource._id).unwrap();
+      const result = await deleteResource(resource._id).unwrap();
 
-      toast({
-        title: 'Success',
-        description: 'Resource deleted successfully',
-      });
+      toast.success(result.message || 'Resource deleted successfully');
 
       onRefetch();
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete resource',
-        variant: 'destructive',
-      });
+    } catch (error: unknown) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to delete resource'
+      );
     }
   };
 
@@ -108,16 +95,14 @@ export const AdminResourcePanel = ({
   const handleReindexKnowledge = async () => {
     try {
       const result = await reindexKnowledge().unwrap();
-      toast({
-        title: 'Reindex Complete',
-        description: `Indexed ${result.data.success}/${result.data.total} articles. Failed: ${result.data.failed}`,
-      });
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to reindex knowledge base',
-        variant: 'destructive',
-      });
+      toast.success(
+        `Đã reindex ${result.data.success}/${result.data.total} bài viết. Thất bại: ${result.data.failed}`
+      );
+    } catch (error: unknown) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to reindex knowledge base'
+      );
     }
   };
 

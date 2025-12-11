@@ -21,7 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   useCreateArticleMutation,
   useUpdateArticleMutation,
@@ -88,7 +88,6 @@ export const ArticleEditor = ({
   onBack,
   onSuccess,
 }: ArticleEditorProps) => {
-  const { toast } = useToast();
   const [createArticle, { isLoading: isCreating }] = useCreateArticleMutation();
   const [updateArticle, { isLoading: isUpdating }] = useUpdateArticleMutation();
   const [uploadFile, { isLoading: isUploading }] = useUploadAdminFileMutation();
@@ -142,11 +141,7 @@ export const ArticleEditor = ({
       if (!file) return;
 
       if (!file.type.startsWith('image/')) {
-        toast({
-          title: 'Error',
-          description: 'Please select an image file',
-          variant: 'destructive',
-        });
+        toast.error('Please select an image file');
         return;
       }
 
@@ -156,16 +151,12 @@ export const ArticleEditor = ({
           folder: 'articles/thumbnails',
         }).unwrap();
         setThumbnail(result.data.url);
-        toast({ title: 'Success', description: 'Thumbnail uploaded' });
+        toast.success('Thumbnail uploaded');
       } catch {
-        toast({
-          title: 'Error',
-          description: 'Failed to upload thumbnail',
-          variant: 'destructive',
-        });
+        toast.error('Failed to upload thumbnail');
       }
     },
-    [uploadFile, toast]
+    [uploadFile]
   );
 
   // Handle attachment upload
@@ -181,11 +172,7 @@ export const ArticleEditor = ({
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: 'Error',
-          description: 'Only PDF, DOCX, and TXT files are allowed',
-          variant: 'destructive',
-        });
+        toast.error('Only PDF, DOCX, and TXT files are allowed');
         return;
       }
 
@@ -196,16 +183,12 @@ export const ArticleEditor = ({
         }).unwrap();
         setAttachmentUrl(result.data.url);
         setAttachmentName(file.name);
-        toast({ title: 'Success', description: 'Attachment uploaded' });
+        toast.success('Attachment uploaded');
       } catch {
-        toast({
-          title: 'Error',
-          description: 'Failed to upload attachment',
-          variant: 'destructive',
-        });
+        toast.error('Failed to upload attachment');
       }
     },
-    [uploadFile, toast]
+    [uploadFile]
   );
 
   // Add topic
@@ -233,21 +216,13 @@ export const ArticleEditor = ({
   // Submit form
   const handleSubmit = async () => {
     if (!title.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Title is required',
-        variant: 'destructive',
-      });
+      toast.error('Title is required.');
       return;
     }
 
     const content = editor?.getHTML() || '';
     if (!content.trim() || content === '<p></p>') {
-      toast({
-        title: 'Error',
-        description: 'Content is required',
-        variant: 'destructive',
-      });
+      toast.error('Content is required.');
       return;
     }
 
@@ -269,24 +244,14 @@ export const ArticleEditor = ({
     try {
       if (isEditing) {
         await updateArticle({ id: article._id, data }).unwrap();
-        toast({
-          title: 'Success',
-          description: 'Article updated successfully',
-        });
+        toast.success('Article updated successfully');
       } else {
         await createArticle(data).unwrap();
-        toast({
-          title: 'Success',
-          description: 'Article created successfully',
-        });
+        toast.success('Article created successfully');
       }
       onSuccess();
     } catch {
-      toast({
-        title: 'Error',
-        description: `Failed to ${isEditing ? 'update' : 'create'} article`,
-        variant: 'destructive',
-      });
+      toast.error(`Failed to ${isEditing ? 'update' : 'create'} article`);
     }
   };
 

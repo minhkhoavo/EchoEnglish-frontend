@@ -32,6 +32,11 @@ const GENDER_OPTIONS = [
   { value: 'Other', label: 'Other' },
 ];
 
+const ROLE_OPTIONS = [
+  { value: 'USER', label: 'User' },
+  { value: 'ADMIN', label: 'Admin' },
+];
+
 export const EditUserDialog = ({
   user,
   open,
@@ -44,6 +49,7 @@ export const EditUserDialog = ({
     phoneNumber: '',
     address: '',
     gender: '',
+    role: 'USER' as 'ADMIN' | 'USER',
     credits: 0,
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -56,6 +62,7 @@ export const EditUserDialog = ({
         phoneNumber: user.phoneNumber ?? '',
         address: user.address ?? '',
         gender: user.gender ?? '',
+        role: user.role ?? 'USER',
         credits: user.credits ?? 0,
       });
     }
@@ -123,7 +130,8 @@ export const EditUserDialog = ({
               <div className="grid gap-2">
                 <Label htmlFor="gender">Gender</Label>
                 <Select
-                  value={formData.gender}
+                  key={`gender-${user?._id}-${formData.gender}`}
+                  value={formData.gender || undefined}
                   onValueChange={(v) => handleChange('gender', v)}
                 >
                   <SelectTrigger>
@@ -138,6 +146,28 @@ export const EditUserDialog = ({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="role">Role</Label>
+              <Select
+                key={`role-${user?._id}-${formData.role}`}
+                value={formData.role}
+                onValueChange={(v) =>
+                  handleChange('role', v as 'ADMIN' | 'USER')
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid gap-2">

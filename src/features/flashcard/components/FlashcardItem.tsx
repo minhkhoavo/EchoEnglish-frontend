@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Brain, Eye, EyeOff, Edit, Trash2, Volume2 } from 'lucide-react';
 import { useGetCategoriesQuery } from '../services/flashcardApi';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 
 interface FlashcardItemProps {
@@ -56,18 +56,13 @@ const FlashcardItem: React.FC<FlashcardItemProps> = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const { data: categories = [], error: categoriesError } =
     useGetCategoriesQuery();
-  const { toast } = useToast();
   const { speak } = useSpeechSynthesis();
 
   useEffect(() => {
     if (categoriesError) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load categories.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to load categories.');
     }
-  }, [categoriesError, toast]);
+  }, [categoriesError]);
 
   const getCategoryName = (categoryId: string) => {
     const category = categories.find((cat) => cat._id === categoryId);

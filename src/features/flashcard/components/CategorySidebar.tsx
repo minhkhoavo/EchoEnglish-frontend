@@ -20,7 +20,7 @@ import {
   Edit2,
   Trash2,
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 
 interface CategorySidebarProps {
@@ -39,7 +39,6 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
   const [showCategoryOptions, setShowCategoryOptions] = useState<string | null>(
     null
   );
-  const { toast } = useToast();
 
   // Check if error is server disconnection
   const isServerDisconnected =
@@ -50,19 +49,11 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
   // Show error toast if API fails, but don't block UI
   useEffect(() => {
     if (isServerDisconnected) {
-      toast({
-        title: 'Server Unavailable',
-        description: 'Cannot load categories from server.',
-        variant: 'destructive',
-      });
+      toast.error('Server Unavailable. Cannot load categories from server.');
     } else if (error) {
-      toast({
-        title: 'Categories Error',
-        description: 'Unable to load categories.',
-        variant: 'destructive',
-      });
+      toast.error('Unable to load categories.');
     }
-  }, [error, isServerDisconnected, toast]);
+  }, [error, isServerDisconnected]);
 
   const handleCategorySelect = (categoryName: string | null) => {
     onCategorySelect(categoryName);
@@ -104,19 +95,12 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
   const handleDeleteCategory = async (categoryId: string) => {
     try {
       await deleteCategory(categoryId).unwrap();
-      toast({
-        title: 'Success',
-        description: 'Category deleted successfully',
-      });
+      toast.success('Category deleted successfully');
       if (selectedCategory === categoryId) {
         onCategorySelect(null);
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete category',
-        variant: 'destructive',
-      });
+      toast.error('Failed to delete category');
     }
   };
 
@@ -276,7 +260,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({
                         onClick={() =>
                           category._id && handleCategorySelect(category._id)
                         }
-                        className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-2.5 rounded-lg text-left transition-colors duration-200 ${
+                        className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between pr-10'} p-2.5 rounded-lg text-left transition-colors duration-200 ${
                           selectedCategory === category._id
                             ? 'bg-blue-50 text-blue-700 border border-blue-200'
                             : 'hover:bg-gray-50 text-gray-700'

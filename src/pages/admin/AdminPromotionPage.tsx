@@ -68,27 +68,36 @@ export const AdminPromotionPage = () => {
       };
 
       if (editingPromo) {
-        await updatePromo({ id: editingPromo._id!, data: payload }).unwrap();
-        toast.success('Promotion updated successfully');
+        const result = await updatePromo({
+          id: editingPromo._id!,
+          data: payload,
+        }).unwrap();
+        toast.success(result.message || 'Promotion updated successfully');
       } else {
-        await createPromo(payload).unwrap();
-        toast.success('Promotion created successfully');
+        const result = await createPromo(payload).unwrap();
+        toast.success(result.message || 'Promotion created successfully');
       }
 
       setOpenDialog(false);
       setEditingPromo(null);
-    } catch (error) {
-      toast.error('Failed to save promotion');
+    } catch (error: unknown) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to save promotion'
+      );
       console.error(error);
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
-      await deletePromo(id).unwrap();
-      toast.success('Promotion deleted successfully');
-    } catch (error) {
-      toast.error('Failed to delete promotion');
+      const result = await deletePromo(id).unwrap();
+      toast.success(result.message || 'Promotion deleted successfully');
+    } catch (error: unknown) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to delete promotion'
+      );
       console.error(error);
     }
   };

@@ -108,17 +108,9 @@ export const UserTable = ({
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex flex-wrap gap-1">
-                    {user.roles?.map((role) => (
-                      <Badge
-                        key={typeof role === 'object' ? role._id : role}
-                        variant="secondary"
-                        className="text-xs"
-                      >
-                        {typeof role === 'object' ? role.name : role}
-                      </Badge>
-                    ))}
-                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {user.role}
+                  </Badge>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-1 text-sm font-medium text-yellow-600">

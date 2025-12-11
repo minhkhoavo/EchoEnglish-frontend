@@ -2,7 +2,6 @@ export { UserFilterCard } from './components/UserFilterCard';
 export { UserTable } from './components/UserTable';
 export { UserStatsOverview } from './components/UserStatsOverview';
 export { EditUserDialog } from './components/EditUserDialog';
-export { AdminUserPage } from './pages/AdminUserPage';
 export {
   useGetUsersQuery,
   useGetUserByIdQuery,

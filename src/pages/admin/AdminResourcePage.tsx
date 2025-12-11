@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import CustomPagination from '@/components/CustomPagination';
 import { useSearchResourcesQuery } from '@/features/resource/services/resourceApi';
 import {
@@ -25,7 +25,6 @@ import type {
 } from '@/features/admin-resource';
 
 const AdminResourcePage = () => {
-  const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<ResourceFilters>({
     limit: 5,
@@ -69,46 +68,34 @@ const AdminResourcePage = () => {
 
   const handleTriggerRssCrawl = async () => {
     try {
-      await triggerRssCrawl().unwrap();
-      toast({
-        title: 'Success',
-        description: 'RSS crawl triggered successfully',
-      });
+      const result = await triggerRssCrawl().unwrap();
+      toast.success(result.message || 'RSS crawl triggered successfully');
       refetch();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to trigger RSS crawl',
-        variant: 'destructive',
-      });
+    } catch (error: unknown) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to trigger RSS crawl'
+      );
     }
   };
 
   const handleSaveVideo = async () => {
     if (!videoUrl.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a video URL',
-        variant: 'destructive',
-      });
+      toast.error('Please enter a video URL');
       return;
     }
 
     try {
-      await saveTranscript({ url: videoUrl }).unwrap();
-      toast({
-        title: 'Success',
-        description: 'Video saved successfully',
-      });
+      const result = await saveTranscript({ url: videoUrl }).unwrap();
+      toast.success(result.message || 'Video saved successfully');
       setShowAddVideo(false);
       setVideoUrl('');
       refetch();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to save video',
-        variant: 'destructive',
-      });
+    } catch (error: unknown) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to save video'
+      );
     }
   };
 

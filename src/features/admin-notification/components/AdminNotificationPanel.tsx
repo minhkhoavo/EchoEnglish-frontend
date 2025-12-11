@@ -124,10 +124,11 @@ export const AdminNotificationPanel = ({
         userIds: formData.userIds,
       };
 
-      await sendNotification(payload).unwrap();
+      const result = await sendNotification(payload).unwrap();
 
       toast.success(
-        `Notification sent to ${formData.userIds.length} users successfully!`
+        result.message ||
+          `Notification sent to ${formData.userIds.length} users successfully!`
       );
 
       setFormData({
@@ -140,8 +141,11 @@ export const AdminNotificationPanel = ({
       setUserSearch('');
 
       onSendNotification?.(payload);
-    } catch (error) {
-      toast.error('Error occurred while sending notification');
+    } catch (error: unknown) {
+      toast.error(
+        (error as { data?: { message?: string } })?.data?.message ||
+          'Error occurred while sending notification'
+      );
       console.error('Error sending notification:', error);
     }
   };

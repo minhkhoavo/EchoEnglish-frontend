@@ -9,14 +9,7 @@ export interface User {
   phoneNumber?: string;
   address?: string;
   image?: string;
-  roles:
-    | string[]
-    | {
-        _id: string;
-        name: string;
-        description: string;
-        permissions: { _id: string; name: string; description: string }[];
-      }[];
+  role: 'ADMIN' | 'USER';
   isDeleted: boolean;
   createdAt?: string;
   updateAt?: string;

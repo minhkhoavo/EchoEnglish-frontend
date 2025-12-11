@@ -47,7 +47,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   useGetAdminTestsQuery,
   useCreateTestMutation,
@@ -199,7 +199,6 @@ const TestCard = ({
 };
 
 export const AdminTestList = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -237,11 +236,7 @@ export const AdminTestList = () => {
 
   const handleCreate = async () => {
     if (!newTestTitle.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Please enter test name',
-        variant: 'destructive',
-      });
+      toast.error('Please enter test name');
       return;
     }
 
@@ -251,10 +246,7 @@ export const AdminTestList = () => {
         duration: newTestDuration,
       }).unwrap();
 
-      toast({
-        title: 'Success',
-        description: 'Test created successfully',
-      });
+      toast.success('Test created successfully');
 
       setIsCreateDialogOpen(false);
       setNewTestTitle('');
@@ -263,11 +255,7 @@ export const AdminTestList = () => {
       // Navigate to edit page to add questions
       navigate(`/admin/tests/${newTest._id}/edit`);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create test',
-        variant: 'destructive',
-      });
+      toast.error('Failed to create test');
     }
   };
 
@@ -277,20 +265,13 @@ export const AdminTestList = () => {
     try {
       await deleteTest(selectedTest._id).unwrap();
 
-      toast({
-        title: 'Success',
-        description: 'Test deleted successfully',
-      });
+      toast.success('Test deleted successfully');
 
       setIsDeleteDialogOpen(false);
       setSelectedTest(null);
       refetch();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete test',
-        variant: 'destructive',
-      });
+      toast.error('Failed to delete test');
     }
   };
 
@@ -303,21 +284,14 @@ export const AdminTestList = () => {
         file: importFile,
       }).unwrap();
 
-      toast({
-        title: 'Success',
-        description: 'Questions imported successfully',
-      });
+      toast.success('Questions imported successfully');
 
       setIsImportDialogOpen(false);
       setSelectedTest(null);
       setImportFile(null);
       refetch();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to import Excel file',
-        variant: 'destructive',
-      });
+      toast.error('Failed to import Excel file');
     }
   };
 
@@ -339,16 +313,9 @@ export const AdminTestList = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      toast({
-        title: 'Success',
-        description: 'Excel file downloaded successfully',
-      });
+      toast.success('Excel file downloaded successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to export Excel file',
-        variant: 'destructive',
-      });
+      toast.error('Failed to export Excel file');
     }
   };
 
@@ -364,19 +331,12 @@ export const AdminTestList = () => {
       link.setAttribute('download', 'toeic_template.xlsx');
       document.body.appendChild(link);
       link.click();
-      link.remove();
+      document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast({
-        title: 'Success',
-        description: 'Template downloaded successfully',
-      });
+      toast.success('Template downloaded successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to download template',
-        variant: 'destructive',
-      });
+      toast.error('Failed to download template');
     }
   };
 

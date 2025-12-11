@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Languages, Save, Loader2 } from 'lucide-react';
 import { useTranslateTextMutation } from '@/features/flashcard/services/flashcardApi';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface SelectionMenuProps {
   selectedText: string;
@@ -22,7 +22,6 @@ export default function SelectionMenu({
   const [translation, setTranslation] = useState('');
   const [showTranslation, setShowTranslation] = useState(false);
   const [translateText, { isLoading }] = useTranslateTextMutation();
-  const { toast } = useToast();
 
   useEffect(() => {
     // Adjust menu position to stay within viewport
@@ -65,11 +64,7 @@ export default function SelectionMenu({
       setShowTranslation(true);
     } catch (error) {
       console.error('Translation failed:', error);
-      toast({
-        title: 'Translation Error',
-        description: 'Failed to translate text. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to translate text. Please try again.');
     }
   };
 

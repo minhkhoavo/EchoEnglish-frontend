@@ -15,7 +15,7 @@ import {
   useBulkUpdateFlashcardsMutation,
   useBulkDeleteFlashcardsMutation,
 } from '../services/flashcardApi';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -69,7 +69,6 @@ const FlashcardBoard: React.FC = () => {
   const [bulkUpdateFlashcards] = useBulkUpdateFlashcardsMutation();
   const [bulkDeleteFlashcards] = useBulkDeleteFlashcardsMutation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const [showFilters, setShowFilters] = useState(false);
   const [editingFlashcard, setEditingFlashcard] = useState<Flashcard | null>(
@@ -177,20 +176,13 @@ const FlashcardBoard: React.FC = () => {
 
   useEffect(() => {
     if (isServerDisconnected) {
-      toast({
-        title: 'Server Unavailable',
-        description:
-          'Cannot connect to the server. Please check your connection.',
-        variant: 'destructive',
-      });
+      toast.error(
+        'Server Unavailable: Cannot connect to the server. Please check your connection.'
+      );
     } else if (error) {
-      toast({
-        title: 'Error',
-        description: 'An error occurred while loading data.',
-        variant: 'destructive',
-      });
+      toast.error('Error: An error occurred while loading data.');
     }
-  }, [error, isServerDisconnected, toast]);
+  }, [error, isServerDisconnected]);
 
   const handleSearch = (value: string) => {
     dispatch(setSearchQuery(value));
@@ -230,16 +222,9 @@ const FlashcardBoard: React.FC = () => {
   const handleDeleteFlashcard = async (id: string) => {
     try {
       await deleteFlashcard(id).unwrap();
-      toast({
-        title: 'Success',
-        description: 'Flashcard deleted successfully.',
-      });
+      toast.success('Flashcard deleted successfully');
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete flashcard.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to delete flashcard');
     }
   };
 
@@ -276,20 +261,15 @@ const FlashcardBoard: React.FC = () => {
 
       await bulkUpdateFlashcards({ updates }).unwrap();
 
-      toast({
-        title: 'Success',
-        description: `Moved ${selectedCards.size} flashcard${selectedCards.size > 1 ? 's' : ''} successfully.`,
-      });
+      toast.success(
+        `Moved ${selectedCards.size} flashcard${selectedCards.size > 1 ? 's' : ''} successfully.`
+      );
 
       setSelectedCards(new Set());
       setSelectionMode(false);
       setBulkMoveOpen(false);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to move flashcards.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to move flashcards.');
     }
   };
 
@@ -299,20 +279,15 @@ const FlashcardBoard: React.FC = () => {
         flashcardIds: Array.from(selectedCards),
       }).unwrap();
 
-      toast({
-        title: 'Success',
-        description: `Deleted ${result.deletedCount} flashcard${result.deletedCount > 1 ? 's' : ''} successfully.`,
-      });
+      toast.success(
+        `Deleted ${result.deletedCount} flashcard${result.deletedCount > 1 ? 's' : ''} successfully.`
+      );
 
       setSelectedCards(new Set());
       setSelectionMode(false);
       setBulkDeleteOpen(false);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete flashcards.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to delete flashcards.');
     }
   };
 

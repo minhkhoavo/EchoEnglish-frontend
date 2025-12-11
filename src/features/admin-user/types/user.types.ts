@@ -6,12 +6,6 @@ export const Gender = {
 
 export type Gender = (typeof Gender)[keyof typeof Gender];
 
-export interface Role {
-  _id: string;
-  name: string;
-  permissions: string[];
-}
-
 export interface User {
   _id: string;
   fullName: string;
@@ -24,7 +18,7 @@ export interface User {
   image?: string;
   credits: number;
   isDeleted: boolean;
-  roles: Role[];
+  role: 'ADMIN' | 'USER';
   createdAt: string;
   updatedAt?: string;
 }

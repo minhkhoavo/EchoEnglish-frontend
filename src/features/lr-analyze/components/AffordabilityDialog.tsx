@@ -7,7 +7,7 @@ import type {
   FeaturePricingType,
 } from '@/features/auth/services/creditsApi';
 import { useLazyCheckCanAffordFeatureQuery } from '@/features/auth/services/creditsApi';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface AffordabilityDialogProps {
   isOpen: boolean;
@@ -35,7 +35,6 @@ export const AffordabilityDialog: React.FC<AffordabilityDialogProps> = ({
   description,
   children,
 }) => {
-  const { toast } = useToast();
   const [affordabilityData, setAffordabilityData] =
     useState<CheckAffordFeatureResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,11 +57,7 @@ export const AffordabilityDialog: React.FC<AffordabilityDialogProps> = ({
           '[AffordabilityDialog] Failed to check affordability:',
           error
         );
-        toast({
-          title: 'Error',
-          description: 'Failed to check your credits. Please try again.',
-          variant: 'destructive',
-        });
+        toast.error('Failed to check your credits. Please try again.');
         // Delay close to let user see the error
         setTimeout(() => {
           onClose();

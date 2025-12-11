@@ -12,7 +12,7 @@ import {
   FileText,
   Download,
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import {
   useGetTranscriptMutation,
   useGetResourceByIdQuery,
@@ -39,8 +39,6 @@ export default function ResourceDetailPage() {
   const [selectionPosition, setSelectionPosition] = useState({ x: 0, y: 0 });
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
   const [selectedTranslation, setSelectedTranslation] = useState<string>('');
-
-  const { toast } = useToast();
 
   // Get resource from location state OR fetch by ID
   const resourceFromState = location.state?.resource;
@@ -87,11 +85,7 @@ export default function ResourceDetailPage() {
         }
       } catch (error) {
         console.error('Error fetching transcript:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load transcript. Please try again.',
-          variant: 'destructive',
-        });
+        toast.error('Failed to load transcript. Please try again.');
       }
     };
 
