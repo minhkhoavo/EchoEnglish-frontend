@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -23,10 +24,19 @@ import {
   useUpdateProfileMutation,
 } from '../services/authApi';
 import { setUser, setLoading, setError } from '../slices/authSlice';
-import { User, Mail, Calendar, Phone, MapPin, Camera } from 'lucide-react';
+import {
+  User,
+  Mail,
+  Calendar,
+  Phone,
+  MapPin,
+  Camera,
+  ArrowLeft,
+} from 'lucide-react';
 import { UserAvatar } from '@/components/UserAvatar';
 
 const ProfileForm: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user, isLoading, error } = useAppSelector((state) => state.auth);
   const { data: profileData, refetch } = useGetProfileQuery();
@@ -190,13 +200,24 @@ const ProfileForm: React.FC = () => {
 
   return (
     <Card className="w-full shadow-xl border-0 max-h-[90vh] overflow-y-auto scrollbar-hide">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-gray-900">
-          Personal Information
-        </CardTitle>
-        <CardDescription className="text-gray-600">
-          Manage your profile information and preferences
-        </CardDescription>
+      <CardHeader className="relative">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="absolute left-2 top-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+        <div className="text-center">
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            Personal Information
+          </CardTitle>
+          <CardDescription className="text-gray-600">
+            Manage your profile information and preferences
+          </CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         {/* Profile Avatar */}
