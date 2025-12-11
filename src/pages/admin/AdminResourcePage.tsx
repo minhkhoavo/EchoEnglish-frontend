@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Youtube, Rss, ChevronDown } from 'lucide-react';
@@ -9,27 +9,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import CustomPagination from '@/components/CustomPagination';
-import { useSearchResourcesQuery } from '@/features/resource/services/resourceApi';
-import {
-  AdminResourcePanel,
-  ResourceFilterCard,
-} from '@/features/admin-resource';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { AdminResourcePanel } from '@/features/admin-resource';
 import {
   useTriggerRssCrawlMutation,
   useSaveTranscriptMutation,
 } from '@/features/admin-resource/services/adminResourceApi';
-import type {
-  Resource as AdminResource,
-  ResourceFilters,
-} from '@/features/admin-resource';
 
 const AdminResourcePage = () => {
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<ResourceFilters>({
-    limit: 5,
-    sort: 'newest',
-  });
   const [showAddVideo, setShowAddVideo] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
 
@@ -37,40 +24,11 @@ const AdminResourcePage = () => {
     useTriggerRssCrawlMutation();
   const [saveTranscript, { isLoading: isSaving }] = useSaveTranscriptMutation();
 
-  const {
-    data: response,
-    isLoading,
-    error,
-    refetch,
-  } = useSearchResourcesQuery({
-    page,
-    limit: filters.limit || 5,
-    type: filters.type
-      ? filters.type === 'article'
-        ? 'web_rss'
-        : 'youtube'
-      : undefined,
-    q: filters.q,
-    suitableForLearners: filters.suitableForLearners
-      ? filters.suitableForLearners === 'true'
-      : undefined,
-    sortBy: filters.sort,
-    isAdmin: true,
-  });
-
-  const resources = useMemo(() => response?.data?.resources || [], [response]);
-  const totalPages = response?.data?.pagination?.totalPages || 1;
-
-  const handleFilterChange = (newFilters: ResourceFilters) => {
-    setFilters(newFilters);
-    setPage(1);
-  };
-
   const handleTriggerRssCrawl = async () => {
     try {
       const result = await triggerRssCrawl().unwrap();
       toast.success(result.message || 'RSS crawl triggered successfully');
-      refetch();
+      // Note: refetch is now handled by AdminResourcePanel
     } catch (error: unknown) {
       toast.error(
         (error as { data?: { message?: string } })?.data?.message ||
@@ -90,7 +48,7 @@ const AdminResourcePage = () => {
       toast.success(result.message || 'Video saved successfully');
       setShowAddVideo(false);
       setVideoUrl('');
-      refetch();
+      // Note: refetch is now handled by AdminResourcePanel
     } catch (error: unknown) {
       toast.error(
         (error as { data?: { message?: string } })?.data?.message ||
@@ -193,32 +151,7 @@ const AdminResourcePage = () => {
         </div>
       )}
 
-      {error && (
-        <div className="text-center py-8">
-          <p className="text-destructive mb-4">Failed to load resources</p>
-          <button onClick={() => refetch()}>Retry</button>
-        </div>
-      )}
-
-      <ResourceFilterCard filters={filters} onFilter={handleFilterChange} />
-
-      <div className="mt-6">
-        <AdminResourcePanel
-          resources={resources as unknown as AdminResource[]}
-          isLoading={isLoading}
-          onRefetch={refetch}
-        />
-      </div>
-
-      {totalPages > 1 && (
-        <div className="flex justify-center pt-8">
-          <CustomPagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
-        </div>
-      )}
+      <AdminResourcePanel />
     </div>
   );
 };

@@ -56,6 +56,7 @@ import {
 } from '../services/adminTestApi';
 import type { AdminTestListItem } from '../types/admin-test.types';
 import axiosInstance from '@/core/api/axios';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const TestCard = ({
   test,
@@ -404,11 +405,7 @@ export const AdminTestList = () => {
 
         {/* Tests Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="h-64 animate-pulse bg-slate-100" />
-            ))}
-          </div>
+          <LoadingSpinner message="Loading tests..." />
         ) : tests.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="p-6 bg-slate-100 rounded-full mb-6">

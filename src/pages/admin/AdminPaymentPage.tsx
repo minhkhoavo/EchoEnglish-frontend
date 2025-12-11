@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import CustomPagination from '@/components/CustomPagination';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PaymentFilterCard } from '@/features/admin-payment/components/PaymentFilterCard';
 import { PaymentTable } from '@/features/admin-payment/components/PaymentTable';
 import { PaymentStatsOverview } from '@/features/admin-payment/components/PaymentStatsOverview';
@@ -66,10 +67,7 @@ export const AdminPaymentPage = () => {
         <PaymentFilterCard filters={filters} onFilter={handleFilterChange} />
 
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-            <p className="mt-2 text-gray-500">Loading payments...</p>
-          </div>
+          <LoadingSpinner message="Loading payments..." />
         ) : (
           <PaymentTable data={data} />
         )}

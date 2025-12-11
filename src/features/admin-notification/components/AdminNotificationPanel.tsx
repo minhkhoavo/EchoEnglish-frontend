@@ -30,6 +30,7 @@ import {
   type User as ApiUser,
 } from '@/features/admin-notification/services/adminNotificationApi';
 import { NotificationType } from '@/features/admin-notification/types/admin-notification.types';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface NotificationFormData {
   title: string;
@@ -152,6 +153,10 @@ export const AdminNotificationPanel = ({
 
   const TypeIcon = typeIcons[formData.type];
 
+  if (isLoadingUsers) {
+    return <LoadingSpinner message="Loading users..." />;
+  }
+
   return (
     <Card className="w-full shadow-sm">
       <CardContent className="p-6">
@@ -186,11 +191,7 @@ export const AdminNotificationPanel = ({
 
                   <ScrollArea className="h-48 border rounded">
                     <div className="p-2 space-y-2">
-                      {isLoadingUsers ? (
-                        <div className="text-center py-4 text-muted-foreground">
-                          Loading user list...
-                        </div>
-                      ) : filteredUsers.length === 0 ? (
+                      {filteredUsers.length === 0 ? (
                         <div className="text-center py-4 text-muted-foreground">
                           {userSearch
                             ? 'No matching users found'

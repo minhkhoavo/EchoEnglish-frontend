@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import CustomPagination from '@/components/CustomPagination';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import {
   UserFilterCard,
   UserTable,
@@ -123,10 +124,7 @@ export const AdminUserPage = () => {
         <UserFilterCard filters={filters} onFilter={handleFilterChange} />
 
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-            <p className="mt-2 text-gray-500">Loading users...</p>
-          </div>
+          <LoadingSpinner message="Loading users..." />
         ) : (
           <UserTable
             data={data}

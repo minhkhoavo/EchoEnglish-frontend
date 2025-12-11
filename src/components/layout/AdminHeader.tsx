@@ -105,7 +105,7 @@ export const AdminHeader = ({
     dispatch(logout());
     dispatch(resetApiState());
     toast.success('Logged out successfully!');
-    navigate('/login');
+    window.location.href = '/login';
   };
 
   return (

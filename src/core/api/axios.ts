@@ -37,9 +37,20 @@ axiosInstance.interceptors.response.use(
     const now = Date.now();
 
     if (error.response?.status === 401 || error.response?.status === 403) {
-      store.dispatch(logout());
-      store.dispatch(resetApiState());
-      window.location.href = '/login';
+      // Check if user is already logged out to prevent double logout
+      const state = store.getState();
+      const isAlreadyLoggedOut =
+        !state.auth.isAuthenticated || !state.auth.accessToken;
+
+      if (!isAlreadyLoggedOut) {
+        store.dispatch(logout());
+        store.dispatch(resetApiState());
+      }
+
+      // Only redirect if not already on login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     } else if (!error.response) {
       if (now - lastNetworkErrorToast > TOAST_COOLDOWN) {
         toast.error(

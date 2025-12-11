@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import CustomPagination from '@/components/CustomPagination';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PromoFilterCard } from '@/features/admin-promotion/components/PromoFilterCard';
 import { PromoTable } from '@/features/admin-promotion/components/PromoTable';
 import { PromoDialogForm } from '@/features/admin-promotion/components/PromoDialogForm';
@@ -156,12 +157,16 @@ export const AdminPromotionPage = () => {
             setPage(1);
           }}
         />{' '}
-        <PromoTable
-          promos={promos}
-          loading={isLoading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+        {isLoading ? (
+          <LoadingSpinner message="Loading promotions..." />
+        ) : (
+          <PromoTable
+            promos={promos}
+            loading={false}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        )}
         {pagination && pagination.totalPages > 1 && (
           <div className="flex justify-center pt-8">
             <CustomPagination

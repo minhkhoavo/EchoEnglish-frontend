@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { AdminResourceList } from './AdminResourceList';
@@ -8,26 +8,26 @@ import {
   useDeleteResourceMutation,
   useReindexKnowledgeMutation,
 } from '../services/adminResourceApi';
+import { useSearchResourcesQuery } from '@/features/resource/services/resourceApi';
 import type { Resource } from '../types/resource.types';
 import { Plus, Database, Loader2 } from 'lucide-react';
-
-interface AdminResourcePanelProps {
-  resources: Resource[];
-  isLoading: boolean;
-  onRefetch: () => void;
-}
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import CustomPagination from '@/components/CustomPagination';
+import { ResourceFilterCard } from './ResourceFilterCard';
+import type { ResourceFilters } from '../types/resource.types';
 
 type ViewMode = 'list' | 'create' | 'edit';
 
-export const AdminResourcePanel = ({
-  resources,
-  isLoading,
-  onRefetch,
-}: AdminResourcePanelProps) => {
+export const AdminResourcePanel = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingResource, setEditingResource] = useState<
     Resource | undefined
   >();
+  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<ResourceFilters>({
+    limit: 5,
+    sort: 'newest',
+  });
 
   const [updateResource, { isLoading: isUpdating }] =
     useUpdateResourceMutation();
@@ -35,6 +35,35 @@ export const AdminResourcePanel = ({
     useDeleteResourceMutation();
   const [reindexKnowledge, { isLoading: isReindexing }] =
     useReindexKnowledgeMutation();
+
+  const {
+    data: response,
+    isLoading,
+    error,
+    refetch,
+  } = useSearchResourcesQuery({
+    page,
+    limit: filters.limit || 5,
+    type: filters.type
+      ? filters.type === 'article'
+        ? 'web_rss'
+        : 'youtube'
+      : undefined,
+    q: filters.q,
+    suitableForLearners: filters.suitableForLearners
+      ? filters.suitableForLearners === 'true'
+      : undefined,
+    sortBy: filters.sort,
+    isAdmin: true,
+  });
+
+  const resources = useMemo(() => response?.data?.resources || [], [response]);
+  const totalPages = response?.data?.pagination?.totalPages || 1;
+
+  const handleFilterChange = (newFilters: ResourceFilters) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
 
   const handleApproveResource = async (resource: Resource) => {
     try {
@@ -45,7 +74,7 @@ export const AdminResourcePanel = ({
 
       toast.success(result.message || 'Resource approved successfully');
 
-      onRefetch();
+      refetch();
     } catch (error: unknown) {
       toast.error(
         (error as { data?: { message?: string } })?.data?.message ||
@@ -63,7 +92,7 @@ export const AdminResourcePanel = ({
 
       toast.success(result.message || 'Resource rejected successfully');
 
-      onRefetch();
+      refetch();
     } catch (error: unknown) {
       toast.error(
         (error as { data?: { message?: string } })?.data?.message ||
@@ -78,7 +107,7 @@ export const AdminResourcePanel = ({
 
       toast.success(result.message || 'Resource deleted successfully');
 
-      onRefetch();
+      refetch();
     } catch (error: unknown) {
       toast.error(
         (error as { data?: { message?: string } })?.data?.message ||
@@ -114,7 +143,7 @@ export const AdminResourcePanel = ({
   const handleEditorSuccess = () => {
     setViewMode('list');
     setEditingResource(undefined);
-    onRefetch();
+    refetch();
   };
 
   // Show editor view
@@ -126,6 +155,10 @@ export const AdminResourcePanel = ({
         onSuccess={handleEditorSuccess}
       />
     );
+  }
+
+  if (isLoading) {
+    return <LoadingSpinner message="Loading resources..." />;
   }
 
   // Show list view
@@ -153,22 +186,29 @@ export const AdminResourcePanel = ({
         </Button>
       </div>
 
+      {/* Filters */}
+      <ResourceFilterCard filters={filters} onFilter={setFilters} />
+
       {/* Resource List */}
-      {isLoading ? (
-        <div className="text-center py-12">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-          <p className="mt-2 text-gray-500">Loading resources...</p>
+      <AdminResourceList
+        resources={resources as Resource[]}
+        onApprove={handleApproveResource}
+        onReject={handleRejectResource}
+        onDelete={handleDeleteResource}
+        onEdit={handleEditResource}
+        isUpdating={isUpdating}
+        isDeleting={isDeleting}
+      />
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center pt-8">
+          <CustomPagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
         </div>
-      ) : (
-        <AdminResourceList
-          resources={resources}
-          onApprove={handleApproveResource}
-          onReject={handleRejectResource}
-          onDelete={handleDeleteResource}
-          onEdit={handleEditResource}
-          isUpdating={isUpdating}
-          isDeleting={isDeleting}
-        />
       )}
     </div>
   );
