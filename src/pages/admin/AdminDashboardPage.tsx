@@ -217,16 +217,6 @@ export function AdminDashboardPage() {
           />
         </div>
       </div>
-
-      {/* Loading Overlay */}
-      {isAnyLoading && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="flex flex-col items-center gap-2">
-            <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading dashboard data...</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

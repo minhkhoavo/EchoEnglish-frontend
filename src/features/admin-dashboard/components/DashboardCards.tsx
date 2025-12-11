@@ -126,13 +126,15 @@ export function DashboardCards({
   resourceStats,
   isLoading = {},
 }: DashboardCardsProps) {
-  const successRate = paymentStats
-    ? (paymentStats.successfulPayments / paymentStats.totalPayments) * 100
-    : 0;
+  const successRate =
+    paymentStats && paymentStats.totalPayments > 0
+      ? (paymentStats.successfulPayments / paymentStats.totalPayments) * 100
+      : 0;
 
-  const approvalRate = resourceStats
-    ? (resourceStats.approved / resourceStats.totalResources) * 100
-    : 0;
+  const approvalRate =
+    resourceStats && resourceStats.totalResources > 0
+      ? (resourceStats.approved / resourceStats.totalResources) * 100
+      : 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -200,16 +202,21 @@ export function DashboardCards({
                 )}
               </div>
               <p className="text-xs mt-1">
-                <span
-                  className={`font-medium ${successRate >= 80 ? 'text-green-600' : successRate >= 60 ? 'text-amber-500' : 'text-red-500'}`}
-                >
-                  {successRate.toFixed(0)}% success
-                </span>
-                {paymentStats?.totalRevenue && (
-                  <span className="text-slate-500 ml-2">
-                    • ${(paymentStats.totalRevenue / 1000000).toFixed(1)}M
+                {paymentStats?.totalPayments === 0 ? (
+                  <span className="text-slate-500">No payments yet</span>
+                ) : (
+                  <span
+                    className={`font-medium ${successRate >= 80 ? 'text-green-600' : successRate >= 60 ? 'text-amber-500' : 'text-red-500'}`}
+                  >
+                    {successRate.toFixed(0)}% success
                   </span>
                 )}
+                {paymentStats?.totalRevenue &&
+                  paymentStats.totalRevenue > 0 && (
+                    <span className="text-slate-500 ml-2">
+                      • ${(paymentStats.totalRevenue / 1000000).toFixed(1)}M
+                    </span>
+                  )}
               </p>
             </div>
             <div className="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center">
