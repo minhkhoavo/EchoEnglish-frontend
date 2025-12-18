@@ -1,7 +1,9 @@
 import { AdminNotificationPanel } from '@/features/admin-notification';
 import type { NotificationFormData } from '@/features/admin-notification';
+import { useAdminGuard } from '@/hooks/useAuthGuard';
 
 const AdminNotificationPage = () => {
+  const { isLoading: isCheckingAdmin } = useAdminGuard();
   const handleSendNotification = (data: NotificationFormData) => {
     console.log('Notification sent:', data);
     // The mutation will automatically update the cache
@@ -39,7 +41,10 @@ const AdminNotificationPage = () => {
           </div>
         </div>
 
-        <AdminNotificationPanel onSendNotification={handleSendNotification} />
+        <AdminNotificationPanel
+          onSendNotification={handleSendNotification}
+          skipQuery={isCheckingAdmin}
+        />
       </div>
     </div>
   );

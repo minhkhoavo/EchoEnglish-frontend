@@ -18,7 +18,13 @@ import type { ResourceFilters } from '../types/resource.types';
 
 type ViewMode = 'list' | 'create' | 'edit';
 
-export const AdminResourcePanel = () => {
+interface AdminResourcePanelProps {
+  skipQuery?: boolean;
+}
+
+export const AdminResourcePanel = ({
+  skipQuery = false,
+}: AdminResourcePanelProps = {}) => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingResource, setEditingResource] = useState<
     Resource | undefined
@@ -41,21 +47,26 @@ export const AdminResourcePanel = () => {
     isLoading,
     error,
     refetch,
-  } = useSearchResourcesQuery({
-    page,
-    limit: filters.limit || 5,
-    type: filters.type
-      ? filters.type === 'article'
-        ? 'web_rss'
-        : 'youtube'
-      : undefined,
-    q: filters.q,
-    suitableForLearners: filters.suitableForLearners
-      ? filters.suitableForLearners === 'true'
-      : undefined,
-    sortBy: filters.sort,
-    isAdmin: true,
-  });
+  } = useSearchResourcesQuery(
+    {
+      page,
+      limit: filters.limit || 5,
+      type: filters.type
+        ? filters.type === 'article'
+          ? 'web_rss'
+          : 'youtube'
+        : undefined,
+      q: filters.q,
+      suitableForLearners: filters.suitableForLearners
+        ? filters.suitableForLearners === 'true'
+        : undefined,
+      sortBy: filters.sort,
+      isAdmin: true,
+    },
+    {
+      skip: skipQuery,
+    }
+  );
 
   const resources = useMemo(() => response?.data?.resources || [], [response]);
   const totalPages = response?.data?.pagination?.totalPages || 1;

@@ -1,5 +1,5 @@
 import VerifyOtpForm from '@/features/auth/components/VerifyOtpForm';
-import { useGuestGuard } from '@/hooks/useGuestGuard';
+import { useGuestGuard } from '@/hooks/useAuthGuard';
 
 export default function VerifyOtpPage() {
   useGuestGuard();

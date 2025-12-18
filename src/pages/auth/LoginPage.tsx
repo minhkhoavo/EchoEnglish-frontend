@@ -1,5 +1,5 @@
 import LoginForm from '@/features/auth/components/LoginForm';
-import { useGuestGuard } from '@/hooks/useGuestGuard';
+import { useGuestGuard } from '@/hooks/useAuthGuard';
 
 export default function LoginPage() {
   useGuestGuard();

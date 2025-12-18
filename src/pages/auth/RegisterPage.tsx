@@ -1,5 +1,5 @@
 import RegisterForm from '@/features/auth/components/RegisterForm';
-import { useGuestGuard } from '@/hooks/useGuestGuard';
+import { useGuestGuard } from '@/hooks/useAuthGuard';
 
 export default function RegisterPage() {
   useGuestGuard();

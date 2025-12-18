@@ -1,5 +1,5 @@
 import ForgotPasswordForm from '@/features/auth/components/ForgotPasswordForm';
-import { useGuestGuard } from '@/hooks/useGuestGuard';
+import { useGuestGuard } from '@/hooks/useAuthGuard';
 
 export default function ForgotPasswordPage() {
   useGuestGuard();

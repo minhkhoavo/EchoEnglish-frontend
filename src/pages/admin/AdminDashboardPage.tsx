@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useAdminGuard } from '@/hooks/useAuthGuard';
 
 // Import dashboard components
 import { DashboardCards } from '@/features/admin-dashboard/components/DashboardCards';
@@ -33,6 +34,7 @@ import {
 import type { DateRangeOption } from '@/features/admin-dashboard/types/dashboard.types';
 
 export function AdminDashboardPage() {
+  const { isLoading: isCheckingAdmin } = useAdminGuard();
   const [selectedDateRange, setSelectedDateRange] = useState<DateRangeOption>(
     DATE_RANGE_OPTIONS.find((opt) => opt.value === 'last-30-days') ||
       DATE_RANGE_OPTIONS[2]
@@ -44,7 +46,7 @@ export function AdminDashboardPage() {
     by: selectedDateRange.by,
   };
 
-  // API calls
+  // API calls - skip if still checking admin status
   const {
     data: userStatsData,
     isLoading: isUserStatsLoading,
@@ -52,6 +54,7 @@ export function AdminDashboardPage() {
     refetch: refetchUserStats,
   } = useGetUserGrowthStatsQuery(dateRangeParams, {
     refetchOnMountOrArgChange: true,
+    skip: isCheckingAdmin,
   });
 
   const {
@@ -60,6 +63,7 @@ export function AdminDashboardPage() {
     refetch: refetchTestStats,
   } = useGetTestStatsQuery(dateRangeParams, {
     refetchOnMountOrArgChange: true,
+    skip: isCheckingAdmin,
   });
 
   const {
@@ -68,13 +72,16 @@ export function AdminDashboardPage() {
     refetch: refetchPaymentStats,
   } = useGetPaymentStatsQuery(dateRangeParams, {
     refetchOnMountOrArgChange: true,
+    skip: isCheckingAdmin,
   });
 
   const {
     data: resourceStatsData,
     isLoading: isResourceStatsLoading,
     refetch: refetchResourceStats,
-  } = useGetResourceStatsQuery();
+  } = useGetResourceStatsQuery(undefined, {
+    skip: isCheckingAdmin,
+  });
 
   const handleRefresh = () => {
     refetchUserStats();

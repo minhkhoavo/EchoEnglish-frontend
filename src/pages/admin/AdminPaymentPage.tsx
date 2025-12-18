@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import CustomPagination from '@/components/CustomPagination';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PaymentFilterCard } from '@/features/admin-payment/components/PaymentFilterCard';
+import { useAdminGuard } from '@/hooks/useAuthGuard';
 import { PaymentTable } from '@/features/admin-payment/components/PaymentTable';
 import { PaymentStatsOverview } from '@/features/admin-payment/components/PaymentStatsOverview';
 import {
@@ -11,14 +12,20 @@ import {
 import type { PaymentFilters } from '@/features/admin-payment/types/payment.types';
 
 export const AdminPaymentPage = () => {
+  const { isLoading: isCheckingAdmin } = useAdminGuard();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<PaymentFilters>({});
 
-  const { data: response, isLoading } = useGetPaymentsQuery({
-    page,
-    limit: filters.limit || 10,
-    ...filters,
-  });
+  const { data: response, isLoading } = useGetPaymentsQuery(
+    {
+      page,
+      limit: filters.limit || 10,
+      ...filters,
+    },
+    {
+      skip: isCheckingAdmin,
+    }
+  );
 
   const data = useMemo(() => response?.data.data || [], [response]);
   const pagination = response?.data.pagination;

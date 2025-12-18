@@ -1,5 +1,5 @@
 import ResetPasswordForm from '@/features/auth/components/ResetPasswordForm';
-import { useGuestGuard } from '@/hooks/useGuestGuard';
+import { useGuestGuard } from '@/hooks/useAuthGuard';
 
 export default function ResetPasswordPage() {
   useGuestGuard();

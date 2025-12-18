@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { useAdminGuard } from '@/hooks/useAuthGuard';
 import CustomPagination from '@/components/CustomPagination';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PromoFilterCard } from '@/features/admin-promotion/components/PromoFilterCard';
@@ -21,6 +22,7 @@ import type {
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 
 export const AdminPromotionPage = () => {
+  const { isLoading: isCheckingAdmin } = useAdminGuard();
   const [page, setPage] = useState(1);
 
   const [filters, setFilters] = useState<PromoFilters>({
@@ -36,11 +38,16 @@ export const AdminPromotionPage = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
 
-  const { data: response, isLoading } = useGetPromosQuery({
-    page,
-    limit: filters.limit || 10,
-    ...filters,
-  });
+  const { data: response, isLoading } = useGetPromosQuery(
+    {
+      page,
+      limit: filters.limit || 10,
+      ...filters,
+    },
+    {
+      skip: isCheckingAdmin,
+    }
+  );
 
   const [createPromo] = useCreatePromoMutation();
   const [updatePromo] = useUpdatePromoMutation();

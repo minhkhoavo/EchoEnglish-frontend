@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Youtube, Rss, ChevronDown } from 'lucide-react';
+import { useAdminGuard } from '@/hooks/useAuthGuard';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ import {
 } from '@/features/admin-resource/services/adminResourceApi';
 
 const AdminResourcePage = () => {
+  const { isLoading: isCheckingAdmin } = useAdminGuard();
   const [showAddVideo, setShowAddVideo] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
 
@@ -151,7 +153,7 @@ const AdminResourcePage = () => {
         </div>
       )}
 
-      <AdminResourcePanel />
+      <AdminResourcePanel skipQuery={isCheckingAdmin} />
     </div>
   );
 };

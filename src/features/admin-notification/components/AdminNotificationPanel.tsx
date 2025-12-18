@@ -42,14 +42,17 @@ interface NotificationFormData {
 
 interface AdminNotificationPanelProps {
   onSendNotification?: (data: NotificationFormData) => void;
+  skipQuery?: boolean;
 }
 
 export const AdminNotificationPanel = ({
   onSendNotification,
+  skipQuery = false,
 }: AdminNotificationPanelProps) => {
   const [sendNotification, { isLoading }] = useSendNotificationMutation();
   const { data: userListData, isLoading: isLoadingUsers } = useGetUserListQuery(
-    { page: 1, limit: 9999 }
+    { page: 1, limit: 9999 },
+    { skip: skipQuery }
   );
 
   const [formData, setFormData] = useState({

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import CustomPagination from '@/components/CustomPagination';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useAdminGuard } from '@/hooks/useAuthGuard';
 import {
   UserFilterCard,
   UserTable,
@@ -18,6 +19,7 @@ import {
 import type { User, UserFilters } from '@/features/admin-user';
 
 export const AdminUserPage = () => {
+  const { isLoading: isCheckingAdmin } = useAdminGuard();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<UserFilters>({
     limit: 10,
@@ -26,11 +28,16 @@ export const AdminUserPage = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const { data: response, isLoading } = useGetUsersQuery({
-    page,
-    limit: filters.limit || 10,
-    ...filters,
-  });
+  const { data: response, isLoading } = useGetUsersQuery(
+    {
+      page,
+      limit: filters.limit || 10,
+      ...filters,
+    },
+    {
+      skip: isCheckingAdmin,
+    }
+  );
 
   const [updateUser] = useUpdateUserMutation();
   const [deleteUser] = useDeleteUserMutation();
