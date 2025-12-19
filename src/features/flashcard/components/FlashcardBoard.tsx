@@ -503,6 +503,29 @@ const FlashcardBoard: React.FC = () => {
 
             <div className="flex items-center gap-2">
               <Select
+                value={pageSize >= 9999 ? 'all' : pageSize.toString()}
+                onValueChange={(value) => {
+                  if (value === 'all') {
+                    setPageSize(9999);
+                  } else {
+                    setPageSize(Number(value));
+                  }
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-32 border-slate-300 bg-white">
+                  <SelectValue placeholder="Per page" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="6">6 per page</SelectItem>
+                  <SelectItem value="12">12 per page</SelectItem>
+                  <SelectItem value="24">24 per page</SelectItem>
+                  <SelectItem value="48">48 per page</SelectItem>
+                  <SelectItem value="all">Show All</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
                 value={`${sortBy}-${sortDirection}`}
                 onValueChange={handleSortChange}
               >
@@ -719,7 +742,7 @@ const FlashcardBoard: React.FC = () => {
               </div>
 
               {/* Pagination */}
-              {totalPages > 1 && (
+              {totalPages > 1 && pageSize < filteredFlashcards.length && (
                 <div className="flex justify-center mt-8">
                   <CustomPagination
                     currentPage={currentPage}

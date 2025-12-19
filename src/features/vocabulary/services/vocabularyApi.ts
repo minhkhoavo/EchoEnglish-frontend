@@ -89,7 +89,7 @@ export const vocabularyApi = api.injectEndpoints({
         message: response.message,
         data: response.data,
       }),
-      invalidatesTags: ['Flashcard'],
+      invalidatesTags: ['Flashcard', 'Category'],
     }),
 
     // Bulk import entire vocabulary set
@@ -107,7 +107,7 @@ export const vocabularyApi = api.injectEndpoints({
         message: response.message,
         data: response.data,
       }),
-      invalidatesTags: ['Flashcard'],
+      invalidatesTags: ['Flashcard', 'Category'],
     }),
   }),
 });

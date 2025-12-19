@@ -214,6 +214,13 @@ export default function ReviewPage() {
   const currentCard = flashcards[currentIndex];
   const progress = (currentIndex / flashcards.length) * 100;
 
+  // Guard: If currentIndex is out of bounds but we have flashcards, reset to first card
+  if (!currentCard && flashcards.length > 0) {
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    return null;
+  }
+
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       {/* Compact Session Controls */}
