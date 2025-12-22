@@ -12,6 +12,7 @@ export interface PracticeDrillQuestion {
   media?: {
     audioUrl?: string;
     transcript?: string;
+    imageUrls?: string[];
   };
   contentTags: {
     difficulty: string;

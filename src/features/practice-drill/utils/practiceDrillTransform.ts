@@ -22,7 +22,7 @@ export const transformPracticeDrillToTestPart = (
     explanation: q.explanation,
     media: {
       audioUrl: q.media?.audioUrl || null,
-      imageUrls: null,
+      imageUrls: q.media?.imageUrls || null,
       passageHtml: null,
       transcript: q.media?.transcript || null,
       translation: null,

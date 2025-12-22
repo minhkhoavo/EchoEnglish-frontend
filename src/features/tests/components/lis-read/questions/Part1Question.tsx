@@ -112,7 +112,7 @@ export const Part1Question = ({
                         <img
                           src={imageUrl}
                           alt={`Question ${question.questionNumber} image ${index + 1}`}
-                          className="w-full rounded-lg shadow-sm border"
+                          className="w-full max-w-md mx-auto rounded-lg shadow-sm border object-contain"
                         />
                       </div>
                     )
