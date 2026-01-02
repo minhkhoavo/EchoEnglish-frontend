@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Loader2, FileText, Play, Search } from 'lucide-react';
+import { Loader2, FileText, Play, Search, Book } from 'lucide-react';
 import CustomPagination from '@/components/CustomPagination';
 import { ResourceType, type Resource } from '../types/resource.type';
 import {
@@ -12,6 +12,7 @@ import {
 } from '../slices/resourceSlice';
 import type { RootState } from '@/core/store/store';
 import ResourceCard from './ResourceCard';
+import { useNavigate } from 'react-router-dom';
 
 interface UnifiedResourceListProps {
   resources: Resource[];
@@ -29,6 +30,7 @@ const UnifiedResourceList: React.FC<UnifiedResourceListProps> = ({
   totalCounts,
 }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { searchQuery, activeTab, currentPage } = useSelector(
     (state: RootState) => state.resource
   );
@@ -76,19 +78,6 @@ const UnifiedResourceList: React.FC<UnifiedResourceListProps> = ({
     );
   }
 
-  // Tab configuration
-  const tabs = [
-    { key: 'all' as const, label: 'All' },
-    {
-      key: ResourceType.WEB_RSS,
-      label: 'Articles',
-    },
-    {
-      key: ResourceType.YOUTUBE,
-      label: 'Videos',
-    },
-  ];
-
   return (
     <div className="space-y-6">
       {/* Search Bar */}
@@ -113,7 +102,7 @@ const UnifiedResourceList: React.FC<UnifiedResourceListProps> = ({
             dispatch(setActiveTab(value as 'all' | ResourceType))
           }
         >
-          <TabsList className="grid w-full grid-cols-3 md:w-auto">
+          <TabsList className="grid w-full grid-cols-4 md:w-auto">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value={ResourceType.WEB_RSS}>
               <FileText className="h-4 w-4 mr-2" />
@@ -122,6 +111,13 @@ const UnifiedResourceList: React.FC<UnifiedResourceListProps> = ({
             <TabsTrigger value={ResourceType.YOUTUBE}>
               <Play className="h-4 w-4 mr-2" />
               Videos
+            </TabsTrigger>
+            <TabsTrigger
+              value={ResourceType.EBOOK}
+              onClick={() => navigate('/ebooks')}
+            >
+              <Book className="h-4 w-4 mr-2" />
+              Ebooks
             </TabsTrigger>
           </TabsList>
         </Tabs>

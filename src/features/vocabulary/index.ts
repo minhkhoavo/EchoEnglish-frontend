@@ -8,5 +8,5 @@ export * from './types/review.types';
 export type { ApiResponse } from '../flashcard/types/flashcard.types';
 
 // Pages
-export { default as VocabularyBrowsePage } from '../../pages/VocabularyPage';
+export { default as VocabularyBrowsePage } from '../../pages/VocabularyBrowsePage';
 export { default as ReviewPage } from '../../pages/ReviewPage';

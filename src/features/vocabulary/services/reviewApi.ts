@@ -3,8 +3,8 @@ import type {
   Flashcard,
   ReviewStatistics,
   DueFlashcardsResponse,
-  ApiResponse,
 } from '../types/review.types';
+import type { ApiResponse } from '../../flashcard/types/flashcard.types';
 
 export const reviewApi = api.injectEndpoints({
   endpoints: (builder) => ({

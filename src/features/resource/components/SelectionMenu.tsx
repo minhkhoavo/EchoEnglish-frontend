@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Languages, Save, Loader2 } from 'lucide-react';
+import {
+  Languages,
+  Save,
+  Loader2,
+  Highlighter,
+  StickyNote,
+} from 'lucide-react';
 import { useTranslateTextMutation } from '@/features/flashcard/services/flashcardApi';
 import { toast } from 'sonner';
 
@@ -10,6 +16,10 @@ interface SelectionMenuProps {
   position: { x: number; y: number };
   onSave: (translation?: string) => void;
   onClose: () => void;
+  // Optional highlight/note actions (for ebook reader)
+  onHighlight?: () => void;
+  onAddNote?: () => void;
+  showHighlightActions?: boolean;
 }
 
 export default function SelectionMenu({
@@ -17,6 +27,9 @@ export default function SelectionMenu({
   position,
   onSave,
   onClose,
+  onHighlight,
+  onAddNote,
+  showHighlightActions = false,
 }: SelectionMenuProps) {
   const [menuPosition, setMenuPosition] = useState(position);
   const [translation, setTranslation] = useState('');
@@ -96,7 +109,7 @@ export default function SelectionMenu({
         )}
 
         {/* Action buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="ghost"
             size="sm"
@@ -118,8 +131,32 @@ export default function SelectionMenu({
             className="flex items-center gap-2 h-8 px-3"
           >
             <Save className="h-3 w-3" />
-            Save Flashcard
+            Flashcard
           </Button>
+
+          {/* Highlight/Note actions (for ebook reader) */}
+          {showHighlightActions && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onHighlight}
+                className="flex items-center gap-2 h-8 px-3 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+              >
+                <Highlighter className="h-3 w-3" />
+                Highlight
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onAddNote}
+                className="flex items-center gap-2 h-8 px-3"
+              >
+                <StickyNote className="h-3 w-3" />
+                Note
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </Card>

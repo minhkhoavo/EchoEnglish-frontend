@@ -2,6 +2,7 @@ export const ResourceType = {
   ARTICLE: 'article',
   WEB_RSS: 'web_rss',
   YOUTUBE: 'youtube',
+  EBOOK: 'ebook',
 } as const;
 
 export type ResourceType = (typeof ResourceType)[keyof typeof ResourceType];

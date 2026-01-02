@@ -73,6 +73,7 @@ import AdminTestEditPage from './pages/admin/AdminTestEditPage';
 // Resources
 import ResourcePage from './pages/resource/ResourcePage';
 import ResourceDetailPage from './pages/resource/ResourceDetailPage';
+import EbookPage from './pages/resource/EbookPage';
 
 // Test Management
 import { ToeicTestDetail } from './features/tests/components/lis-read/TOEICTestDetail';
@@ -168,6 +169,7 @@ function App() {
           {/* RESOURCES */}
           <Route path="/resources" element={<ResourcePage />} />
           <Route path="/resources/:id" element={<ResourceDetailPage />} />
+          <Route path="/ebooks" element={<EbookPage />} />
         </Route>
 
         {/* ================================================================== */}
