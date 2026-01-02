@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   ClipboardCheck,
   BookText,
+  MessageSquare,
 } from 'lucide-react';
 
 export type NavItem = {
@@ -39,6 +40,12 @@ const navigationItems: NavItem[] = [
     name: 'Tests',
     icon: ClipboardCheck,
     description: 'Timed practice & reviews',
+  },
+  {
+    path: '/conversation-practice',
+    name: 'AI Conversation',
+    icon: MessageSquare,
+    description: 'Practice speaking with AI',
   },
   {
     path: '/flashcards',
