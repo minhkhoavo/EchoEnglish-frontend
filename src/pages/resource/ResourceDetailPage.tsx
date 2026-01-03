@@ -27,6 +27,7 @@ import SelectionMenu from '@/features/resource/components/SelectionMenu';
 import CreateEditFlashcardDialog from '@/features/resource/components/CreateEditFlashcardDialog';
 import YouTubeTranscriptPlayer from '@/features/resource/components/YouTubeTranscriptPlayer';
 import VocabularySheet from '@/features/resource/components/VocabularySheet';
+import { ArticleExerciseContainer } from '@/features/resource/components/exercises/reading';
 
 export default function ResourceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -350,6 +351,23 @@ export default function ResourceDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Reading Exercises */}
+            {resource.content && (
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Reading Exercises
+                </h2>
+                <ArticleExerciseContainer
+                  id={resource.id}
+                  title={resource.title}
+                  content={resource.content}
+                  onClose={() =>
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }
+                />
+              </div>
+            )}
 
             {/* Floating Vocabulary Sheet */}
             <VocabularySheet
