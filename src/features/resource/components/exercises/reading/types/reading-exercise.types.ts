@@ -3,10 +3,7 @@ export const ReadingExerciseType = {
   FILL_BLANKS: 'fill_blanks', // Điền từ còn thiếu trong đoạn văn
   COMPREHENSION: 'comprehension', // Câu hỏi đọc hiểu (AI-generated)
   SENTENCE_REORDER: 'sentence_reorder', // Sắp xếp lại thứ tự câu
-  VOCABULARY_CONTEXT: 'vocabulary_context', // Đoán nghĩa từ qua context
   PARAGRAPH_SUMMARY: 'paragraph_summary', // Viết tóm tắt (AI-evaluated)
-  WORD_DEFINITION: 'word_definition', // Nối từ với định nghĩa
-  TRUE_FALSE: 'true_false', // Đúng sai về nội dung
 } as const;
 
 export type ReadingExerciseType =
@@ -204,41 +201,6 @@ export interface SentenceReorderAnswer {
 }
 
 // ============================================================================
-// VOCABULARY IN CONTEXT EXERCISE
-// ============================================================================
-
-export interface VocabularyContextItem {
-  word: string;
-  sentence: string; // Sentence containing the word
-  contextClue: string;
-  correctDefinition: string;
-  wrongDefinitions: string[];
-  partOfSpeech: string;
-  pronunciation?: string;
-  ttsUrl?: string;
-}
-
-export interface VocabularyContextExercise {
-  id: string;
-  type: typeof ReadingExerciseType.VOCABULARY_CONTEXT;
-  difficulty: ReadingDifficulty;
-  segment: ArticleSegment;
-  items: VocabularyContextItem[];
-  showContext: boolean;
-}
-
-export interface VocabularyContextAnswer {
-  exerciseId: string;
-  answers: {
-    word: string;
-    selectedDefinition: string;
-    isCorrect: boolean;
-  }[];
-  score: number;
-  timeSpent: number;
-}
-
-// ============================================================================
 // PARAGRAPH SUMMARY EXERCISE (AI-Evaluated)
 // ============================================================================
 
@@ -275,72 +237,6 @@ export interface ParagraphSummaryAnswer {
 }
 
 // ============================================================================
-// TRUE/FALSE EXERCISE
-// ============================================================================
-
-export interface TrueFalseStatement {
-  id: string;
-  statement: string;
-  isTrue: boolean;
-  explanation: string;
-  relatedText?: string;
-}
-
-export interface TrueFalseExercise {
-  id: string;
-  type: typeof ReadingExerciseType.TRUE_FALSE;
-  difficulty: ReadingDifficulty;
-  segment: ArticleSegment;
-  statements: TrueFalseStatement[];
-}
-
-export interface TrueFalseAnswer {
-  exerciseId: string;
-  answers: {
-    statementId: string;
-    userAnswer: boolean;
-    isCorrect: boolean;
-  }[];
-  score: number;
-  timeSpent: number;
-}
-
-// ============================================================================
-// WORD DEFINITION MATCHING EXERCISE
-// ============================================================================
-
-export interface WordDefinitionItem {
-  id: string;
-  word: string;
-  definition: string;
-  example: string;
-  ttsUrl?: string;
-}
-
-export interface WordDefinitionExercise {
-  id: string;
-  type: typeof ReadingExerciseType.WORD_DEFINITION;
-  difficulty: ReadingDifficulty;
-  segment: ArticleSegment;
-  words: WordDefinitionItem[];
-  shuffledDefinitions: {
-    id: string;
-    definition: string;
-  }[];
-}
-
-export interface WordDefinitionAnswer {
-  exerciseId: string;
-  matches: {
-    wordId: string;
-    definitionId: string;
-    isCorrect: boolean;
-  }[];
-  score: number;
-  timeSpent: number;
-}
-
-// ============================================================================
 // UNIFIED TYPES
 // ============================================================================
 
@@ -349,20 +245,14 @@ export type ReadingExercise =
   | FillBlanksExercise
   | ComprehensionExercise
   | SentenceReorderExercise
-  | VocabularyContextExercise
-  | ParagraphSummaryExercise
-  | TrueFalseExercise
-  | WordDefinitionExercise;
+  | ParagraphSummaryExercise;
 
 export type ReadingAnswer =
   | DictationAnswer
   | FillBlanksAnswer
   | ComprehensionAnswer
   | SentenceReorderAnswer
-  | VocabularyContextAnswer
-  | ParagraphSummaryAnswer
-  | TrueFalseAnswer
-  | WordDefinitionAnswer;
+  | ParagraphSummaryAnswer;
 
 // ============================================================================
 // EXERCISE SESSION

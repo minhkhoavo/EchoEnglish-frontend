@@ -7,8 +7,7 @@ export { ParagraphSummaryExercise } from './components/ParagraphSummaryExercise'
 export { ArticleExerciseContainer } from './components/ArticleExerciseContainer';
 
 // Hooks
-export { useTTS, useExerciseTTS } from './hooks/useTTS';
-export { useReadingExercise } from './hooks/useReadingExercise';
+export { useTTS } from './hooks/useTTS';
 
 // Services
 export {
@@ -16,13 +15,10 @@ export {
   useGenerateExerciseQuestionsMutation,
   useEvaluateAnswerMutation,
   buildComprehensionPrompt,
-  buildTrueFalsePrompt,
-  buildVocabularyPrompt,
   buildFillBlanksPrompt,
   buildSummaryEvaluationPrompt,
   buildDictationEvaluationPrompt,
   generateTTSUrl,
-  splitIntoSegments,
   selectWordsToBlank,
   createBlankedText,
   shuffleArray,
@@ -55,24 +51,9 @@ export type {
   SentenceReorderExercise as SentenceReorderExerciseType,
   SentenceReorderAnswer,
 
-  // Vocabulary Context
-  VocabularyContextItem,
-  VocabularyContextExercise,
-  VocabularyContextAnswer,
-
   // Paragraph Summary
   ParagraphSummaryExercise as ParagraphSummaryExerciseType,
   ParagraphSummaryAnswer,
-
-  // True/False
-  TrueFalseStatement,
-  TrueFalseExercise,
-  TrueFalseAnswer,
-
-  // Word Definition
-  WordDefinitionItem,
-  WordDefinitionExercise,
-  WordDefinitionAnswer,
 
   // Unified
   ReadingExercise,

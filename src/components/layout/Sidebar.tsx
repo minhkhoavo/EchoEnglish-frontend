@@ -77,6 +77,12 @@ const navigationItems: NavItem[] = [
     icon: Library,
     description: 'Learning Resources',
   },
+  {
+    path: '/conversation-practice',
+    name: 'Conversation',
+    icon: Speech,
+    description: 'Practice conversation',
+  },
 ];
 
 export const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {

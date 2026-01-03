@@ -6,8 +6,6 @@ import type {
   AIEvaluationRequest,
   AIEvaluationResponse,
   ComprehensionQuestion,
-  TrueFalseStatement,
-  VocabularyContextItem,
   ArticleSegment,
 } from '../types/reading-exercise.types';
 
@@ -21,8 +19,6 @@ interface GenerateQuestionsRequest {
 
 interface GenerateQuestionsResponse {
   questions?: ComprehensionQuestion[];
-  statements?: TrueFalseStatement[];
-  vocabularyItems?: VocabularyContextItem[];
   blanks?: { index: number; word: string; hint: string }[];
   message?: string;
   raw?: boolean;
@@ -98,81 +94,6 @@ Requirements:
 - Each question must have exactly 4 options with 1 correct answer
 - Explanations should be educational and helpful
 - Options should be plausible but distinguishable
-- Return ONLY the JSON object, no other text`;
-};
-
-/**
- * Build prompt for generating True/False statements
- */
-export const buildTrueFalsePrompt = (
-  text: string,
-  difficulty: ReadingDifficulty,
-  statementCount: number = 5
-): string => {
-  return `You are an expert English teacher. Generate ${statementCount} True/False statements for the following text.
-
-TEXT:
-"""
-${text}
-"""
-
-DIFFICULTY: ${difficulty}
-
-Generate statements in JSON format:
-{
-  "statements": [
-    {
-      "id": "s1",
-      "statement": "The statement about the text",
-      "isTrue": true|false,
-      "explanation": "Why this statement is true/false",
-      "relatedText": "Quote from text that supports or contradicts"
-    }
-  ]
-}
-
-Requirements:
-- Mix true and false statements (roughly 50/50)
-- For ${difficulty}: ${difficulty === 'beginner' ? 'use simple, directly stated facts' : difficulty === 'intermediate' ? 'include some inference' : 'require deep understanding and inference'}
-- Explanations should reference the text
-- Return ONLY the JSON object, no other text`;
-};
-
-/**
- * Build prompt for generating vocabulary context items
- */
-export const buildVocabularyPrompt = (
-  text: string,
-  difficulty: ReadingDifficulty,
-  wordCount: number = 5
-): string => {
-  return `You are an expert English teacher. Select ${wordCount} vocabulary words from the text and create context-based exercises.
-
-TEXT:
-"""
-${text}
-"""
-
-DIFFICULTY: ${difficulty}
-
-Generate in JSON format:
-{
-  "vocabularyItems": [
-    {
-      "word": "the vocabulary word",
-      "sentence": "Original sentence containing the word",
-      "contextClue": "Clue in context that helps understand meaning",
-      "correctDefinition": "The meaning of the word in this context",
-      "wrongDefinitions": ["Wrong definition 1", "Wrong definition 2", "Wrong definition 3"],
-      "partOfSpeech": "noun|verb|adjective|adverb|etc"
-    }
-  ]
-}
-
-Requirements:
-- Select words appropriate for ${difficulty} level
-- Wrong definitions should be plausible but clearly wrong in context
-- Context clues should help learners figure out the meaning
 - Return ONLY the JSON object, no other text`;
 };
 
@@ -362,46 +283,6 @@ export const {
  */
 export const generateTTSUrl = (text: string): string => {
   return `https://classmate-vuive.vn/tts?text=${encodeURIComponent(text)}`;
-};
-
-/**
- * Split article into segments for exercises
- */
-export const splitIntoSegments = (
-  content: string,
-  segmentSize: 'sentence' | 'paragraph' | 'chunk' = 'paragraph'
-): ArticleSegment[] => {
-  let segments: string[] = [];
-
-  switch (segmentSize) {
-    case 'sentence':
-      // Split by sentence-ending punctuation
-      segments = content
-        .split(/(?<=[.!?])\s+/)
-        .filter((s) => s.trim().length > 0);
-      break;
-    case 'paragraph':
-      // Split by double newline or paragraph breaks
-      segments = content.split(/\n\n+/).filter((s) => s.trim().length > 0);
-      break;
-    case 'chunk': {
-      // Split into ~200 word chunks
-      const words = content.split(/\s+/);
-      const chunkSize = 200;
-      for (let i = 0; i < words.length; i += chunkSize) {
-        segments.push(words.slice(i, i + chunkSize).join(' '));
-      }
-      break;
-    }
-  }
-
-  return segments.map((text, index) => ({
-    id: `segment-${index}`,
-    text: text.trim(),
-    sentences: text.split(/(?<=[.!?])\s+/).filter((s) => s.trim()),
-    wordCount: text.split(/\s+/).filter((w) => w).length,
-    startIndex: index,
-  }));
 };
 
 /**
