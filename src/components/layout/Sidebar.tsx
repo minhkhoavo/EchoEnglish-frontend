@@ -42,12 +42,6 @@ const navigationItems: NavItem[] = [
     description: 'Timed practice & reviews',
   },
   {
-    path: '/conversation-practice',
-    name: 'AI Conversation',
-    icon: MessageSquare,
-    description: 'Practice speaking with AI',
-  },
-  {
     path: '/flashcards',
     name: 'Flashcards',
     icon: Layers,
@@ -66,6 +60,12 @@ const navigationItems: NavItem[] = [
     description: 'AI pronunciation feedback',
   },
   {
+    path: '/conversation-practice',
+    name: 'AI Conversation',
+    icon: MessageSquare,
+    description: 'Practice speaking with AI',
+  },
+  {
     path: '/me/tests',
     name: 'My Tests',
     icon: BookOpen,
@@ -76,12 +76,6 @@ const navigationItems: NavItem[] = [
     name: 'Document Hub',
     icon: Library,
     description: 'Learning Resources',
-  },
-  {
-    path: '/conversation-practice',
-    name: 'Conversation',
-    icon: Speech,
-    description: 'Practice conversation',
   },
 ];
 
