@@ -91,7 +91,7 @@ export default function ResourceDetailPage() {
     };
 
     fetchTranscript();
-  }, [resource, getTranscript, toast]);
+  }, [resource, getTranscript]);
 
   // Handle text selection
   const handleTextSelection = (e: React.MouseEvent) => {
