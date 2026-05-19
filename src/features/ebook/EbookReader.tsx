@@ -415,7 +415,7 @@ export const EbookReader: React.FC<EbookReaderProps> = ({
         );
       });
     },
-    [fontSize, notes]
+    [fontSize, notes, storageKey]
   );
 
   // Get TOC

@@ -95,7 +95,7 @@ export const useTTS = (options: TTSOptions = {}): UseTTSReturn => {
       audio.pause();
       audio.src = '';
     };
-  }, []);
+  }, [onComplete, onError]);
 
   /**
    * Generate TTS URL for text
