@@ -6,11 +6,12 @@ import {
   Send,
   Paperclip,
   Image as ImageIcon,
+  Sparkles,
+  Bot,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import type {
@@ -27,6 +28,8 @@ import {
   ResultLayout,
   HtmlEmbedLayout,
 } from './ChatbotLayouts';
+import { QuickSuggestions } from './QuickSuggestions';
+import { AIAvatar, ThinkingIndicator } from './StreamingMessage';
 import '../styles/chatbot.css';
 
 interface ChatBubbleProps {
@@ -301,29 +304,35 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         onDrop={handleDrop}
       >
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-12">
-            <div className="mb-6 relative">
-              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center">
-                <MessageCircle className="h-10 w-10 text-blue-600" />
+          <div className="text-center text-gray-500 mt-8 px-2">
+            {/* AI Avatar */}
+            <div className="mb-6 relative inline-block">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-lg animate-bounce-subtle">
+                <Bot className="h-10 w-10 text-white" />
               </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs">✨</span>
+              <div className="absolute -top-1 -right-1 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-md animate-pulse">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              {/* Online indicator */}
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-3 border-white shadow-sm">
+                <div className="w-full h-full bg-green-400 rounded-full animate-ping opacity-75" />
               </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Welcome to EchoEnglish AI!
+
+            <h3 className="text-xl font-bold text-gray-800 mb-2 gradient-text">
+              Hi! I'm EchoEnglish AI
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              How can I help you with your TOEIC preparation today?
+            <p className="text-sm text-gray-600 mb-6 max-w-[280px] mx-auto">
+              Your AI learning assistant. I can help with your progress, weak
+              points, practice drills, and more!
             </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Badge variant="secondary" className="text-xs">
-                Try: "Show my progress"
-              </Badge>
-              <Badge variant="secondary" className="text-xs">
-                Try: "I want to upgrade"
-              </Badge>
-            </div>
+
+            {/* Quick Suggestions */}
+            <QuickSuggestions
+              onSelect={(text) => onSendMessage(text)}
+              variant="animated"
+              className="text-left"
+            />
           </div>
         )}
 
@@ -336,19 +345,10 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         ))}
 
         {isTyping && (
-          <div className="flex items-start space-x-3 mb-4 animate-in fade-in slide-in-from-left duration-500">
-            <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center">
-                <MessageCircle className="h-5 w-5 text-white" />
-              </div>
-              <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-400 rounded-full border-2 border-white"></div>
-            </div>
+          <div className="flex items-start space-x-3 mb-4 animate-in fade-in slide-in-from-left duration-300">
+            <AIAvatar isTyping size="md" />
             <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100 max-w-[80%] message-bubble">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-blue-400 rounded-full chatbot-typing-dot"></div>
-                <div className="w-2 h-2 bg-purple-400 rounded-full chatbot-typing-dot"></div>
-                <div className="w-2 h-2 bg-blue-400 rounded-full chatbot-typing-dot"></div>
-              </div>
+              <ThinkingIndicator />
             </div>
           </div>
         )}
