@@ -34,8 +34,14 @@ export function VocabularyCard({
     }
   };
 
+  const vocAiId = `vocab-${word.word.toLowerCase().replace(/\s+/g, '-')}`;
+  const vocAiLabel = `Vocabulary "${word.word}"${word.phonetics[0]?.text ? ` ${word.phonetics[0].text}` : ''} — ${word.translation.vi}${isImported ? ' · already imported' : ''}`;
+
   return (
     <Card
+      data-ai-id={vocAiId}
+      data-ai-label={vocAiLabel}
+      data-ai-role="vocabulary-card"
       className={`rounded-xl hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group h-full flex flex-col ${
         isImported
           ? 'border-2 border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-950/20'
@@ -105,6 +111,13 @@ export function VocabularyCard({
           }`}
           onClick={() => onImportClick(word)}
           disabled={isImporting || isImported}
+          data-ai-id={`${vocAiId}-import-btn`}
+          data-ai-label={
+            isImported
+              ? `"${word.word}" already in flashcards`
+              : `Add "${word.word}" to flashcards`
+          }
+          data-ai-role={isImported ? 'view' : 'create'}
         >
           {isImporting ? (
             'Importing...'

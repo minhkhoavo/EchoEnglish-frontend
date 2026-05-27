@@ -30,6 +30,7 @@ import {
 } from './ChatbotLayouts';
 import { QuickSuggestions } from './QuickSuggestions';
 import { AIAvatar, ThinkingIndicator } from './StreamingMessage';
+import { LiveModeToggle } from '@/features/livecontext';
 import '../styles/chatbot.css';
 
 interface ChatBubbleProps {
@@ -273,6 +274,8 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         </div>
 
         <div className="flex items-center space-x-2 relative z-10">
+          {/* Switch to LiveContext (voice + screen + webcam) mode */}
+          <LiveModeToggle onEnable={onClose} />
           <Button
             onClick={onToggle}
             size="sm"

@@ -16,7 +16,11 @@ export const Layout = () => {
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">
+        <main
+          className="flex-1 overflow-auto"
+          data-ai-id="main"
+          data-ai-label="Main content area"
+        >
           <div className="container mx-auto h-full">
             <Outlet />
           </div>

@@ -80,6 +80,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   return (
     <div
       className={`p-2 rounded-lg border ${getScoreBackground(calculatedPercentage)}`}
+      data-ai-id={`score-${label.toLowerCase().replace(/\s+/g, '-')}`}
+      data-ai-label={`${label}: ${score} out of ${maxScore} (${calculatedPercentage}%)`}
+      data-ai-role="score"
     >
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-700">{label}</span>

@@ -403,6 +403,9 @@ const FlashcardBoard: React.FC = () => {
                             ? 'Server unavailable'
                             : undefined
                         }
+                        data-ai-id="flashcard-create-btn"
+                        data-ai-label="Create new flashcard"
+                        data-ai-role="create"
                       >
                         <Plus size={16} />
                         Create Flashcard
@@ -498,6 +501,9 @@ const FlashcardBoard: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10 border-slate-300 focus:border-slate-500 focus:ring-slate-500 bg-white"
+                data-ai-id="flashcard-search-input"
+                data-ai-label="Search flashcards"
+                data-ai-role="search"
               />
             </div>
 

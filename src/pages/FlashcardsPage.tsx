@@ -23,16 +23,27 @@ export default function FlashcardsPage() {
   };
 
   return (
-    <div className="h-screen bg-slate-50 dark:bg-slate-900">
+    <div
+      className="h-screen bg-slate-50 dark:bg-slate-900"
+      data-ai-id="flashcards-page"
+      data-ai-label="Flashcards page"
+    >
       <Tabs
         value={activeTab}
         onValueChange={handleTabChange}
         className="h-full flex flex-col"
       >
         <div className="bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border-b px-6 pt-6 pb-4">
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 h-12 bg-slate-100 dark:bg-slate-800 p-1">
+          <TabsList
+            className="grid w-full max-w-2xl mx-auto grid-cols-3 h-12 bg-slate-100 dark:bg-slate-800 p-1"
+            data-ai-id="flashcards-tabs"
+            data-ai-label="Flashcards page tabs"
+          >
             <TabsTrigger
               value="flashcards"
+              data-ai-id="flashcards-tab-cards"
+              data-ai-label="Open My Flashcards tab"
+              data-ai-role="navigation"
               className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm transition-all"
             >
               <BookOpen className="h-4 w-4" />
@@ -40,6 +51,9 @@ export default function FlashcardsPage() {
             </TabsTrigger>
             <TabsTrigger
               value="review"
+              data-ai-id="flashcards-tab-review"
+              data-ai-label="Open Review tab"
+              data-ai-role="navigation"
               className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm transition-all"
             >
               <Zap className="h-4 w-4" />
@@ -47,6 +61,9 @@ export default function FlashcardsPage() {
             </TabsTrigger>
             <TabsTrigger
               value="statistics"
+              data-ai-id="flashcards-tab-statistics"
+              data-ai-label="Open Statistics tab"
+              data-ai-role="navigation"
               className="gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm transition-all"
             >
               <BarChart3 className="h-4 w-4" />

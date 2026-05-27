@@ -276,7 +276,11 @@ export default function VocabularyBrowsePage() {
   }
 
   return (
-    <div className="h-full bg-slate-50 dark:bg-slate-900">
+    <div
+      className="h-full bg-slate-50 dark:bg-slate-900"
+      data-ai-id="vocabulary-page"
+      data-ai-label="Vocabulary browse page"
+    >
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Header */}
         <div className="mb-6 bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 rounded-xl p-6 border">
@@ -290,6 +294,9 @@ export default function VocabularyBrowsePage() {
                   setSearchQuery('');
                 }}
                 className="border-2"
+                data-ai-id="vocabulary-back-to-library-btn"
+                data-ai-label="Back to vocabulary library"
+                data-ai-role="cancel"
               >
                 <ChevronLeft className="h-4 w-4 mr-2" />
                 Back to Library

@@ -191,10 +191,14 @@ const ExamAttemptsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
+    <div
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40"
+      data-ai-id="exam-attempts-page"
+      data-ai-label="Exam attempts page"
+    >
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Modern Header */}
-        <div className="mb-8">
+        <div className="mb-8" data-ai-id="exam-attempts-header">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="space-y-3">
               <div className="space-y-2">
@@ -213,6 +217,9 @@ const ExamAttemptsPage: React.FC = () => {
                 onClick={handleNewTest}
                 className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:via-blue-800 hover:to-indigo-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3 rounded-xl font-medium"
                 size="default"
+                data-ai-id="exam-attempts-new-test-btn"
+                data-ai-label="Start a new test"
+                data-ai-role="start"
               >
                 <Plus className="h-5 w-5 mr-2" />
                 Start New Test

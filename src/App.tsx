@@ -82,6 +82,13 @@ import LandingPage from './pages/LandingPage';
 // Error Pages
 import NotFound from './pages/NotFound';
 
+// LiveContext (AI Companion + DOM vision + webcam)
+import {
+  CompanionProvider,
+  LiveContextRoot,
+  useCompanion,
+} from './features/livecontext';
+
 const QuizRouteWrapper = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -93,9 +100,10 @@ const QuizRouteWrapper = () => {
 const ChatbotWrapper = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const { liveModeEnabled } = useCompanion();
 
-  // Don't show chatbot on admin routes
-  if (isAdminRoute) {
+  // Don't show chatbot on admin routes, and hide it whenever LiveContext mode is ON
+  if (isAdminRoute || liveModeEnabled) {
     return null;
   }
 
@@ -105,125 +113,139 @@ const ChatbotWrapper = () => {
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
+      <CompanionProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
 
-        {/* Auth Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/verify-otp" element={<VerifyOtpPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/payment/callback" element={<PaymentCallbackPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+          {/* Auth Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/verify-otp" element={<VerifyOtpPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/payment/callback" element={<PaymentCallbackPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
 
-        {/* ================================================================== */}
-        {/* MAIN APP ROUTES - With Layout (Header + Sidebar) */}
-        {/* ================================================================== */}
-        <Route element={<Layout />}>
-          {/* DASHBOARD & PROFILE */}
-          <Route path="/content" element={<ContentPage />} />
-          <Route path="/dashboard" element={<UserDashboardPage />} />
+          {/* ================================================================== */}
+          {/* MAIN APP ROUTES - With Layout (Header + Sidebar) */}
+          {/* ================================================================== */}
+          <Route element={<Layout />}>
+            {/* DASHBOARD & PROFILE */}
+            <Route path="/content" element={<ContentPage />} />
+            <Route path="/dashboard" element={<UserDashboardPage />} />
 
-          {/* LEARNING FEATURES */}
-          <Route path="/quiz" element={<QuizRouteWrapper />} />
-          <Route path="/tests" element={<AllTestsPage />} />
-          <Route path="/recordings" element={<RecordingsPage />} />
-          <Route path="/flashcards" element={<FlashcardsPage />} />
-          <Route path="/vocabulary" element={<VocabularyBrowsePage />} />
+            {/* LEARNING FEATURES */}
+            <Route path="/quiz" element={<QuizRouteWrapper />} />
+            <Route path="/tests" element={<AllTestsPage />} />
+            <Route path="/recordings" element={<RecordingsPage />} />
+            <Route path="/flashcards" element={<FlashcardsPage />} />
+            <Route path="/vocabulary" element={<VocabularyBrowsePage />} />
 
-          {/* TEST TAKING & EXAMS */}
-          <Route
-            path="/test/speaking/:testId/check"
-            element={<MicrophoneCheck />}
-          />
-          <Route
-            path="/test/speaking/:testId/exam"
-            element={<SpeakingExam />}
-          />
-          <Route
-            path="/test/writing/:testId/select"
-            element={<WritingModeSelection />}
-          />
-          <Route path="/test/writing/:testId/exam" element={<WritingExam />} />
-          <Route path="/speaking-exam/:testId" element={<MicrophoneCheck />} />
+            {/* TEST TAKING & EXAMS */}
+            <Route
+              path="/test/speaking/:testId/check"
+              element={<MicrophoneCheck />}
+            />
+            <Route
+              path="/test/speaking/:testId/exam"
+              element={<SpeakingExam />}
+            />
+            <Route
+              path="/test/writing/:testId/select"
+              element={<WritingModeSelection />}
+            />
+            <Route
+              path="/test/writing/:testId/exam"
+              element={<WritingExam />}
+            />
+            <Route
+              path="/speaking-exam/:testId"
+              element={<MicrophoneCheck />}
+            />
 
-          {/* TEST RESULTS & ANALYSIS */}
-          <Route path="/me/tests" element={<ExamAttemptsPage />} />
+            {/* TEST RESULTS & ANALYSIS */}
+            <Route path="/me/tests" element={<ExamAttemptsPage />} />
 
-          {/* LEARNING & PRACTICE */}
-          <Route
-            path="/learning-plan/setup"
-            element={<PersonalizedLearningSetup />}
-          />
-          <Route path="/practice-drill" element={<PracticeDrillPage />} />
-          <Route
-            path="/conversation-practice"
-            element={<ConversationPracticePage />}
-          />
+            {/* LEARNING & PRACTICE */}
+            <Route
+              path="/learning-plan/setup"
+              element={<PersonalizedLearningSetup />}
+            />
+            <Route path="/practice-drill" element={<PracticeDrillPage />} />
+            <Route
+              path="/conversation-practice"
+              element={<ConversationPracticePage />}
+            />
 
-          {/* PAYMENT & CREDITS */}
-          <Route path="/payment" element={<PaymentPage />} />
-          <Route path="/payment/history" element={<PaymentHistoryPage />} />
+            {/* PAYMENT & CREDITS */}
+            <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/payment/history" element={<PaymentHistoryPage />} />
 
-          {/* RESOURCES */}
-          <Route path="/resources" element={<ResourcePage />} />
-          <Route path="/resources/:id" element={<ResourceDetailPage />} />
-          <Route path="/ebooks" element={<EbookPage />} />
-        </Route>
+            {/* RESOURCES */}
+            <Route path="/resources" element={<ResourcePage />} />
+            <Route path="/resources/:id" element={<ResourceDetailPage />} />
+            <Route path="/ebooks" element={<EbookPage />} />
+          </Route>
 
-        {/* ================================================================== */}
-        {/* ADMIN ROUTES - With AdminLayout (Admin Header + Admin Sidebar) */}
-        {/* ================================================================== */}
-        <Route element={<AdminLayout />}>
-          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-          <Route
-            path="/admin/notifications"
-            element={<AdminNotificationPage />}
-          />
-          <Route path="/admin/resources" element={<AdminResourcePage />} />
-          <Route path="/admin/payments" element={<AdminPaymentPage />} />
-          <Route path="/admin/promotions" element={<AdminPromotionPage />} />
-          <Route path="/admin/users" element={<AdminUserPage />} />
-          <Route path="/admin/tests" element={<AdminTestPage />} />
-          <Route path="/admin/tests/:id" element={<AdminTestDetailPage />} />
-          <Route path="/admin/tests/:id/edit" element={<AdminTestEditPage />} />
-        </Route>
+          {/* ================================================================== */}
+          {/* ADMIN ROUTES - With AdminLayout (Admin Header + Admin Sidebar) */}
+          {/* ================================================================== */}
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route
+              path="/admin/notifications"
+              element={<AdminNotificationPage />}
+            />
+            <Route path="/admin/resources" element={<AdminResourcePage />} />
+            <Route path="/admin/payments" element={<AdminPaymentPage />} />
+            <Route path="/admin/promotions" element={<AdminPromotionPage />} />
+            <Route path="/admin/users" element={<AdminUserPage />} />
+            <Route path="/admin/tests" element={<AdminTestPage />} />
+            <Route path="/admin/tests/:id" element={<AdminTestDetailPage />} />
+            <Route
+              path="/admin/tests/:id/edit"
+              element={<AdminTestEditPage />}
+            />
+          </Route>
 
-        {/* ================================================================== */}
-        {/* NoHeaderLayout (Sidebar only) */}
-        {/* ================================================================== */}
-        <Route element={<NoHeaderLayout />}>
-          {/* TEST RESULTS & ANALYSIS */}
-          <Route path="/test-exam/:testId" element={<TestExam />} />
-          <Route path="/test-exam" element={<TestExam />} />
+          {/* ================================================================== */}
+          {/* NoHeaderLayout (Sidebar only) */}
+          {/* ================================================================== */}
+          <Route element={<NoHeaderLayout />}>
+            {/* TEST RESULTS & ANALYSIS */}
+            <Route path="/test-exam/:testId" element={<TestExam />} />
+            <Route path="/test-exam" element={<TestExam />} />
 
-          <Route
-            path="/me/tests/:attemptId/analysis"
-            element={<ExamAnalysisPage />}
-          />
-          <Route
-            path="/speech/recordings/:id"
-            element={<SpeechAnalyzePage />}
-          />
-          <Route path="/test-detail/:testId" element={<ToeicTestDetail />} />
-          <Route
-            path="/speaking-result-demo"
-            element={<SpeakingResultDemoPage />}
-          />
-          <Route path="/speaking-result" element={<SpeakingResultPage />} />
-          <Route path="/writing-result" element={<WritingResultPage />} />
-        </Route>
+            <Route
+              path="/me/tests/:attemptId/analysis"
+              element={<ExamAnalysisPage />}
+            />
+            <Route
+              path="/speech/recordings/:id"
+              element={<SpeechAnalyzePage />}
+            />
+            <Route path="/test-detail/:testId" element={<ToeicTestDetail />} />
+            <Route
+              path="/speaking-result-demo"
+              element={<SpeakingResultDemoPage />}
+            />
+            <Route path="/speaking-result" element={<SpeakingResultPage />} />
+            <Route path="/writing-result" element={<WritingResultPage />} />
+          </Route>
 
-        {/* ================================================================== */}
-        {/* 404 NOT FOUND */}
-        {/* ================================================================== */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <Toaster />
+          {/* ================================================================== */}
+          {/* 404 NOT FOUND */}
+          {/* ================================================================== */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
 
-      {/* AI Chatbot - Available on all pages except admin */}
-      <ChatbotWrapper />
+        {/* AI Chatbot - Available on all pages except admin and when Live Mode is on */}
+        <ChatbotWrapper />
+
+        {/* LiveContext companion (orb, DOM annotations, floating webcam) */}
+        <LiveContextRoot />
+      </CompanionProvider>
     </Router>
   );
 }
