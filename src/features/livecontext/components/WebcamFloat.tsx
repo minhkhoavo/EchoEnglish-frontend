@@ -66,7 +66,7 @@ export default function WebcamFloat() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<Position | null>(null);
   const [minimized, setMinimized] = useState(false);
-  const [audioOnly, setAudioOnly] = useState(false);
+  const [audioOnly, setAudioOnly] = useState(true);
   const [sizeMode, setSizeMode] = useState<SizeMode>('pip');
   const [viewportSize, setViewportSize] = useState({
     w: window.innerWidth,

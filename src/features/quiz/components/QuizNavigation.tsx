@@ -33,13 +33,22 @@ export const QuizNavigation = ({ onSubmitQuiz }: QuizNavigationProps) => {
         variant="outline"
         onClick={handlePrevious}
         disabled={currentQuestionIndex === 0}
+        data-ai-id="quiz-prev-btn"
+        data-ai-label="Previous question"
+        data-ai-role="navigation"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Previous
       </Button>
 
       <div className="flex space-x-2">
-        <Button variant="outline" onClick={handleSubmit}>
+        <Button
+          variant="outline"
+          onClick={handleSubmit}
+          data-ai-id="quiz-submit-btn"
+          data-ai-label="Submit quiz"
+          data-ai-role="save"
+        >
           Submit Quiz
         </Button>
 
@@ -49,6 +58,9 @@ export const QuizNavigation = ({ onSubmitQuiz }: QuizNavigationProps) => {
             disabled={
               !selectedAnswers[activeQuiz.questions[currentQuestionIndex].id]
             }
+            data-ai-id="quiz-next-btn"
+            data-ai-label="Next question"
+            data-ai-role="navigation"
           >
             Next <ArrowRight className="h-4 w-4 ml-2" />
           </Button>

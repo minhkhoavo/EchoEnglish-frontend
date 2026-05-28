@@ -74,7 +74,11 @@ export const ScoreOverview = ({ scoreData }: ScoreOverviewProps) => {
   };
 
   return (
-    <Card>
+    <Card
+      data-ai-id="dashboard-score-overview"
+      data-ai-label={`TOEIC score prediction: overall ${roundedOverallScore}/${scoreData.targetScore} target (listening ${roundedListeningScore}, reading ${roundedReadingScore})`}
+      data-ai-role="score"
+    >
       <CardHeader className="text-center">
         <CardTitle className="text-2xl" style={{ color: '#1F2937' }}>
           TOEIC Score Prediction

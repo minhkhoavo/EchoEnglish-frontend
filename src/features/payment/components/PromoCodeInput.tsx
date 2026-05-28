@@ -85,6 +85,9 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               disabled={disabled || isValidating}
+              data-ai-id="promo-code-input"
+              data-ai-label="Promo code input"
+              data-ai-role="input"
               className={`uppercase ${
                 showValidation
                   ? isValid
@@ -113,6 +116,9 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
             variant="outline"
             size="default"
             className="px-4"
+            data-ai-id="promo-code-apply-btn"
+            data-ai-label="Apply promo code"
+            data-ai-role="save"
           >
             {isValidating ? (
               <Loader2 className="w-4 h-4 animate-spin" />

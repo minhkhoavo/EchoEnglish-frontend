@@ -173,6 +173,9 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
                 size="sm"
                 className="hidden sm:flex items-center space-x-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
                 onClick={() => navigate('/payment')}
+                data-ai-id="header-credits-btn"
+                data-ai-label={`Credit balance: ${userBalance.credits.toLocaleString('vi-VN')} credits — click to buy more`}
+                data-ai-role="navigation"
               >
                 <Coins className="h-4 w-4" />
                 <span className="font-medium">
@@ -198,6 +201,9 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
                 size="sm"
                 className="relative hover:bg-gray-100 dark:hover:bg-gray-800"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                data-ai-id="header-notifications-btn"
+                data-ai-label={`Notifications${displayUnreadCount > 0 ? ` (${displayUnreadCount} unread)` : ''}`}
+                data-ai-role="navigation"
               >
                 <Bell className="h-4 w-4" />
                 {displayUnreadCount > 0 && (
@@ -225,6 +231,9 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
                   variant="ghost"
                   size="icon"
                   className="relative rounded-full"
+                  data-ai-id="header-user-menu-btn"
+                  data-ai-label={`User menu for ${user?.fullName || 'User'}`}
+                  data-ai-role="navigation"
                 >
                   <UserAvatar
                     src={user?.image}

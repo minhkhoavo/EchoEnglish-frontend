@@ -459,7 +459,7 @@ export function useLiveApi(
             );
             ctx2.restore();
 
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.3);
             const base64Image = dataUrl.split(',')[1];
 
             wsRef.current.send(
@@ -471,8 +471,8 @@ export function useLiveApi(
             );
           };
 
-          videoIntervalRef.current = setInterval(sendFrame, 500);
-          console.log('📹 [LiveAPI] Video streaming at 2 FPS');
+          videoIntervalRef.current = setInterval(sendFrame, 2000);
+          console.log('📹 [LiveAPI] Video streaming at 0.5 FPS (optimized)');
         }
 
         setIsStreaming(true);
