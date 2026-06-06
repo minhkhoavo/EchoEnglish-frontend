@@ -28,6 +28,7 @@ import CreateEditFlashcardDialog from '@/features/resource/components/CreateEdit
 import YouTubeTranscriptPlayer from '@/features/resource/components/YouTubeTranscriptPlayer';
 import VocabularySheet from '@/features/resource/components/VocabularySheet';
 import { ArticleExerciseContainer } from '@/features/resource/components/exercises/reading';
+import { RawHtmlRenderer, useCompanion } from '@/features/livecontext';
 
 export default function ResourceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -63,6 +64,34 @@ export default function ResourceDetailPage() {
     useGetTranscriptMutation();
 
   const flashcards: Flashcard[] = flashcardsResponse || [];
+
+  // ── Publish the active resource into LiveContext so the AI knows what
+  //    the user is reading. This gets surfaced in get_screen_context().
+  const { setPageContext } = useCompanion();
+  useEffect(() => {
+    if (!resource) {
+      setPageContext('resource', null);
+      return;
+    }
+    setPageContext('resource', {
+      id: resource._id || id,
+      title: resource.title,
+      type: resource.type,
+      summary: resource.summary,
+      description: resource.description,
+      url: resource.url,
+      keyPoints: resource.keyPoints,
+      labels: resource.labels,
+      // First 800 chars only — full text via get_resource_text tool
+      contentPreview: (resource.content || '')
+        .replace(/<[^>]+>/g, ' ')
+        .slice(0, 800),
+      // Tell the AI exactly which ai_id wraps the article body so it can
+      // call highlight_text({container_ai_id: '<this>'})
+      articleContainerAiId: `resource-${id || resource._id || 'doc'}`,
+    });
+    return () => setPageContext('resource', null);
+  }, [resource, id, setPageContext]);
 
   // Fetch transcript when component mounts
   useEffect(() => {
@@ -189,14 +218,26 @@ export default function ResourceDetailPage() {
     resource.isArticle;
 
   return (
-    <div className="min-h-screen bg-gray-50" onMouseUp={handleTextSelection}>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div
+      className="min-h-screen bg-gray-50"
+      onMouseUp={handleTextSelection}
+      data-ai-id="resource-detail-page"
+      data-ai-label={`Resource detail: ${resource?.title || ''}`}
+    >
+      <main
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+        data-ai-id="resource-detail-main"
+        data-ai-role="section"
+      >
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8" data-ai-id="resource-detail-header">
           <Button
             variant="ghost"
             onClick={() => navigate(-1)}
             className="mb-4 hover:bg-gray-100"
+            data-ai-id="resource-back-btn"
+            data-ai-label="Back to resources"
+            data-ai-role="cancel"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
@@ -224,13 +265,23 @@ export default function ResourceDetailPage() {
                   </Badge>
                 )}
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+              <h1
+                className="text-3xl font-bold text-gray-900 leading-tight"
+                data-ai-id="resource-detail-title"
+                data-ai-label={`Resource title: ${resource.title}`}
+                data-ai-role="heading"
+              >
                 {resource.title}
               </h1>
 
               {/* Key Points */}
               {resource.keyPoints && resource.keyPoints.length > 0 && (
-                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                <div
+                  className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg"
+                  data-ai-id="resource-key-points"
+                  data-ai-label={`Key points: ${resource.keyPoints.join('; ')}`}
+                  data-ai-role="section"
+                >
                   <h3 className="font-semibold text-blue-900 mb-2">
                     Key Points:
                   </h3>
@@ -239,6 +290,9 @@ export default function ResourceDetailPage() {
                       <li
                         key={index}
                         className="text-blue-800 text-sm flex items-start gap-2"
+                        data-ai-id={`resource-key-point-${index}`}
+                        data-ai-label={`Key point ${index + 1}: ${point}`}
+                        data-ai-role="list-item"
                       >
                         <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                         {point}
@@ -249,7 +303,12 @@ export default function ResourceDetailPage() {
               )}
 
               {resource.description && (
-                <p className="text-gray-600 text-lg leading-relaxed max-w-4xl">
+                <p
+                  className="text-gray-600 text-lg leading-relaxed max-w-4xl"
+                  data-ai-id="resource-description"
+                  data-ai-label={`Description: ${(resource.description as string).slice(0, 200)}`}
+                  data-ai-role="paragraph"
+                >
                   {resource.description}
                 </p>
               )}
@@ -312,8 +371,17 @@ export default function ResourceDetailPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       download
+                      data-ai-id="resource-attachment-link"
+                      data-ai-label={`Download attachment: ${resource.attachmentName || 'document'}`}
+                      data-ai-role="view"
                     >
-                      <Button variant="outline" className="gap-2">
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        data-ai-id="resource-attachment-btn"
+                        data-ai-label={`Download attachment: ${resource.attachmentName || 'document'}`}
+                        data-ai-role="view"
+                      >
                         <Download className="w-4 h-4" />
                         Download
                       </Button>
@@ -325,11 +393,25 @@ export default function ResourceDetailPage() {
 
             {/* Article Content */}
             <Card>
-              <CardContent className="p-8">
+              <CardContent
+                className="p-8"
+                data-ai-id="resource-article-card"
+                data-ai-label={`Article content: ${resource.title || ''}`}
+                data-ai-role="section"
+              >
                 <div className="prose prose-lg max-w-none">
                   {resource.content ? (
-                    <div
-                      dangerouslySetInnerHTML={{ __html: resource.content }}
+                    /*
+                     * Wrap article HTML in RawHtmlRenderer so every heading,
+                     * paragraph, list-item, blockquote, link and table gets
+                     * a stable data-ai-id and every paragraph is split into
+                     * sentence-level spans. This is what lets the AI call
+                     * highlight_text({container_ai_id, text}) on the exact
+                     * phrase the user asked about.
+                     */
+                    <RawHtmlRenderer
+                      html={resource.content}
+                      prefix={`resource-${id || resource._id || 'doc'}`}
                       className="leading-relaxed article-content"
                     />
                   ) : (

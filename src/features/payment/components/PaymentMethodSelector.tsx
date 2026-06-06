@@ -52,6 +52,9 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           return (
             <Card
               key={method.id}
+              data-ai-id={`payment-method-${method.id.toLowerCase()}`}
+              data-ai-label={`Payment method: ${method.name} — ${method.description}${isSelected ? ' (selected)' : ''}`}
+              data-ai-role="payment-method"
               className={`relative cursor-pointer transition-all duration-200 hover:shadow-md ${
                 isSelected
                   ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200'

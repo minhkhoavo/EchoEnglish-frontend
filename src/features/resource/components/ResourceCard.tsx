@@ -38,8 +38,18 @@ export default function ResourceCard({
     return text.substring(0, maxLength) + '...';
   };
 
+  // Stable AI handle. Combines the resource _id with title fragment so the AI
+  // can refer to "the article about climate" rather than an opaque hash.
+  const resAiId = `resource-card-${resource._id || (resource.title || '').slice(0, 16).replace(/\s+/g, '-').toLowerCase()}`;
+  const resAiLabel = `${isVideo ? 'Video' : 'Article'}: ${resource.title || 'Untitled'}${resource.labels?.cefr ? ` (level ${resource.labels.cefr})` : ''}`;
+
   return (
-    <Card className="group h-full overflow-hidden shadow-card hover:shadow-floating transition-smooth">
+    <Card
+      data-ai-id={resAiId}
+      data-ai-label={resAiLabel}
+      data-ai-role="resource-card"
+      className="group h-full overflow-hidden shadow-card hover:shadow-floating transition-smooth"
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start gap-3">
           <div
@@ -62,6 +72,9 @@ export default function ResourceCard({
             <CardTitle
               className="text-base leading-tight line-clamp-2 hover:text-primary transition-smooth cursor-pointer"
               onClick={() => onRead(resource)}
+              data-ai-id={`${resAiId}-title`}
+              data-ai-label={`Open: ${resource.title || 'Untitled'}`}
+              data-ai-role="view"
             >
               {resource.title || 'Untitled'}
             </CardTitle>
@@ -132,6 +145,9 @@ export default function ResourceCard({
               onClick={() => onRead(resource)}
               className="flex-1"
               size="sm"
+              data-ai-id={`${resAiId}-read-btn`}
+              data-ai-label={`${isVideo ? 'Watch' : 'Read'} "${resource.title || 'Untitled'}"`}
+              data-ai-role="view"
             >
               <Eye className="h-4 w-4 mr-2" />
               {isVideo ? 'Watch' : 'Read'}
@@ -143,6 +159,9 @@ export default function ResourceCard({
               }}
               variant="outline"
               size="sm"
+              data-ai-id={`${resAiId}-external-btn`}
+              data-ai-label={`Open original source of "${resource.title || 'Untitled'}" in a new tab`}
+              data-ai-role="view"
             >
               <ExternalLink className="h-4 w-4" />
             </Button>

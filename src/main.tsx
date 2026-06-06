@@ -6,7 +6,7 @@ import { Provider } from 'react-redux';
 import { store } from './core/store/store.ts';
 import { PostHogProvider } from 'posthog-js/react';
 
-const isProduction = import.meta.env.VITE_ENVIRONMENT === 'PRODUCTION';
+const isProduction = import.meta.env.VITE_ENVIRONMENT === 'prd';
 
 createRoot(document.getElementById('root')!).render(
   //   <StrictMode>

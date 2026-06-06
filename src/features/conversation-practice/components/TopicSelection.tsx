@@ -161,6 +161,9 @@ const TopicSelection: React.FC<TopicSelectionProps> = ({
             <button
               onClick={onCustomConversation}
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-medium shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-200"
+              data-ai-id="conversation-custom-btn"
+              data-ai-label="Create a custom conversation scenario"
+              data-ai-role="create"
             >
               <Sparkles className="w-5 h-5" />
               Create Custom Conversation
@@ -206,6 +209,9 @@ const TopicSelection: React.FC<TopicSelectionProps> = ({
                       return (
                         <Card
                           key={topic.id}
+                          data-ai-id={`conversation-topic-${topic.id}`}
+                          data-ai-label={`Conversation topic: ${topic.title} (${topic.difficulty}, ${topic.estimatedMinutes}m) — ${topic.description}`}
+                          data-ai-role="conversation-topic"
                           className="group cursor-pointer border border-slate-200/80 bg-white hover:border-blue-300 hover:shadow-lg hover:shadow-blue-100/50 transition-all duration-200 overflow-hidden"
                           onClick={() => onSelectTopic(topic)}
                         >

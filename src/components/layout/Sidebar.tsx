@@ -107,6 +107,9 @@ export const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           sidebarOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full',
           'fixed lg:relative z-40'
         )}
+        data-ai-id="primary-sidebar"
+        data-ai-label="Primary navigation sidebar"
+        data-ai-role="navigation"
       >
         <nav className="p-4 space-y-2 lg:group-hover:px-4 lg:px-2">
           {/* Header - hidden on collapsed, shown on hover */}
@@ -127,6 +130,9 @@ export const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               key={item.path}
               to={item.path}
               onClick={handleNavClick}
+              data-ai-id={`nav-${item.path.replace(/\//g, '-').replace(/^-/, '')}`}
+              data-ai-label={`Go to ${item.name}`}
+              data-ai-role="navigation"
               className={({ isActive }) =>
                 cn(
                   'w-full flex items-center text-left transition-all duration-200 rounded-lg',

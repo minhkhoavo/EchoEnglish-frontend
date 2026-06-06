@@ -396,6 +396,9 @@ export function DailyLesson({
                                 : 'bg-[#10b981] hover:bg-[#059669]'
                             } text-white`}
                             onClick={() => handleDrillClick(drill)}
+                            data-ai-id={`daily-drill-${drill.id || drill.title?.slice(0, 16).replace(/\s+/g, '-')}-btn`}
+                            data-ai-label={`${isDrillCompleted ? 'Review' : 'Start'} drill: ${drill.title}`}
+                            data-ai-role="start"
                             // disabled={isDrillCompleted}
                           >
                             <Play className="w-3 h-3 mr-1" />

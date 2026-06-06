@@ -86,9 +86,16 @@ const FlashcardItem: React.FC<FlashcardItemProps> = ({
     }
   };
 
+  // AI-friendly identifier — the AI uses this id to point at / click this card.
+  const flashcardAiId = `flashcard-${flashcard._id || flashcard.front.slice(0, 16).replace(/\s+/g, '-')}`;
+  const flashcardAiLabel = `Flashcard "${flashcard.front}" → "${flashcard.back}" (${flashcard.difficulty}, ${getCategoryName(flashcard.category)})`;
+
   if (viewMode === 'list') {
     return (
       <div
+        data-ai-id={flashcardAiId}
+        data-ai-label={flashcardAiLabel}
+        data-ai-role="flashcard-item"
         className={`bg-gradient-to-r from-white via-gray-50/30 to-white rounded-xl shadow-sm border p-5 hover:shadow-lg hover:border-blue-300/50 transition-all duration-300 group backdrop-blur-sm ${isSelected ? 'border-blue-500 bg-blue-50/20' : 'border-gray-200/60'}`}
       >
         <div className="flex items-center gap-4">
@@ -183,6 +190,9 @@ const FlashcardItem: React.FC<FlashcardItemProps> = ({
                 size="sm"
                 onClick={handleEdit}
                 className="h-8 w-8 p-0 bg-white/80 backdrop-blur-sm shadow-sm border border-gray-200/50 text-gray-600 hover:text-blue-600 hover:bg-blue-50/80 hover:border-blue-300/60 transition-all duration-200"
+                data-ai-id={`${flashcardAiId}-edit-btn`}
+                data-ai-label={`Edit flashcard "${flashcard.front}"`}
+                data-ai-role="save"
               >
                 <Edit className="h-3.5 w-3.5" />
               </Button>
@@ -191,6 +201,9 @@ const FlashcardItem: React.FC<FlashcardItemProps> = ({
                 size="sm"
                 onClick={handleDelete}
                 className="h-8 w-8 p-0 bg-white/80 backdrop-blur-sm shadow-sm border border-gray-200/50 text-gray-600 hover:text-red-600 hover:bg-red-50/80 hover:border-red-300/60 transition-all duration-200"
+                data-ai-id={`${flashcardAiId}-delete-btn`}
+                data-ai-label={`Delete flashcard "${flashcard.front}"`}
+                data-ai-role="delete"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
@@ -226,6 +239,9 @@ const FlashcardItem: React.FC<FlashcardItemProps> = ({
 
   return (
     <div
+      data-ai-id={flashcardAiId}
+      data-ai-label={flashcardAiLabel}
+      data-ai-role="flashcard-item"
       className={`bg-gradient-to-br from-white to-gray-50/30 h-80 rounded-xl shadow-sm border flex flex-col relative group cursor-pointer hover:shadow-xl hover:border-blue-300/40 transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] backdrop-blur-sm ${isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200/60'}`}
       onClick={toggleFlip}
     >

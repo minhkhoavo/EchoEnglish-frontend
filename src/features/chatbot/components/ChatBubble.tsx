@@ -30,7 +30,11 @@ import {
 } from './ChatbotLayouts';
 import { QuickSuggestions } from './QuickSuggestions';
 import { AIAvatar, ThinkingIndicator } from './StreamingMessage';
+import { LiveModeToggle } from '@/features/livecontext';
 import '../styles/chatbot.css';
+
+// Check if LiveContext is enabled based on environment
+const IS_LIVECONTEXT_ENABLED = import.meta.env.VITE_ENVIRONMENT !== 'prd';
 
 interface ChatBubbleProps {
   isOpen: boolean;
@@ -273,6 +277,8 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         </div>
 
         <div className="flex items-center space-x-2 relative z-10">
+          {/* Switch to LiveContext (voice + screen + webcam) mode - only in non-production */}
+          {IS_LIVECONTEXT_ENABLED && <LiveModeToggle onEnable={onClose} />}
           <Button
             onClick={onToggle}
             size="sm"

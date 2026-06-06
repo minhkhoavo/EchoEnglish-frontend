@@ -23,8 +23,17 @@ const ResourceListItem: React.FC<Props> = ({
   isUpdating,
   isDeleting,
 }) => {
+  const resAiId = `resource-row-${resource._id || (resource.title || '').slice(0, 16).replace(/\s+/g, '-').toLowerCase()}`;
+  const resAiLabel = `${resource.type === ResourceType.YOUTUBE ? 'Video' : 'Article'}: ${resource.title} · ${resource.suitableForLearners ? 'Approved' : 'Pending'}`;
+
   return (
-    <Card key={resource._id} className="relative p-4">
+    <Card
+      key={resource._id}
+      data-ai-id={resAiId}
+      data-ai-label={resAiLabel}
+      data-ai-role="resource-row"
+      className="relative p-4"
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
@@ -63,6 +72,9 @@ const ResourceListItem: React.FC<Props> = ({
                 size="sm"
                 onClick={() => onApprove && onApprove(resource)}
                 disabled={isUpdating}
+                data-ai-id={`${resAiId}-approve-btn`}
+                data-ai-label={`Approve "${resource.title}"`}
+                data-ai-role="save"
               >
                 <Eye className="h-4 w-4 mr-1" />
                 Approve
@@ -73,6 +85,9 @@ const ResourceListItem: React.FC<Props> = ({
                 variant="outline"
                 onClick={() => onReject && onReject(resource)}
                 disabled={isUpdating}
+                data-ai-id={`${resAiId}-reject-btn`}
+                data-ai-label={`Reject "${resource.title}"`}
+                data-ai-role="cancel"
               >
                 <EyeOff className="h-4 w-4 mr-1" />
                 Reject
@@ -87,7 +102,14 @@ const ResourceListItem: React.FC<Props> = ({
               onConfirm={() => onDelete && onDelete(resource)}
               variant="destructive"
             >
-              <Button size="sm" variant="destructive" disabled={isDeleting}>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={isDeleting}
+                data-ai-id={`${resAiId}-delete-btn`}
+                data-ai-label={`Delete "${resource.title}"`}
+                data-ai-role="delete"
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </ConfirmationDialog>
@@ -100,6 +122,9 @@ const ResourceListItem: React.FC<Props> = ({
             variant="outline"
             onClick={() => window.open(resource.url, '_blank')}
             className="text-blue-600 hover:text-blue-700"
+            data-ai-id={`${resAiId}-external-btn`}
+            data-ai-label={`Open original source of "${resource.title}" in a new tab`}
+            data-ai-role="view"
           >
             <ExternalLink className="h-4 w-4" />
           </Button>

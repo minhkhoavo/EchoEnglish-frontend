@@ -139,10 +139,18 @@ export function LearningResourceCard({
   const bgColor = getResourceColor(resource.type);
   const isCompleted = resource.completed;
 
+  const lrAiId = `learning-resource-${resource._id || (resource.title || '').slice(0, 16).replace(/\s+/g, '-').toLowerCase()}`;
+  const lrAiLabel = `Learning resource (${resource.type}): ${resource.title} · ${resource.estimatedTime || 30} min${isCompleted ? ' · completed' : ''}`;
+
   if (compact) {
     return (
       <>
-        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#e5e7eb] hover:border-[#bfdbfe] transition-colors group">
+        <div
+          data-ai-id={lrAiId}
+          data-ai-label={lrAiLabel}
+          data-ai-role="learning-resource"
+          className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[#e5e7eb] hover:border-[#bfdbfe] transition-colors group"
+        >
           <div className={`p-2 ${bgColor} rounded-lg flex-shrink-0`}>
             <Icon className="w-4 h-4 text-white" />
           </div>
@@ -170,6 +178,9 @@ export function LearningResourceCard({
                   e.stopPropagation();
                   handleResourceClick(resource);
                 }}
+                data-ai-id={`${lrAiId}-open-btn`}
+                data-ai-label={`Open learning resource: ${resource.title}`}
+                data-ai-role="view"
                 // disabled={isCompleted && showCompletedState}
               >
                 {resource.type === 'article' || resource.type === 'video' ? (
@@ -200,6 +211,9 @@ export function LearningResourceCard({
   return (
     <>
       <Card
+        data-ai-id={lrAiId}
+        data-ai-label={lrAiLabel}
+        data-ai-role="learning-resource"
         className={`p-4 border border-[#e5e7eb] hover:border-[#bfdbfe] transition-colors group ${isCompleted && showCompletedState ? 'bg-[#f8fafc] opacity-75' : 'bg-white'}`}
       >
         <div className="flex items-start gap-3">
@@ -237,6 +251,9 @@ export function LearningResourceCard({
                     variant="outline"
                     className="h-7 text-xs"
                     onClick={handleComplete}
+                    data-ai-id={`${lrAiId}-complete-btn`}
+                    data-ai-label={`Mark "${resource.title}" as complete`}
+                    data-ai-role="save"
                   >
                     Mark Complete
                   </Button>
@@ -246,6 +263,9 @@ export function LearningResourceCard({
                   className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white h-7 text-xs"
                   onClick={() => handleResourceClick(resource)}
                   disabled={isCompleted && showCompletedState}
+                  data-ai-id={`${lrAiId}-start-btn`}
+                  data-ai-label={`Start learning resource: ${resource.title}`}
+                  data-ai-role="start"
                 >
                   {resource.type === 'article' || resource.type === 'video' ? (
                     <>

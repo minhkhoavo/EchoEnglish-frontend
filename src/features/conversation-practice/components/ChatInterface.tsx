@@ -326,12 +326,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 placeholder="Type your message..."
                 disabled={disabled}
                 autoFocus
+                data-ai-id="conversation-message-input"
+                data-ai-label="Conversation practice message input"
+                data-ai-role="input"
                 className="flex-1 rounded-full px-5 py-6 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
               />
               <Button
                 onClick={handleSend}
                 disabled={!inputValue.trim() || disabled}
                 size="lg"
+                data-ai-id="conversation-send-btn"
+                data-ai-label="Send conversation message"
+                data-ai-role="save"
                 className="rounded-full w-12 h-12 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300"
               >
                 <Send className="w-5 h-5" />
@@ -350,6 +356,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   onClick={isRecording ? onStopRecording : onStartRecording}
                   disabled={disabled}
                   size="lg"
+                  data-ai-id="conversation-record-btn"
+                  data-ai-label={
+                    isRecording
+                      ? 'Stop recording your voice'
+                      : 'Start recording your voice'
+                  }
+                  data-ai-role="start"
                   className={cn(
                     'relative rounded-full w-20 h-20 transition-all duration-200',
                     isRecording
