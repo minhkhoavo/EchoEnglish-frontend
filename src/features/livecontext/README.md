@@ -307,7 +307,7 @@ react to this state in real time.
 ## 9. How to drive it as the user
 
 1. Open any non-admin page → click the floating blue chatbot bubble.
-2. In the chatbot header, click the **"Live AI Mode"** pill.
+2. In the chatbot header, click the **"Live AI"** pill.
 3. The chatbot collapses; the **orb** appears bottom-right.
 4. Click the orb to connect (it negotiates the WebSocket with Gemini).
 5. Click the orb again to open the slide-up panel; press `🎤` to start

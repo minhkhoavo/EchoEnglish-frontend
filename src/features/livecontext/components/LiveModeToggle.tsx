@@ -4,6 +4,7 @@
  * Small pill the user can drop into any UI (header, chatbot, sidebar) to switch
  * the legacy text chatbot off and bring up the LiveContext companion instead.
  */
+import { Sparkles } from 'lucide-react';
 import { useCompanion } from '../context/CompanionContext';
 
 interface LiveModeToggleProps {
@@ -47,8 +48,8 @@ export default function LiveModeToggle({
       data-ai-id="lc-live-mode-toggle"
       data-ai-label="Toggle Live AI Mode"
     >
-      <span className="lc-live-mode-toggle__dot" />
-      {liveModeEnabled ? 'Live ON — tap to exit' : 'Live AI Mode'}
+      <Sparkles className="h-3.5 w-3.5 text-yellow-300 animate-pulse" />
+      {liveModeEnabled ? 'Live ON — tap to exit' : 'Live AI'}
     </button>
   );
 }
