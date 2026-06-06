@@ -180,10 +180,19 @@ export default function VocabularyBrowsePage() {
 
   if (!selectedSet) {
     return (
-      <div className="h-full bg-slate-50 dark:bg-slate-900">
+      <div
+        className="h-full bg-slate-50 dark:bg-slate-900"
+        data-ai-id="vocabulary-library-page"
+        data-ai-label="Vocabulary library — list of vocabulary sets"
+        data-ai-role="section"
+      >
         <div className="container mx-auto p-6 max-w-7xl">
           {/* Hero Section */}
-          <div className="mb-8 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950 rounded-2xl p-8 border-2 border-blue-200 dark:border-blue-800">
+          <div
+            className="mb-8 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950 dark:via-indigo-950 dark:to-purple-950 rounded-2xl p-8 border-2 border-blue-200 dark:border-blue-800"
+            data-ai-id="vocabulary-library-hero"
+            data-ai-label="Vocabulary library header"
+          >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
@@ -205,6 +214,9 @@ export default function VocabularyBrowsePage() {
                 size="lg"
                 onClick={() => navigate('/flashcards?tab=review')}
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                data-ai-id="vocabulary-start-review-btn"
+                data-ai-label="Start reviewing flashcards"
+                data-ai-role="start"
               >
                 <Zap className="h-5 w-5 mr-2" />
                 Start Review
@@ -233,10 +245,17 @@ export default function VocabularyBrowsePage() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              data-ai-id="vocabulary-set-grid"
+              data-ai-label={`Vocabulary set list (${sets.length} sets)`}
+            >
               {sets.map((set) => (
                 <Card
                   key={set.fileName}
+                  data-ai-id={`vocabulary-set-${set.fileName}`}
+                  data-ai-label={`Vocabulary set: ${set.name} (${set.wordCount} words) — ${set.description}`}
+                  data-ai-role="view"
                   className="rounded-xl cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-blue-300 dark:hover:border-blue-700 group"
                   onClick={() => {
                     setSelectedSet(set);
@@ -324,6 +343,9 @@ export default function VocabularyBrowsePage() {
                 onClick={() => setBulkImportOpen(true)}
                 className="border-2 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
                 disabled={words.length === 0}
+                data-ai-id="vocabulary-bulk-import-btn"
+                data-ai-label={`Bulk import all words from "${selectedSet.name}" to flashcards`}
+                data-ai-role="create"
               >
                 <PackagePlus className="h-5 w-5 mr-2" />
                 Bulk Import
@@ -332,6 +354,9 @@ export default function VocabularyBrowsePage() {
                 size="lg"
                 onClick={() => navigate('/flashcards?tab=review')}
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                data-ai-id="vocabulary-review-now-btn"
+                data-ai-label="Review flashcards now"
+                data-ai-role="start"
               >
                 <Zap className="h-5 w-5 mr-2" />
                 Review Now
@@ -351,16 +376,31 @@ export default function VocabularyBrowsePage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="pl-12 h-12 text-base border-2"
+                data-ai-id="vocabulary-search-input"
+                data-ai-label="Search vocabulary words"
+                data-ai-role="search"
               />
             </div>
-            <Button onClick={handleSearch} size="lg" className="px-8">
+            <Button
+              onClick={handleSearch}
+              size="lg"
+              className="px-8"
+              data-ai-id="vocabulary-search-btn"
+              data-ai-label="Search vocabulary"
+              data-ai-role="search"
+            >
               <Search className="h-4 w-4 mr-2" />
               Search
             </Button>
           </div>
 
           {/* Filter Buttons */}
-          <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2"
+            data-ai-id="vocabulary-filters"
+            data-ai-label="Filter vocabulary by import status"
+            data-ai-role="filter"
+          >
             <span className="text-sm font-medium text-muted-foreground">
               Filter:
             </span>
@@ -372,6 +412,9 @@ export default function VocabularyBrowsePage() {
                 setCurrentPage(1);
               }}
               className="h-9"
+              data-ai-id="vocabulary-filter-all"
+              data-ai-label="Show all words"
+              data-ai-role="filter"
             >
               All
             </Button>
@@ -385,6 +428,9 @@ export default function VocabularyBrowsePage() {
                 setCurrentPage(1);
               }}
               className="h-9"
+              data-ai-id="vocabulary-filter-not-imported"
+              data-ai-label="Show words not yet imported"
+              data-ai-role="filter"
             >
               Not Imported
             </Button>
@@ -396,6 +442,9 @@ export default function VocabularyBrowsePage() {
                 setCurrentPage(1);
               }}
               className="h-9"
+              data-ai-id="vocabulary-filter-imported"
+              data-ai-label="Show already-imported words"
+              data-ai-role="filter"
             >
               <Check className="h-4 w-4 mr-1" />
               Imported
@@ -415,7 +464,11 @@ export default function VocabularyBrowsePage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              data-ai-id="vocabulary-words-grid"
+              data-ai-label={`Vocabulary words in "${selectedSet.name}" (${words.length} shown)`}
+            >
               {words.map((word) => (
                 <VocabularyCard
                   key={word.card_id}

@@ -89,6 +89,9 @@ import {
   useCompanion,
 } from './features/livecontext';
 
+// Check if LiveContext is enabled based on environment
+const IS_LIVECONTEXT_ENABLED = import.meta.env.VITE_ENVIRONMENT !== 'prd';
+
 const QuizRouteWrapper = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -243,8 +246,8 @@ function App() {
         {/* AI Chatbot - Available on all pages except admin and when Live Mode is on */}
         <ChatbotWrapper />
 
-        {/* LiveContext companion (orb, DOM annotations, floating webcam) */}
-        <LiveContextRoot />
+        {/* LiveContext companion (orb, DOM annotations, floating webcam) - only in non-production */}
+        {IS_LIVECONTEXT_ENABLED && <LiveContextRoot />}
       </CompanionProvider>
     </Router>
   );
