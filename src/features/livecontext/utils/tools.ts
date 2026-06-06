@@ -543,6 +543,26 @@ export const toolDeclarations: ToolDefinition[] = [
           'Return the text the user currently has highlighted on the page, plus its container element. Use when the user says "what does this mean?" / "translate this".',
         parameters: { type: 'OBJECT', properties: {} },
       },
+      {
+        name: 'select_option',
+        description:
+          'Choose an option from a dropdown / select (works with the app\'s custom Radix selects AND native <select>). Pass the ai_id of the select trigger and the visible text of the option to choose, e.g. select_option({ai_id:"flashcard-form-difficulty", option_text:"Hard"}). Use this for difficulty pickers, category pickers, filters, etc. — fill_input does NOT work on these.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            ai_id: {
+              type: 'STRING',
+              description: 'ai_id of the select trigger element',
+            },
+            option_text: {
+              type: 'STRING',
+              description:
+                'Visible text of the option to pick (case-insensitive substring)',
+            },
+          },
+          required: ['ai_id', 'option_text'],
+        },
+      },
       // ─── EchoEnglish domain tools ────────────────────────────────────────
       {
         name: 'create_flashcard',
@@ -622,6 +642,43 @@ export const toolDeclarations: ToolDefinition[] = [
             },
           },
           required: ['flashcard_id'],
+        },
+      },
+      {
+        name: 'open_flashcard_dialog',
+        description:
+          'Open the "Create Flashcard" dialog ON SCREEN and pre-fill it so the user watches the form populate. Navigates to the Flashcards page first if needed. Prefer THIS over create_flashcard when the user is watching / on a demo / says "show me" — it is visual. Set auto_submit:true to also save it automatically after filling. Leave fields empty to just open a blank dialog for the user to fill.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            front: {
+              type: 'STRING',
+              description: 'Front side (English word/phrase)',
+            },
+            back: {
+              type: 'STRING',
+              description: 'Back side (translation/definition/example)',
+            },
+            category_name: {
+              type: 'STRING',
+              description:
+                'Category name (matched case-insensitively to an existing category)',
+            },
+            difficulty: {
+              type: 'STRING',
+              description: 'Difficulty',
+              enum: ['Easy', 'Medium', 'Hard'],
+            },
+            tags: { type: 'STRING', description: 'Comma-separated tags' },
+            phonetic: { type: 'STRING', description: 'IPA phonetic notation' },
+            source: { type: 'STRING', description: 'Source of the word' },
+            auto_submit: {
+              type: 'STRING',
+              description:
+                'If "true", auto-save after filling (default just fills + waits)',
+              enum: ['true', 'false'],
+            },
+          },
         },
       },
       {
@@ -785,24 +842,36 @@ function fillByAiId(
 ): { success: boolean; reason?: string } {
   const el = resolveAiElement(aiId);
   if (!el) return { success: false, reason: 'Element not found' };
-  if (
-    !(el instanceof HTMLInputElement) &&
-    !(el instanceof HTMLTextAreaElement) &&
-    !(el instanceof HTMLSelectElement)
-  ) {
-    return { success: false, reason: 'Not an input element' };
+
+  // Pick the native value setter for the ELEMENT'S OWN type. Using the
+  // HTMLInputElement setter on a <textarea> throws "Illegal invocation", so the
+  // previous `inputSetter || textareaSetter` logic silently failed on textareas
+  // (the flashcard front/back fields). Match the prototype to the instance.
+  let proto: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null =
+    null;
+  if (el instanceof HTMLTextAreaElement) proto = HTMLTextAreaElement.prototype;
+  else if (el instanceof HTMLInputElement) proto = HTMLInputElement.prototype;
+  else if (el instanceof HTMLSelectElement) proto = HTMLSelectElement.prototype;
+  else {
+    // contentEditable fallback
+    if ((el as HTMLElement).isContentEditable) {
+      (el as HTMLElement).focus();
+      (el as HTMLElement).textContent = value;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      return { success: true };
+    }
+    return { success: false, reason: 'Not a fillable element' };
   }
-  const setter =
-    Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')
-      ?.set ||
-    Object.getOwnPropertyDescriptor(
-      window.HTMLTextAreaElement.prototype,
-      'value'
-    )?.set;
+
+  el.focus();
+  const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
   if (setter) {
+    // React tracks the previous value on the element; setting via the native
+    // setter lets React's onChange fire on the dispatched input event.
     setter.call(el, value);
   } else {
-    (el as HTMLInputElement).value = value;
+    (el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement).value =
+      value;
   }
   el.dispatchEvent(new Event('input', { bubbles: true }));
   el.dispatchEvent(new Event('change', { bubbles: true }));
@@ -813,6 +882,56 @@ function scrollByAiId(aiId: string): { success: boolean; reason?: string } {
   const el = resolveAiElement(aiId);
   if (!el) return { success: false, reason: 'Element not found' };
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  return { success: true };
+}
+
+/**
+ * Pick an option from a dropdown. Handles:
+ *  - Native <select>: sets value + dispatches change.
+ *  - Radix Select (the app's <Select>): clicks the trigger to open the
+ *    listbox portal, then clicks the [role="option"] whose text matches.
+ */
+function selectOptionByAiId(
+  aiId: string,
+  optionText: string
+): { success: boolean; reason?: string } {
+  const el = resolveAiElement(aiId);
+  if (!el) return { success: false, reason: 'Element not found' };
+  const wanted = optionText.trim().toLowerCase();
+
+  // Native <select>
+  if (el instanceof HTMLSelectElement) {
+    const opt = Array.from(el.options).find((o) =>
+      o.textContent?.toLowerCase().includes(wanted)
+    );
+    if (!opt) return { success: false, reason: 'Option not found' };
+    el.value = opt.value;
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    return { success: true };
+  }
+
+  // Radix Select trigger (button[role="combobox"]) or any custom trigger:
+  // open it, then click the matching option in the portal.
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.click();
+  // The listbox renders in a portal a tick later.
+  setTimeout(() => {
+    const options = Array.from(
+      document.querySelectorAll<HTMLElement>('[role="option"]')
+    );
+    const match =
+      options.find((o) => o.textContent?.trim().toLowerCase() === wanted) ||
+      options.find((o) => o.textContent?.toLowerCase().includes(wanted));
+    if (match) {
+      match.click();
+    } else {
+      console.warn(
+        `[Tools] select_option: "${optionText}" not found in listbox`
+      );
+      // Close the listbox to avoid leaving it stuck open.
+      document.body.click();
+    }
+  }, 220);
   return { success: true };
 }
 
@@ -828,13 +947,13 @@ export async function executeToolCall(
   customToolCallback?: CustomToolCallback
 ): Promise<FunctionResponse> {
   const { name, id, args } = functionCall;
-  console.log(`🔧 [Tools] Executing tool: ${name}`, args);
+  console.log(`[Tools] Executing tool: ${name}`, args);
 
   switch (name) {
     case 'navigate_to_page': {
       const page = args.page as string;
       const route = PAGE_ROUTES[page] || `/${page}`;
-      console.log(`🔧 [Tools] ✅ Navigating to: ${route}`);
+      console.log(`[Tools] Navigating to: ${route}`);
       if (onNavigate) onNavigate(route);
       return {
         name,
@@ -913,6 +1032,14 @@ export async function executeToolCall(
 
     case 'scroll_to_element': {
       const r = scrollByAiId(args.ai_id as string);
+      return { name, id, response: { result: r } };
+    }
+
+    case 'select_option': {
+      const r = selectOptionByAiId(
+        args.ai_id as string,
+        args.option_text as string
+      );
       return { name, id, response: { result: r } };
     }
 
@@ -1149,7 +1276,7 @@ export async function executeToolCall(
           const result = await customToolCallback(name, args);
           return { name, id, response: { result } };
         } catch (e) {
-          console.error(`🔧 [Tools] ❌ Custom tool "${name}" threw`, e);
+          console.error(`[Tools] ❌ Custom tool "${name}" threw`, e);
           return {
             name,
             id,
@@ -1159,7 +1286,7 @@ export async function executeToolCall(
           };
         }
       }
-      console.warn(`🔧 [Tools] ⚠️ Unknown tool: ${name}`);
+      console.warn(`[Tools] ⚠️ Unknown tool: ${name}`);
       return {
         name,
         id,

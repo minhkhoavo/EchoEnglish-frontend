@@ -32,7 +32,8 @@ export default function TranscriptOverlay({
 
   const recentMessages = messages
     .filter((m) => {
-      if (m.type === 'system') return false;
+      // System + tool messages never appear in the transcript overlay.
+      if (m.type === 'system' || m.type === 'tool') return false;
       const duration = DISPLAY_DURATION[m.type] || 8000;
       return now - m.timestamp < duration;
     })

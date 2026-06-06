@@ -61,7 +61,7 @@ export class AudioStreamer {
       this.audioContext = null;
       this.scheduledTime = 0;
       this.chunkCount = 0;
-      console.log('🔊 [AudioStreamer] ✅ Stopped');
+      console.log('🔊 [AudioStreamer] Stopped');
     }
   }
 }

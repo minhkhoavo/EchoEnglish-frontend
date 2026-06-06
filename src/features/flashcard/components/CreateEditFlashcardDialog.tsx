@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +37,7 @@ import { useLazyGetPhoneticsQuery } from '../../vocabulary/services/vocabularyAp
 import type { Flashcard, Category } from '../types/flashcard.types';
 import { toast } from 'sonner';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
+import { subscribeUiAction } from '@/features/livecontext';
 
 interface CreateEditFlashcardDialogProps {
   flashcard?: Flashcard;
@@ -123,19 +124,26 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
     }
   }, [isEdit, flashcard]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.front.trim() || !formData.back.trim()) {
+  // Latest formData in a ref so the AI auto-submit path reads fresh values.
+  const formDataRef = useRef(formData);
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+  // When the AI prefills with autoSubmit, we set this flag and let an effect
+  // submit once front+back have landed in state (setState is async).
+  const pendingAutoSubmitRef = useRef(false);
+
+  const submitFlashcard = async (): Promise<boolean> => {
+    const data = formDataRef.current;
+    if (!data.front.trim() || !data.back.trim()) {
       toast.error('Please fill in all required fields (Front, Back)');
-      return;
+      return false;
     }
 
     // Clean phonetic data before sending to backend (remove slashes)
     const cleanFormData = {
-      ...formData,
-      phonetic: formData.phonetic
-        ? formData.phonetic.replace(/^\/+|\/+$/g, '')
-        : '',
+      ...data,
+      phonetic: data.phonetic ? data.phonetic.replace(/^\/+|\/+$/g, '') : '',
     };
 
     try {
@@ -145,18 +153,88 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
           ...cleanFormData,
         }).unwrap();
         toast.success('Flashcard updated successfully');
-        setOpen(false);
-        onSuccess?.();
       } else {
         await createFlashcard(cleanFormData).unwrap();
         toast.success('Flashcard created successfully');
-        setOpen(false);
-        onSuccess?.();
       }
+      setOpen(false);
+      onSuccess?.();
+      return true;
     } catch (error) {
       toast.error(`Failed to ${isEdit ? 'update' : 'create'} flashcard`);
+      return false;
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitFlashcard();
+  };
+
+  // ── AI-driven open + prefill ────────────────────────────────────────────
+  // Only the "create" instance of this dialog handles the open-flashcard-dialog
+  // action (the edit instance is controlled by its flashcard prop).
+  // Read categories via a ref so we subscribe ONCE (a stable listener) instead
+  // of re-subscribing every time the categories query result changes.
+  const categoriesRef = useRef(categories);
+  useEffect(() => {
+    categoriesRef.current = categories;
+  }, [categories]);
+
+  useEffect(() => {
+    if (isEdit) return;
+    const unsubscribe = subscribeUiAction(
+      'open-flashcard-dialog',
+      (payload) => {
+        // Map a human category name to its id (case-insensitive); otherwise
+        // fall back to the first available category so the field isn't empty.
+        const cats = categoriesRef.current as Category[];
+        let categoryId = '';
+        if (payload.categoryName) {
+          const wanted = payload.categoryName.trim().toLowerCase();
+          const match = cats.find((c) => c.name.toLowerCase() === wanted);
+          if (match?._id) categoryId = match._id;
+        }
+        if (!categoryId && cats[0]?._id) categoryId = cats[0]._id;
+
+        setFormData({
+          front: payload.front ?? '',
+          back: payload.back ?? '',
+          category: categoryId,
+          difficulty: payload.difficulty ?? 'Medium',
+          tags: payload.tags ?? [],
+          source: payload.source ?? '',
+          phonetic: payload.phonetic
+            ? `/${payload.phonetic.replace(/^\/+|\/+$/g, '')}/`
+            : '',
+          isAIGenerated: true,
+        });
+        setNewTag('');
+        setShowPhonetics(false);
+        setPhoneticsExpanded(false);
+        setOpen(true);
+        // Only arm auto-submit when both required fields were actually supplied,
+        // so opening a blank dialog never silently saves later.
+        pendingAutoSubmitRef.current =
+          Boolean(payload.autoSubmit) &&
+          Boolean(payload.front?.trim()) &&
+          Boolean(payload.back?.trim());
+      }
+    );
+    return unsubscribe;
+  }, [isEdit]);
+
+  // Auto-submit once the prefilled values have committed to state.
+  useEffect(() => {
+    if (!open || !pendingAutoSubmitRef.current) return;
+    if (formData.front.trim() && formData.back.trim()) {
+      pendingAutoSubmitRef.current = false;
+      // slight delay so the user visibly sees the filled form before it saves
+      const t = setTimeout(() => void submitFlashcard(), 900);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, formData.front, formData.back]);
 
   const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
@@ -341,6 +419,9 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                 </Label>
                 <Textarea
                   id="front"
+                  data-ai-id="flashcard-form-front"
+                  data-ai-label="Flashcard front side (question/word)"
+                  data-ai-role="input"
                   placeholder="Enter the question or prompt..."
                   value={formData.front}
                   onChange={(e) => {
@@ -376,6 +457,9 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                 </div>
                 <Textarea
                   id="back"
+                  data-ai-id="flashcard-form-back"
+                  data-ai-label="Flashcard back side (answer/translation)"
+                  data-ai-role="input"
                   placeholder="Enter the answer or explanation..."
                   value={formData.back}
                   onChange={(e) =>
@@ -472,7 +556,11 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                     setFormData((prev) => ({ ...prev, category: value }));
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger
+                    data-ai-id="flashcard-form-category"
+                    data-ai-label="Flashcard category selector"
+                    data-ai-role="input"
+                  >
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -513,6 +601,9 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                 </Label>
                 <Input
                   id="source"
+                  data-ai-id="flashcard-form-source"
+                  data-ai-label="Flashcard source (optional)"
+                  data-ai-role="input"
                   placeholder="e.g. Textbook page 42, Wikipedia"
                   value={formData.source}
                   onChange={(e) =>
@@ -530,6 +621,9 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                 </Label>
                 <Input
                   id="phonetic"
+                  data-ai-id="flashcard-form-phonetic"
+                  data-ai-label="Flashcard phonetic (optional)"
+                  data-ai-role="input"
                   placeholder="e.g. /həˈloʊ/"
                   value={formData.phonetic}
                   onChange={(e) =>
@@ -552,7 +646,12 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                     setFormData((prev) => ({ ...prev, difficulty: value }))
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    className="w-full"
+                    data-ai-id="flashcard-form-difficulty"
+                    data-ai-label="Flashcard difficulty selector"
+                    data-ai-role="input"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -568,6 +667,9 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
               <Label className="text-sm font-medium">Tags</Label>
               <div className="flex gap-2">
                 <Input
+                  data-ai-id="flashcard-form-tag-input"
+                  data-ai-label="Add a tag to the flashcard"
+                  data-ai-role="input"
                   placeholder="Add a tag..."
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
@@ -615,6 +717,9 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                 variant="outline"
                 onClick={() => setOpen(false)}
                 className="flex-1"
+                data-ai-id="flashcard-form-cancel"
+                data-ai-label="Cancel flashcard dialog"
+                data-ai-role="cancel"
               >
                 Cancel
               </Button>
@@ -622,6 +727,9 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                 type="submit"
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
                 disabled={isCreating || isUpdating}
+                data-ai-id="flashcard-form-submit"
+                data-ai-label={isEdit ? 'Update flashcard' : 'Create flashcard'}
+                data-ai-role="save"
               >
                 {isCreating || isUpdating ? (
                   <div className="flex items-center gap-2">

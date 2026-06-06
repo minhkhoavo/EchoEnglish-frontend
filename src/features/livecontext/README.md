@@ -232,12 +232,28 @@ sentence the user asked about.
 
 **EchoEnglish domain (real actions)**
 
-- `create_flashcard({front, back, category_name?, difficulty?, tags?, phonetic?, source?})`
+- `open_flashcard_dialog({front?, back?, category_name?, difficulty?, tags?, phonetic?, source?, auto_submit?})` — **opens the real Create-Flashcard dialog on screen and fills it in front of the user** (navigates to Flashcards first). Visual, demo-friendly. `auto_submit:"true"` also saves it.
+- `create_flashcard({front, back, category_name?, difficulty?, tags?, phonetic?, source?})` — silent/headless save (no dialog).
+- `select_option({ai_id, option_text})` — pick from a dropdown (Radix or native): opens the trigger, clicks the matching option. Use for difficulty/category/filter pickers (`fill_input` can't touch these).
 - `list_flashcards({search?, category_id?, limit?})`
 - `list_flashcard_categories()`
 - `delete_flashcard({flashcard_id})`
 - `get_resource_text()` — full article text + every paragraph's ai_id from the current `/resources/:id` page.
 - `open_resource({resource_id})`
+
+**Dialog automation — UI Action Bus** (`utils/ui-actions.ts`)
+
+A tiny typed event bus (`emitUiAction` / `subscribeUiAction`) lets tools drive
+_visible_ dialog flows instead of headless API calls. `open_flashcard_dialog`
+emits `open-flashcard-dialog`; `CreateEditFlashcardDialog` subscribes, opens
+itself, pre-fills `formData` (mapping `category_name`→id), and optionally
+auto-submits after a 900 ms "watch it fill" delay. Every dialog field also has
+a stable `data-ai-id` (`flashcard-form-front`, `-back`, `-category`,
+`-difficulty`, `-phonetic`, `-source`, `-tag-input`, `-submit`, `-cancel`) so
+the AI can alternatively drive it field-by-field via `fill_input` +
+`select_option` + `click_element`. To wire a new dialog: add an action type to
+`UiActionMap`, `subscribeUiAction(...)` inside that dialog, and a tool in
+`LiveToolBridge` that `emitUiAction(...)`.
 
 **Legacy**
 

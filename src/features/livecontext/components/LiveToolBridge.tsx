@@ -11,9 +11,10 @@
  */
 
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useCompanion } from '../context/CompanionContext';
+import { emitUiAction } from '../utils/ui-actions';
 import {
   useCreateFlashcardMutation,
   useGetFlashcardsQuery,
@@ -28,6 +29,7 @@ import type {
 export default function LiveToolBridge() {
   const { registerTool, currentPage } = useCompanion();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [createFlashcard] = useCreateFlashcardMutation();
   const [deleteFlashcard] = useDeleteFlashcardMutation();
@@ -171,6 +173,54 @@ export default function LiveToolBridge() {
         };
       }
     });
+
+    // open_flashcard_dialog ----------------------------------------------
+    // Opens the real "Create Flashcard" dialog on screen and pre-fills it so
+    // the user watches the form populate (then optionally auto-submits).
+    const unregisterOpenDialog = registerTool(
+      'open_flashcard_dialog',
+      async (args) => {
+        const onFlashcards = location.pathname.startsWith('/flashcards');
+        if (!onFlashcards) {
+          // Make sure we're on the cards tab so the dialog is mounted.
+          navigate('/flashcards?tab=flashcards');
+        }
+
+        const tags = args.tags
+          ? String(args.tags)
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : undefined;
+
+        const payload = {
+          front: args.front ? String(args.front) : undefined,
+          back: args.back ? String(args.back) : undefined,
+          categoryName: args.category_name
+            ? String(args.category_name)
+            : undefined,
+          difficulty: args.difficulty as 'Easy' | 'Medium' | 'Hard' | undefined,
+          tags,
+          phonetic: args.phonetic ? String(args.phonetic) : undefined,
+          source: args.source ? String(args.source) : undefined,
+          autoSubmit: args.auto_submit === 'true',
+        };
+
+        // Wait for the dialog to mount if we just navigated, then emit.
+        const delay = onFlashcards ? 150 : 900;
+        await new Promise((res) => setTimeout(res, delay));
+        emitUiAction('open-flashcard-dialog', payload);
+
+        return {
+          success: true,
+          opened: true,
+          prefilled: payload,
+          note: payload.autoSubmit
+            ? 'Dialog opened, prefilled, and will auto-save.'
+            : 'Dialog opened and prefilled — user can review then click Create.',
+        };
+      }
+    );
 
     // open_resource ------------------------------------------------------
     const unregisterOpenResource = registerTool(

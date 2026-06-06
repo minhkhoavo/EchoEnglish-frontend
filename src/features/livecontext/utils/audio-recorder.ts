@@ -49,7 +49,7 @@ export class AudioRecorder {
 
     this.source.connect(this.processor);
     this.processor.connect(this.audioContext.destination);
-    console.log('🎤 [AudioRecorder] ✅ Recording started (16kHz PCM)');
+    console.log('🎤 [AudioRecorder] Recording started (16kHz PCM)');
   }
 
   stop() {
@@ -68,6 +68,6 @@ export class AudioRecorder {
     this.audioContext = null;
     this.source = null;
     this.processor = null;
-    console.log('🎤 [AudioRecorder] ✅ Stopped');
+    console.log('🎤 [AudioRecorder] Stopped');
   }
 }

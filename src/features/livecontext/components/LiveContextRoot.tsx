@@ -8,6 +8,7 @@ import { useCompanion } from '../context/CompanionContext';
 import CompanionOrb from './CompanionOrb';
 import DomAnnotationOverlay from './DomAnnotationOverlay';
 import WebcamFloat from './WebcamFloat';
+import CameraStage from './CameraStage';
 import LiveToolBridge from './LiveToolBridge';
 import SelectionHighlight from './SelectionHighlight';
 import '../styles/livecontext.css';
@@ -30,6 +31,7 @@ export default function LiveContextRoot() {
         <>
           <CompanionOrb />
           <WebcamFloat />
+          <CameraStage />
         </>
       )}
     </>

@@ -14,21 +14,13 @@ export default function CompanionOrb() {
     togglePanel,
     isPanelOpen,
     connect,
-    disconnect,
     guidance,
     dismissGuidance,
     liveModeEnabled,
-    setLiveModeEnabled,
   } = useCompanion();
 
   // Only render when Live Mode is enabled
   if (!liveModeEnabled) return null;
-
-  const handleExitLiveMode = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    disconnect();
-    setLiveModeEnabled(false);
-  };
 
   return (
     <>
@@ -38,9 +30,9 @@ export default function CompanionOrb() {
 
       {/*
         Container is always pointer-events:auto while Live Mode is enabled so
-        the dormant "Connect Live AI" orb stays clickable. (The previous
-        `isVisible = connected || isPanelOpen` gate made the orb visible but
-        un-clickable on first render, stranding the user.)
+        the orb stays clickable from the first render. The orb only appears
+        once the user has entered Live Mode — by default the original
+        EchoEnglish chatbot icon is shown instead.
       */}
       <div
         className="lc-companion-container lc-companion-container--visible"
@@ -51,22 +43,19 @@ export default function CompanionOrb() {
           isVisible={connected && !isPanelOpen}
         />
 
-        <LiveChatPanel />
-
-        {/* Exit-Live pill — only shown when not connected so the user can
-            always escape back to the legacy chatbot, even without connecting. */}
-        {!connected && !isPanelOpen && (
-          <button
-            type="button"
-            className="lc-exit-live-pill"
-            onClick={handleExitLiveMode}
-            title="Exit Live Mode → show normal chatbot"
-            data-ai-id="lc-exit-live-pill"
-            data-ai-label="Exit Live Mode"
-          >
-            ← Back to chatbot
-          </button>
+        {/* AI thinking indicator — sleek animated bubble while processing */}
+        {connected && companionState === 'processing' && !isPanelOpen && (
+          <div className="lc-thinking" aria-live="polite">
+            <span className="lc-thinking__label">AI đang soạn</span>
+            <span className="lc-thinking__dots">
+              <i />
+              <i />
+              <i />
+            </span>
+          </div>
         )}
+
+        <LiveChatPanel />
 
         <div
           className={`lc-companion-orb-touch ${isPanelOpen ? 'lc-companion-orb-touch--panel-open' : ''}`}
@@ -85,20 +74,11 @@ export default function CompanionOrb() {
           data-ai-id="lc-companion-orb-button"
           data-ai-label="AI Companion Orb"
         >
-          {connected ? (
-            <OrbVisual
-              state={companionState}
-              amplitude={audioAmplitude}
-              size={60}
-            />
-          ) : (
-            <div className="lc-orb-dormant">
-              <div className="lc-orb-dormant__body">
-                <span className="lc-orb-dormant__icon">✦</span>
-              </div>
-              <div className="lc-orb-dormant__label">Connect Live AI</div>
-            </div>
-          )}
+          <OrbVisual
+            state={companionState}
+            amplitude={audioAmplitude}
+            size={60}
+          />
         </div>
       </div>
 

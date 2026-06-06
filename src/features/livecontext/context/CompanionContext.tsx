@@ -65,11 +65,19 @@ interface CompanionContextValue {
   setLiveModeEnabled: (v: boolean) => void;
   toggleLiveMode: () => void;
 
-  // Webcam
+  // Webcam (floating PiP — LOCAL preview only, never streamed to Gemini)
   webcamEnabled: boolean;
   enableWebcam: () => Promise<void>;
   disableWebcam: () => void;
   webcamStream: MediaStream | null;
+
+  // Camera Stage (dedicated fullscreen view that DOES stream frames to Gemini)
+  cameraStageOpen: boolean;
+  openCameraStage: () => Promise<void>;
+  closeCameraStage: () => void;
+  startVideoFrames: (videoElement: HTMLVideoElement) => void;
+  stopVideoFrames: () => void;
+  isVideoStreaming: boolean;
 
   // Navigation
   navigationTarget: string | null;
@@ -102,8 +110,6 @@ export function useCompanion() {
   return ctx;
 }
 
-const LIVE_MODE_STORAGE_KEY = 'echo_live_mode_enabled';
-
 export function CompanionProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -115,21 +121,10 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
     useState<CompanionState>('disconnected');
   const [guidance, setGuidance] = useState<GuidanceState | null>(null);
 
-  const [liveModeEnabled, _setLiveModeEnabled] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(LIVE_MODE_STORAGE_KEY) === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [liveModeEnabled, _setLiveModeEnabled] = useState<boolean>(false);
 
   const setLiveModeEnabled = useCallback((v: boolean) => {
     _setLiveModeEnabled(v);
-    try {
-      localStorage.setItem(LIVE_MODE_STORAGE_KEY, String(v));
-    } catch {
-      /* ignore */
-    }
   }, []);
 
   const toggleLiveMode = useCallback(() => {
@@ -138,6 +133,7 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
 
   const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
   const [webcamEnabled, setWebcamEnabled] = useState(false);
+  const [cameraStageOpen, setCameraStageOpen] = useState(false);
 
   const annotationRef = useRef<AnnotationOverlayHandle | null>(null);
   const domAnnotationRef = useRef<DomAnnotationOverlayHandle | null>(null);
@@ -410,6 +406,9 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
     disconnect: rawDisconnect,
     startStreaming,
     stopStreaming,
+    startVideoFrames,
+    stopVideoFrames,
+    isVideoStreaming,
     sendText,
     connected,
     isStreaming,
@@ -434,7 +433,7 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
       });
       setWebcamStream(stream);
       setWebcamEnabled(true);
-      console.log('📹 [Webcam] ✅ Access granted');
+      console.log('📹 [Webcam] Access granted');
     } catch (err) {
       console.error('📹 [Webcam] ❌ Access denied:', err);
     }
@@ -446,14 +445,42 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
     }
     setWebcamStream(null);
     setWebcamEnabled(false);
+    // Closing the webcam also tears down the camera stage + frame streaming.
+    stopVideoFrames();
+    setCameraStageOpen(false);
     console.log('📹 [Webcam] Stopped');
+  }, [webcamStream, stopVideoFrames]);
+
+  // Camera Stage: dedicated fullscreen view that actually streams frames to
+  // Gemini. Opening it ensures the webcam is on; closing stops frame upload
+  // but keeps the local PiP preview alive.
+  const openCameraStage = useCallback(async () => {
+    if (!webcamStream) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        });
+        setWebcamStream(stream);
+        setWebcamEnabled(true);
+      } catch (err) {
+        console.error('📹 [CameraStage] ❌ Camera access denied:', err);
+        return;
+      }
+    }
+    setCameraStageOpen(true);
   }, [webcamStream]);
+
+  const closeCameraStage = useCallback(() => {
+    stopVideoFrames();
+    setCameraStageOpen(false);
+  }, [stopVideoFrames]);
 
   const disconnect = useCallback(() => {
     rawDisconnect();
     setIsPanelOpen(false);
     setWaitingForResponse(false);
     setGuidance(null);
+    setCameraStageOpen(false);
     if (webcamStream) {
       webcamStream.getTracks().forEach((t) => t.stop());
       setWebcamStream(null);
@@ -526,6 +553,12 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
         enableWebcam,
         disableWebcam,
         webcamStream,
+        cameraStageOpen,
+        openCameraStage,
+        closeCameraStage,
+        startVideoFrames,
+        stopVideoFrames,
+        isVideoStreaming,
         navigationTarget,
         currentPage,
         guidance,

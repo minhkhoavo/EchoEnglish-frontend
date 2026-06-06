@@ -16,14 +16,20 @@ export default function LiveModeToggle({
   className,
   onEnable,
 }: LiveModeToggleProps) {
-  const { liveModeEnabled, setLiveModeEnabled, openPanel, disconnect } =
-    useCompanion();
+  const {
+    liveModeEnabled,
+    setLiveModeEnabled,
+    openPanel,
+    connect,
+    disconnect,
+  } = useCompanion();
 
   const handleClick = () => {
     if (!liveModeEnabled) {
       setLiveModeEnabled(true);
       // Open the live panel so the orb is visible right away.
       openPanel();
+      connect();
       onEnable?.();
     } else {
       // Toggling off: disconnect the websocket and hide the orb.

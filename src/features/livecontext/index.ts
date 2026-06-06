@@ -30,3 +30,9 @@ export {
   findElementByAiId,
   getCurrentSelection,
 } from './utils/dom-vision';
+export { emitUiAction, subscribeUiAction } from './utils/ui-actions';
+export type {
+  UiActionType,
+  UiActionMap,
+  FlashcardDialogPayload,
+} from './utils/ui-actions';

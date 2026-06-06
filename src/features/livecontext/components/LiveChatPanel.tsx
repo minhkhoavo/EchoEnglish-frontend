@@ -58,7 +58,10 @@ export default function LiveChatPanel() {
     setLiveModeEnabled(false);
   };
 
-  const chatMessages = messages.filter((m) => m.type !== 'system');
+  // Hide system + tool messages from the chat UI — tool calls run silently.
+  const chatMessages = messages.filter(
+    (m) => m.type !== 'system' && m.type !== 'tool'
+  );
 
   return (
     <div
@@ -72,21 +75,22 @@ export default function LiveChatPanel() {
           />
           <span className="lc-chat-panel__title">EchoEnglish Live AI</span>
         </div>
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <button
             onClick={handleExitLiveMode}
             className="lc-chat-panel__close"
             aria-label="Exit Live Mode"
             title="Exit Live Mode (return to chatbot)"
           >
-            ↩
+            ↩ Exit
           </button>
           <button
             onClick={closePanel}
             className="lc-chat-panel__close"
-            aria-label="Close panel"
+            aria-label="Minimize panel"
+            title="Minimize panel"
           >
-            ✕
+            ▾
           </button>
         </div>
       </div>
