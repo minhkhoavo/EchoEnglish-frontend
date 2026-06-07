@@ -43,12 +43,20 @@ export interface TestOption {
   text: string;
 }
 
+export interface TestVocabWord {
+  word: string;
+  partOfSpeech?: string;
+  meaning?: string;
+  example?: string;
+}
+
 export interface TestMedia {
   audioUrl: string | null;
   imageUrls: string[] | null;
   passageHtml: string | null;
   transcript: string | null;
   translation: string | null;
+  vocabulary?: TestVocabWord[] | null;
 }
 
 export interface TestQuestion {

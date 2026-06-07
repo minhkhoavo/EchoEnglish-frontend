@@ -5,6 +5,7 @@ import { useTestSession } from '@/features/tests/hooks/useTestSession';
 import { QuestionHeader } from '../common/QuestionHeader';
 import { AnswerOptions } from '../common/AnswerOptions';
 import { ExplanationSection } from '../common/ExplanationSection';
+import { VocabularySection } from '../common/VocabularySection';
 import { QuestionContent } from '../common/QuestionContent';
 import { Instructions } from '../common/Instructions';
 import { useExpanded } from '@/features/tests/hooks/useExpanded';
@@ -121,6 +122,13 @@ export const Part6Question = ({
                       }
                       showCorrectAnswers={showCorrectAnswers}
                     />
+                  )}
+
+                {/* Vocabulary Section (AI-extracted, attached to test) */}
+                {showCorrectAnswers &&
+                  group.groupContext?.vocabulary &&
+                  group.groupContext.vocabulary.length > 0 && (
+                    <VocabularySection words={group.groupContext.vocabulary} />
                   )}
               </div>
 
