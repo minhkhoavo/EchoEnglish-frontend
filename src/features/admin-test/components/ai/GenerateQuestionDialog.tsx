@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -65,7 +66,7 @@ export const GenerateQuestionDialog = ({
 }: GenerateQuestionDialogProps) => {
   const isGroupPart = [3, 4, 6, 7].includes(part);
   const [difficulty, setDifficulty] = useState('B1');
-  const [topic, setTopic] = useState('');
+  const [prompt, setPrompt] = useState('');
   const [count, setCount] = useState(isGroupPart ? 3 : 1);
   const [runAi, { isLoading }] = useRunAiMutation();
   const [questions, setQuestions] = useState<AiGeneratedQuestion[] | null>(
@@ -86,7 +87,7 @@ export const GenerateQuestionDialog = ({
           buildGenerateGroup({
             part,
             difficulty,
-            topic: topic || undefined,
+            instructions: prompt || undefined,
             numQuestions: count,
           })
         ).unwrap()) as GenerateGroupResult;
@@ -97,7 +98,7 @@ export const GenerateQuestionDialog = ({
           buildGenerateQuestion({
             part,
             difficulty,
-            topic: topic || undefined,
+            instructions: prompt || undefined,
             count,
           })
         ).unwrap()) as GenerateQuestionResult;
@@ -143,7 +144,7 @@ export const GenerateQuestionDialog = ({
         </DialogHeader>
 
         {/* Spec form */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <Label className="text-xs">Difficulty (CEFR)</Label>
             <Select value={difficulty} onValueChange={setDifficulty}>
@@ -174,15 +175,15 @@ export const GenerateQuestionDialog = ({
               className="mt-1"
             />
           </div>
-          <div>
-            <Label className="text-xs">Topic (optional)</Label>
-            <Input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g. office, travel..."
-              className="mt-1"
-            />
-          </div>
+        </div>
+        <div>
+          <Label className="text-xs">Prompt (optional)</Label>
+          <Textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Short instructions for the AI, e.g. office scenario about a delayed shipment..."
+            className="mt-1 min-h-[64px]"
+          />
         </div>
 
         <Button

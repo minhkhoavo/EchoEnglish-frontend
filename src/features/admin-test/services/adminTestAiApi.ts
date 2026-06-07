@@ -5,6 +5,10 @@ export interface RunAiRequest {
   temperature?: number;
 }
 
+export interface RunAiMediaRequest extends RunAiRequest {
+  imageUrls?: string[];
+}
+
 interface ApiEnvelope<T> {
   message: string;
   data: T;
@@ -25,7 +29,18 @@ export const adminTestAiApi = api.injectEndpoints({
       }),
       transformResponse: (response: ApiEnvelope<unknown>) => response.data,
     }),
+
+    // Same as runAi but forwards image URLs so the model can see them
+    // (e.g. authoring a Part 1 question from an uploaded photo).
+    runAiMedia: builder.mutation<unknown, RunAiMediaRequest>({
+      query: (data) => ({
+        url: '/admin/tests/ai/media',
+        method: 'POST',
+        data,
+      }),
+      transformResponse: (response: ApiEnvelope<unknown>) => response.data,
+    }),
   }),
 });
 
-export const { useRunAiMutation } = adminTestAiApi;
+export const { useRunAiMutation, useRunAiMediaMutation } = adminTestAiApi;
