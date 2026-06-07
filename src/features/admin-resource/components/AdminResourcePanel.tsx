@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { AdminResourceList } from './AdminResourceList';
 import { ArticleEditor } from './ArticleEditor';
+import { XapiUploader } from './XapiUploader';
 import {
   useUpdateResourceMutation,
   useDeleteResourceMutation,
@@ -10,7 +11,7 @@ import {
 } from '../services/adminResourceApi';
 import { useSearchResourcesQuery } from '@/features/resource/services/resourceApi';
 import type { Resource } from '../types/resource.types';
-import { Plus, Database, Loader2 } from 'lucide-react';
+import { Plus, Database, Loader2, GraduationCap } from 'lucide-react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import CustomPagination from '@/components/CustomPagination';
 import { ResourceFilterCard } from './ResourceFilterCard';
@@ -29,6 +30,7 @@ export const AdminResourcePanel = ({
   const [editingResource, setEditingResource] = useState<
     Resource | undefined
   >();
+  const [xapiOpen, setXapiOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<ResourceFilters>({
     limit: 5,
@@ -182,6 +184,10 @@ export const AdminResourcePanel = ({
             <Plus className="h-4 w-4 mr-2" />
             Create Article
           </Button>
+          <Button variant="outline" onClick={() => setXapiOpen(true)}>
+            <GraduationCap className="h-4 w-4 mr-2" />
+            Upload xAPI Package
+          </Button>
         </div>
         <Button
           variant="outline"
@@ -221,6 +227,12 @@ export const AdminResourcePanel = ({
           />
         </div>
       )}
+
+      <XapiUploader
+        open={xapiOpen}
+        onOpenChange={setXapiOpen}
+        onSuccess={refetch}
+      />
     </div>
   );
 };

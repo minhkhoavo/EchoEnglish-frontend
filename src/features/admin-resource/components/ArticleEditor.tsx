@@ -25,9 +25,14 @@ import { toast } from 'sonner';
 import {
   useCreateArticleMutation,
   useUpdateArticleMutation,
+  useUpdateResourceMutation,
   useUploadAdminFileMutation,
 } from '../services/adminResourceApi';
-import type { Resource, CreateArticleData } from '../types/resource.types';
+import {
+  ResourceType,
+  type Resource,
+  type CreateArticleData,
+} from '../types/resource.types';
 import {
   Upload,
   X,
@@ -90,7 +95,12 @@ export const ArticleEditor = ({
 }: ArticleEditorProps) => {
   const [createArticle, { isLoading: isCreating }] = useCreateArticleMutation();
   const [updateArticle, { isLoading: isUpdating }] = useUpdateArticleMutation();
+  const [updateResource, { isLoading: isUpdatingResource }] =
+    useUpdateResourceMutation();
   const [uploadFile, { isLoading: isUploading }] = useUploadAdminFileMutation();
+
+  // xAPI package: không sửa file gói, chỉ chỉnh metadata (mô tả, nhãn...)
+  const isXapi = article?.type === ResourceType.XAPI;
 
   // Form state
   const [title, setTitle] = useState(article?.title || '');
@@ -111,7 +121,7 @@ export const ArticleEditor = ({
   );
 
   const isEditing = !!article;
-  const isLoading = isCreating || isUpdating;
+  const isLoading = isCreating || isUpdating || isUpdatingResource;
 
   // TipTap Editor
   const editor = useEditor({
@@ -221,27 +231,48 @@ export const ArticleEditor = ({
     }
 
     const content = editor?.getHTML() || '';
-    if (!content.trim() || content === '<p></p>') {
+    // xAPI: content (mô tả) là tùy chọn vì nội dung chính nằm trong gói
+    const hasContent = content.trim() && content !== '<p></p>';
+    if (!isXapi && !hasContent) {
       toast.error('Content is required.');
       return;
     }
 
-    const data: CreateArticleData = {
-      title: title.trim(),
-      content,
-      summary: summary.trim() || undefined,
-      thumbnail: thumbnail || undefined,
-      attachmentUrl: attachmentUrl || undefined,
-      attachmentName: attachmentName || undefined,
-      labels: {
-        domain: domain || undefined,
-        cefr: cefr || undefined,
-        topic: topics.length > 0 ? topics : undefined,
-      },
-      suitableForLearners,
+    const labels = {
+      domain: domain || undefined,
+      cefr: cefr || undefined,
+      topic: topics.length > 0 ? topics : undefined,
     };
 
     try {
+      if (isXapi && article) {
+        // Chỉ cập nhật metadata, không đụng file gói xAPI
+        await updateResource({
+          id: article._id,
+          data: {
+            title: title.trim(),
+            summary: summary.trim() || undefined,
+            content: hasContent ? content : undefined,
+            labels,
+            suitableForLearners,
+          },
+        }).unwrap();
+        toast.success('xAPI course updated successfully');
+        onSuccess();
+        return;
+      }
+
+      const data: CreateArticleData = {
+        title: title.trim(),
+        content,
+        summary: summary.trim() || undefined,
+        thumbnail: thumbnail || undefined,
+        attachmentUrl: attachmentUrl || undefined,
+        attachmentName: attachmentName || undefined,
+        labels,
+        suitableForLearners,
+      };
+
       if (isEditing) {
         await updateArticle({ id: article._id, data }).unwrap();
         toast.success('Article updated successfully');
@@ -251,7 +282,11 @@ export const ArticleEditor = ({
       }
       onSuccess();
     } catch {
-      toast.error(`Failed to ${isEditing ? 'update' : 'create'} article`);
+      toast.error(
+        `Failed to ${isEditing ? 'update' : 'create'} ${
+          isXapi ? 'xAPI course' : 'article'
+        }`
+      );
     }
   };
 
@@ -268,7 +303,11 @@ export const ArticleEditor = ({
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h2 className="text-2xl font-bold">
-            {isEditing ? 'Edit Article' : 'Create New Article'}
+            {isXapi
+              ? 'Edit xAPI Course'
+              : isEditing
+                ? 'Edit Article'
+                : 'Create New Article'}
           </h2>
         </div>
         <Button onClick={handleSubmit} disabled={isLoading}>
@@ -297,6 +336,14 @@ export const ArticleEditor = ({
           </div>
 
           {/* Editor Toolbar */}
+          {isXapi && (
+            <Label className="block">
+              Description{' '}
+              <span className="text-muted-foreground font-normal">
+                (optional — shown to learners under the course)
+              </span>
+            </Label>
+          )}
           <div className="border rounded-md">
             <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
               {/* Undo/Redo */}
@@ -555,72 +602,74 @@ export const ArticleEditor = ({
           </Card>
 
           {/* Attachment */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Attachment (PDF, DOCX, TXT)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {attachmentUrl ? (
-                <div className="flex items-center justify-between p-3 bg-muted rounded-md">
-                  <a
-                    href={attachmentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 truncate hover:text-primary"
-                  >
-                    <FileText className="h-4 w-4 flex-shrink-0" />
-                    <span className="text-sm truncate underline">
-                      {attachmentName}
-                    </span>
-                  </a>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 flex-shrink-0"
-                    onClick={() => {
-                      setAttachmentUrl('');
-                      setAttachmentName('');
-                    }}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <label
-                  className={`flex flex-col items-center justify-center h-20 border-2 border-dashed rounded-md cursor-pointer hover:border-primary transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
-                      <span className="text-xs text-muted-foreground mt-1">
-                        Uploading...
+          {!isXapi && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Attachment (PDF, DOCX, TXT)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {attachmentUrl ? (
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+                    <a
+                      href={attachmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 truncate hover:text-primary"
+                    >
+                      <FileText className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-sm truncate underline">
+                        {attachmentName}
                       </span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-6 w-6 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground mt-1">
-                        Upload file
-                      </span>
-                    </>
-                  )}
-                  <input
-                    type="file"
-                    accept=".pdf,.docx,.txt"
-                    className="hidden"
-                    onChange={handleAttachmentUpload}
-                    disabled={isUploading}
-                  />
-                </label>
-              )}
-              <p className="text-xs text-muted-foreground mt-2">
-                File content will be indexed for AI knowledge base
-              </p>
-            </CardContent>
-          </Card>
+                    </a>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 flex-shrink-0"
+                      onClick={() => {
+                        setAttachmentUrl('');
+                        setAttachmentName('');
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label
+                    className={`flex flex-col items-center justify-center h-20 border-2 border-dashed rounded-md cursor-pointer hover:border-primary transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+                        <span className="text-xs text-muted-foreground mt-1">
+                          Uploading...
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-6 w-6 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground mt-1">
+                          Upload file
+                        </span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept=".pdf,.docx,.txt"
+                      className="hidden"
+                      onChange={handleAttachmentUpload}
+                      disabled={isUploading}
+                    />
+                  </label>
+                )}
+                <p className="text-xs text-muted-foreground mt-2">
+                  File content will be indexed for AI knowledge base
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Labels */}
           <Card>

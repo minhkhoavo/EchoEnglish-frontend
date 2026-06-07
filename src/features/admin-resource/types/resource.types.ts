@@ -3,6 +3,7 @@ export const ResourceType = {
   VIDEO: 'video',
   WEB_RSS: 'web_rss',
   YOUTUBE: 'youtube',
+  XAPI: 'xapi',
 } as const;
 
 export type ResourceType = (typeof ResourceType)[keyof typeof ResourceType];
@@ -35,6 +36,8 @@ export interface Resource {
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
+  xapiLaunchUrl?: string;
+  xapiPackageKey?: string;
 }
 
 export interface ResourceFilters {

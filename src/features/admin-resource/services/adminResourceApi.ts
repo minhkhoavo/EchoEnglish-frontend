@@ -31,14 +31,17 @@ export const adminResourceApi = api.injectEndpoints({
       }),
     }),
 
-    // Cập nhật resource (approve/reject)
+    // Cập nhật resource (approve/reject + edit metadata cho mọi loại resource)
     updateResource: builder.mutation<
       { message: string; data: Resource },
-      { id: string; data: { suitableForLearners: boolean } }
+      {
+        id: string;
+        data: UpdateArticleData & { suitableForLearners?: boolean };
+      }
     >({
       query: ({ id, data }) => ({
         url: `/resources/${id}`,
-        method: 'PATCH',
+        method: 'PUT',
         data,
       }),
     }),
@@ -98,6 +101,22 @@ export const adminResourceApi = api.injectEndpoints({
         };
       },
     }),
+
+    // Upload xAPI package (iSpring Suite zip)
+    uploadXapiPackage: builder.mutation<
+      { message: string; data: Resource },
+      { file: File }
+    >({
+      query: ({ file }) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return {
+          url: '/resources/xapi/upload',
+          method: 'POST',
+          data: formData,
+        };
+      },
+    }),
   }),
 });
 
@@ -110,4 +129,5 @@ export const {
   useSaveTranscriptMutation,
   useReindexKnowledgeMutation,
   useUploadAdminFileMutation,
+  useUploadXapiPackageMutation,
 } = adminResourceApi;

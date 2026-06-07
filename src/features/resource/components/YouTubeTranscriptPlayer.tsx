@@ -3,7 +3,14 @@ import YouTube, { type YouTubeProps } from 'react-youtube';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Play, Pause, Volume2, GraduationCap } from 'lucide-react';
+import {
+  Play,
+  Pause,
+  Volume2,
+  GraduationCap,
+  RefreshCw,
+  AlertCircle,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SyncedExercisePanel } from './exercises';
 import type { TranscriptSegment } from '../types/resource.type';
@@ -12,12 +19,18 @@ interface YouTubeTranscriptPlayerProps {
   videoUrl: string;
   transcript: TranscriptSegment[];
   className?: string;
+  isLoadingTranscript?: boolean;
+  transcriptError?: string | null;
+  onRetryTranscript?: () => void;
 }
 
 const YouTubeTranscriptPlayer: React.FC<YouTubeTranscriptPlayerProps> = ({
   videoUrl,
   transcript,
   className,
+  isLoadingTranscript = false,
+  transcriptError = null,
+  onRetryTranscript,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -343,6 +356,33 @@ const YouTubeTranscriptPlayer: React.FC<YouTubeTranscriptPlayerProps> = ({
                       </div>
                     ))}
                   </div>
+                ) : isLoadingTranscript ? (
+                  <div className="flex items-center justify-center h-[380px] text-gray-500">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4" />
+                      <p className="text-sm">Loading transcript...</p>
+                    </div>
+                  </div>
+                ) : transcriptError ? (
+                  <div className="flex items-center justify-center h-[380px] text-gray-500">
+                    <div className="text-center px-6">
+                      <AlertCircle className="w-10 h-10 mx-auto mb-3 text-amber-400" />
+                      <p className="text-sm text-gray-600 mb-4">
+                        {transcriptError}
+                      </p>
+                      {onRetryTranscript && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={onRetryTranscript}
+                          className="gap-2"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          Retry
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 ) : (
                   <div className="flex items-center justify-center h-[380px] text-gray-500">
                     <div className="text-center">
@@ -369,6 +409,15 @@ const YouTubeTranscriptPlayer: React.FC<YouTubeTranscriptPlayerProps> = ({
                       onSeek={handleSeek}
                       onNavigateSegment={handleNavigateSegment}
                     />
+                  </div>
+                ) : isLoadingTranscript ? (
+                  <div className="flex items-center justify-center h-[430px] text-gray-500">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4" />
+                      <p className="text-sm">
+                        Loading transcript for practice...
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-[430px] text-gray-500">

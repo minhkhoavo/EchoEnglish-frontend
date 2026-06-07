@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/core/store/store';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +13,8 @@ import {
   BookOpen,
   FileText,
   Download,
+  Maximize2,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -34,13 +38,17 @@ export default function ResourceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const currentUser = useSelector((state: RootState) => state.auth.user);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [showSelectionMenu, setShowSelectionMenu] = useState(false);
   const [showFlashcardDialog, setShowFlashcardDialog] = useState(false);
   const [selectionPosition, setSelectionPosition] = useState({ x: 0, y: 0 });
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
+  const [transcriptError, setTranscriptError] = useState<string | null>(null);
+  const [transcriptRetryCount, setTranscriptRetryCount] = useState(0);
   const [selectedTranslation, setSelectedTranslation] = useState<string>('');
+  const xapiFrameRef = useRef<HTMLIFrameElement>(null);
 
   // Get resource from location state OR fetch by ID
   const resourceFromState = location.state?.resource;
@@ -93,34 +101,47 @@ export default function ResourceDetailPage() {
     return () => setPageContext('resource', null);
   }, [resource, id, setPageContext]);
 
-  // Fetch transcript when component mounts
+  const cleanSegments = (segments: TranscriptSegment[]) =>
+    segments.map((seg) => ({
+      ...seg,
+      text: seg.text.replace(/&amp;#39;/g, "'").replace(/&amp;/g, '&'),
+    }));
+
+  // Fetch transcript when component mounts (or on manual retry)
   useEffect(() => {
     const fetchTranscript = async () => {
+      if (!resource?.url || resource.type !== ResourceType.YOUTUBE) return;
+
+      // Use transcript already stored on the resource (avoids hitting YouTube again)
+      if (resource.transcript && resource.transcript.length > 0) {
+        setTranscript(cleanSegments(resource.transcript));
+        return;
+      }
+
+      setTranscriptError(null);
       try {
-        if (!resource?.url || resource.type !== ResourceType.YOUTUBE) return;
-
         const response = await getTranscript({ url: resource.url }).unwrap();
-
         if (response?.data && Array.isArray(response.data)) {
-          // Clean up transcript text (decode HTML entities)
-          const cleanedTranscript = response.data.map(
-            (segment: TranscriptSegment) => ({
-              ...segment,
-              text: segment.text
-                .replace(/&amp;#39;/g, "'")
-                .replace(/&amp;/g, '&'),
-            })
-          );
-          setTranscript(cleanedTranscript);
+          setTranscript(cleanSegments(response.data));
         }
       } catch (error) {
         console.error('Error fetching transcript:', error);
-        toast.error('Failed to load transcript. Please try again.');
+        const msg =
+          (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to load transcript. Please try again.';
+        setTranscriptError(msg);
+        toast.error(msg);
       }
     };
 
     fetchTranscript();
-  }, [resource, getTranscript]);
+  }, [resource, getTranscript, transcriptRetryCount]);
+
+  const handleRetryTranscript = useCallback(() => {
+    setTranscript([]);
+    setTranscriptError(null);
+    setTranscriptRetryCount((c) => c + 1);
+  }, []);
 
   // Handle text selection
   const handleTextSelection = (e: React.MouseEvent) => {
@@ -175,6 +196,39 @@ export default function ResourceDetailPage() {
     refetchFlashcards();
   };
 
+  const isVideo = resource?.type === ResourceType.YOUTUBE;
+  const isXapi = resource?.type === ResourceType.XAPI;
+  const isArticle =
+    resource &&
+    !isXapi &&
+    (resource.type === ResourceType.WEB_RSS ||
+      resource.type === ResourceType.ARTICLE ||
+      resource.isArticle);
+
+  const xapiLaunchSrc = useMemo(() => {
+    if (!isXapi || !resource?.xapiLaunchUrl) return '';
+    const endpoint = import.meta.env.VITE_XAPI_LRS_ENDPOINT as
+      | string
+      | undefined;
+    const auth = import.meta.env.VITE_XAPI_LRS_AUTH as string | undefined;
+    if (!endpoint) return resource.xapiLaunchUrl;
+    const actor = currentUser
+      ? {
+          name: [currentUser.fullName || currentUser.email || 'Learner'],
+          mbox: currentUser.email ? [`mailto:${currentUser.email}`] : undefined,
+        }
+      : { name: ['Anonymous Learner'] };
+    const params = new URLSearchParams({
+      endpoint,
+      auth: auth || '',
+      actor: JSON.stringify(actor),
+      activity_id: String(resource._id || id || ''),
+      registration: String(resource._id || id || ''),
+    });
+    const sep = resource.xapiLaunchUrl.includes('?') ? '&' : '?';
+    return `${resource.xapiLaunchUrl}${sep}${params.toString()}`;
+  }, [isXapi, resource, id, currentUser]);
+
   // Loading state
   if (isLoadingResource) {
     return (
@@ -210,12 +264,6 @@ export default function ResourceDetailPage() {
       </div>
     );
   }
-
-  const isVideo = resource.type === ResourceType.YOUTUBE;
-  const isArticle =
-    resource.type === ResourceType.WEB_RSS ||
-    resource.type === ResourceType.ARTICLE ||
-    resource.isArticle;
 
   return (
     <div
@@ -327,7 +375,64 @@ export default function ResourceDetailPage() {
         </div>
 
         {/* Content Layout */}
-        {isVideo ? (
+        {isXapi ? (
+          /* xAPI iSpring package — embed launch file qua iframe */
+          <div className="space-y-6 pb-16">
+            {resource.xapiLaunchUrl ? (
+              <>
+                {/* Toolbar */}
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => xapiFrameRef.current?.requestFullscreen?.()}
+                  >
+                    <Maximize2 className="w-4 h-4 mr-2" />
+                    Fullscreen
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(xapiLaunchSrc, '_blank')}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Open in new tab
+                  </Button>
+                </div>
+
+                {/* Course frame — fill viewport height, no nested scrollbars */}
+                <iframe
+                  ref={xapiFrameRef}
+                  src={xapiLaunchSrc}
+                  title={resource.title || 'xAPI Course'}
+                  className="block w-full h-[calc(100vh-220px)] min-h-[560px] rounded-lg border bg-white shadow"
+                  allow="autoplay; fullscreen; microphone; camera"
+                  allowFullScreen
+                />
+
+                {/* Optional admin description below the course */}
+                {resource.content && (
+                  <Card>
+                    <CardContent className="p-8">
+                      <div className="prose prose-lg max-w-none">
+                        <RawHtmlRenderer
+                          html={resource.content}
+                          prefix={`resource-${id || resource._id || 'doc'}`}
+                          className="leading-relaxed article-content"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>This xAPI package has no launch URL.</p>
+              </div>
+            )}
+          </div>
+        ) : isVideo ? (
           /* Video gets full width */
           <div className="space-y-6 pb-16 ">
             {resource.url && (
@@ -337,6 +442,9 @@ export default function ResourceDetailPage() {
                   ...seg,
                   end: seg.start + seg.duration,
                 }))}
+                isLoadingTranscript={isLoadingTranscript}
+                transcriptError={transcriptError}
+                onRetryTranscript={handleRetryTranscript}
               />
             )}
 

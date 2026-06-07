@@ -3,6 +3,7 @@ export const ResourceType = {
   WEB_RSS: 'web_rss',
   YOUTUBE: 'youtube',
   EBOOK: 'ebook',
+  XAPI: 'xapi',
 } as const;
 
 export type ResourceType = (typeof ResourceType)[keyof typeof ResourceType];
@@ -53,6 +54,7 @@ export interface Resource {
   lang?: string;
   summary?: string;
   content?: string;
+  transcript?: TranscriptSegment[];
   keyPoints?: string[];
   labels?: ResourceLabels;
   suitableForLearners: boolean;
@@ -60,6 +62,8 @@ export interface Resource {
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
+  xapiLaunchUrl?: string;
+  xapiPackageKey?: string;
 }
 
 export interface TranscriptSegment {

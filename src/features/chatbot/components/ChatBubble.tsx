@@ -34,7 +34,7 @@ import { LiveModeToggle } from '@/features/livecontext';
 import '../styles/chatbot.css';
 
 // Check if LiveContext is enabled based on environment
-const IS_LIVECONTEXT_ENABLED = import.meta.env.VITE_ENVIRONMENT !== 'prd';
+const IS_LIVECONTEXT_ENABLED = import.meta.env.VITE_ENVIRONMENT === 'dev';
 
 interface ChatBubbleProps {
   isOpen: boolean;

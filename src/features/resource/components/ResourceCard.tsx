@@ -5,6 +5,7 @@ import {
   FileText,
   Eye,
   ExternalLink,
+  GraduationCap,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,7 @@ export default function ResourceCard({
   isAdmin = false,
 }: ResourceCardProps) {
   const isVideo = resource.type === ResourceType.YOUTUBE;
+  const isXapi = resource.type === ResourceType.XAPI;
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
@@ -41,7 +43,8 @@ export default function ResourceCard({
   // Stable AI handle. Combines the resource _id with title fragment so the AI
   // can refer to "the article about climate" rather than an opaque hash.
   const resAiId = `resource-card-${resource._id || (resource.title || '').slice(0, 16).replace(/\s+/g, '-').toLowerCase()}`;
-  const resAiLabel = `${isVideo ? 'Video' : 'Article'}: ${resource.title || 'Untitled'}${resource.labels?.cefr ? ` (level ${resource.labels.cefr})` : ''}`;
+  const kindLabel = isXapi ? 'Course' : isVideo ? 'Video' : 'Article';
+  const resAiLabel = `${kindLabel}: ${resource.title || 'Untitled'}${resource.labels?.cefr ? ` (level ${resource.labels.cefr})` : ''}`;
 
   return (
     <Card
@@ -59,15 +62,20 @@ export default function ResourceCard({
                 : 'bg-primary/10 text-primary'
             }`}
           >
-            {isVideo ? (
+            {isXapi ? (
+              <GraduationCap className="h-4 w-4" />
+            ) : isVideo ? (
               <Play className="h-4 w-4" />
             ) : (
               <FileText className="h-4 w-4" />
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <Badge variant={isVideo ? 'secondary' : 'outline'} className="mb-2">
-              {isVideo ? 'Video' : 'Article'}
+            <Badge
+              variant={isXapi ? 'default' : isVideo ? 'secondary' : 'outline'}
+              className="mb-2"
+            >
+              {kindLabel}
             </Badge>
             <CardTitle
               className="text-base leading-tight line-clamp-2 hover:text-primary transition-smooth cursor-pointer"
@@ -150,7 +158,7 @@ export default function ResourceCard({
               data-ai-role="view"
             >
               <Eye className="h-4 w-4 mr-2" />
-              {isVideo ? 'Watch' : 'Read'}
+              {isXapi ? 'Open' : isVideo ? 'Watch' : 'Read'}
             </Button>
             <Button
               onClick={(e) => {

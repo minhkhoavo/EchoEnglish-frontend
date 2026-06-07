@@ -13,6 +13,7 @@ import {
   Rss,
   Youtube,
   Database,
+  GraduationCap,
 } from 'lucide-react';
 import { ResourceType, type Resource } from '../types/resource.types';
 
@@ -27,6 +28,7 @@ interface AdminResourceListProps {
 }
 
 const getResourceIcon = (resource: Resource) => {
+  if (resource.type === 'xapi') return <GraduationCap className="h-4 w-4" />;
   if (resource.isArticle) return <FileText className="h-4 w-4" />;
   if (resource.type === 'youtube') return <Youtube className="h-4 w-4" />;
   if (resource.type === 'web_rss') return <Rss className="h-4 w-4" />;
@@ -34,6 +36,7 @@ const getResourceIcon = (resource: Resource) => {
 };
 
 const getResourceLabel = (resource: Resource) => {
+  if (resource.type === 'xapi') return 'xAPI Course';
   if (resource.isArticle) return 'Article';
   if (resource.type === 'youtube') return 'YouTube';
   if (resource.type === 'web_rss') return 'RSS';
@@ -122,8 +125,8 @@ export const AdminResourceList = ({
 
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
-                {/* Edit button for articles */}
-                {resource.isArticle && onEdit && (
+                {/* Edit button for articles + xAPI courses */}
+                {(resource.isArticle || resource.type === 'xapi') && onEdit && (
                   <Button
                     size="sm"
                     variant="outline"
