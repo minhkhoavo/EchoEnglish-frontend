@@ -77,12 +77,12 @@ export interface ResourceStatsResponse {
   message: string;
   data: {
     totalResources: number;
-    approved: number;
-    notApproved: number;
+    suitableForLearners: number;
+    notSuitableForLearners: number;
     byDomain: Array<{
       total: number;
-      approvedCount: number;
-      notApprovedCount: number;
+      suitableForLearnersCount: number;
+      notSuitableForLearnersCount: number;
       domain: string;
     }>;
   };

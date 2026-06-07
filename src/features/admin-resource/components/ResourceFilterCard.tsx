@@ -25,7 +25,7 @@ const RESOURCE_TYPES = [
 
 const SUITABLE_STATUS = [
   { value: 'true', label: 'Suitable for Learners' },
-  { value: 'false', label: 'Not Suitable' },
+  { value: 'false', label: 'Not Suitable for Learners' },
 ];
 
 const SORT_OPTIONS = [

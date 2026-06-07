@@ -108,8 +108,8 @@ interface DashboardCardsProps {
   };
   resourceStats?: {
     totalResources: number;
-    approved: number;
-    notApproved: number;
+    suitableForLearners: number;
+    notSuitableForLearners: number;
   };
   isLoading?: {
     users?: boolean;
@@ -133,7 +133,7 @@ export function DashboardCards({
 
   const approvalRate =
     resourceStats && resourceStats.totalResources > 0
-      ? (resourceStats.approved / resourceStats.totalResources) * 100
+      ? (resourceStats.suitableForLearners / resourceStats.totalResources) * 100
       : 0;
 
   return (
@@ -245,8 +245,8 @@ export function DashboardCards({
                 <span
                   className={`font-medium ${approvalRate >= 80 ? 'text-green-600' : approvalRate >= 50 ? 'text-amber-500' : 'text-red-500'}`}
                 >
-                  {resourceStats?.approved || 0} approved (
-                  {approvalRate.toFixed(0)}%)
+                  {resourceStats?.suitableForLearners || 0} suitable for
+                  learners ({approvalRate.toFixed(0)}%)
                 </span>
               </p>
             </div>

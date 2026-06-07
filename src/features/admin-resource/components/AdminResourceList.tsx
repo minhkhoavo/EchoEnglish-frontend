@@ -83,7 +83,7 @@ export const AdminResourceList = ({
                     resource.suitableForLearners ? 'default' : 'destructive'
                   }
                 >
-                  {resource.suitableForLearners ? 'Approved' : 'Pending'}
+                  {resource.suitableForLearners ? 'Approved' : 'Rejected'}
                 </Badge>
                 {resource.isArticle && resource.isIndexed && (
                   <Badge

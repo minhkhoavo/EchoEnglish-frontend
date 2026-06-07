@@ -22,8 +22,8 @@ import { Pie, PieChart, Cell } from 'recharts';
 interface ResourceDomainProps {
   data?: Array<{
     total: number;
-    approvedCount: number;
-    notApprovedCount: number;
+    suitableForLearnersCount: number;
+    notSuitableForLearnersCount: number;
     domain: string;
   }>;
   isLoading?: boolean;
@@ -169,7 +169,7 @@ export function ResourceDomainChart({
                   <TableHead>Domain</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Approved</TableHead>
-                  <TableHead>Pending</TableHead>
+                  <TableHead>Rejected</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -178,7 +178,7 @@ export function ResourceDomainChart({
                   data.map((item, index) => {
                     const approvalRate =
                       item.total > 0
-                        ? (item.approvedCount / item.total) * 100
+                        ? (item.suitableForLearnersCount / item.total) * 100
                         : 0;
                     return (
                       <TableRow key={item.domain || `domain-${index}`}>
@@ -199,8 +199,10 @@ export function ResourceDomainChart({
                           </div>
                         </TableCell>
                         <TableCell>{item.total}</TableCell>
-                        <TableCell>{item.approvedCount}</TableCell>
-                        <TableCell>{item.notApprovedCount}</TableCell>
+                        <TableCell>{item.suitableForLearnersCount}</TableCell>
+                        <TableCell>
+                          {item.notSuitableForLearnersCount}
+                        </TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
