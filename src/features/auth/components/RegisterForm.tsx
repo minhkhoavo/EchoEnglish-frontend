@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -424,12 +424,12 @@ const RegisterForm: React.FC = () => {
           <div className="md:col-span-2 text-center pt-2">
             <p className="text-sm text-gray-600">
               Already have an account?{' '}
-              <a
-                href="/login"
+              <Link
+                to="/login"
                 className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
               >
                 Sign in now
-              </a>
+              </Link>
             </p>
           </div>
         </form>

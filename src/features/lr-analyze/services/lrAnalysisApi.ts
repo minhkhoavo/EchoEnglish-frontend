@@ -40,10 +40,23 @@ export const lrAnalysisApi = api.injectEndpoints({
         { type: 'TestResult', id: testResultId },
       ],
     }),
+
+    requestAnalysis: builder.mutation<
+      { success: boolean; data: ExamAnalysisResult; creditsUsed: number },
+      string
+    >({
+      query: (testResultId) => ({
+        url: `/test-results/${testResultId}/analyze`,
+        method: 'POST',
+      }),
+    }),
   }),
   overrideExisting: false,
 });
 
 // Export hooks for usage in components
-export const { useGetAnalysisResultQuery, useLazyGetAnalysisResultQuery } =
-  lrAnalysisApi;
+export const {
+  useGetAnalysisResultQuery,
+  useLazyGetAnalysisResultQuery,
+  useRequestAnalysisMutation,
+} = lrAnalysisApi;

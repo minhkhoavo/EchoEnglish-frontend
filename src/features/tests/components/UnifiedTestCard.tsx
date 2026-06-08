@@ -83,8 +83,16 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
     return `${minutes}m`;
   };
 
+  const testAiId = `test-card-${testId}`;
+  const testAiLabel = `${config.description} test: ${test.testTitle} (${config.numberOfQuestions} questions, ${formatDuration(config.duration)})`;
+
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
+    <Card
+      data-ai-id={testAiId}
+      data-ai-label={testAiLabel}
+      data-ai-role="test-card"
+      className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20"
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -132,6 +140,9 @@ export const UnifiedTestCard: React.FC<UnifiedTestCardProps> = ({
           onClick={handleStartTest}
           className="w-full group-hover:shadow-md transition-all"
           size="sm"
+          data-ai-id={`${testAiId}-start-btn`}
+          data-ai-label={`Open ${config.description} test: ${test.testTitle}`}
+          data-ai-role="start"
         >
           Detail
         </Button>

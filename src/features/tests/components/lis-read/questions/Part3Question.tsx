@@ -6,6 +6,8 @@ import { useTestSession } from '@/features/tests/hooks/useTestSession';
 import { QuestionHeader } from '../common/QuestionHeader';
 import { AnswerOptions } from '../common/AnswerOptions';
 import { ExplanationSection } from '../common/ExplanationSection';
+import { VocabularySection } from '../common/VocabularySection';
+import { QuestionText } from '../common/QuestionText';
 import { Instructions } from '../common/Instructions';
 import { useExpanded } from '@/features/tests/hooks/useExpanded';
 import {
@@ -24,6 +26,7 @@ interface Part3QuestionProps {
     isCorrect: boolean;
     correctAnswer: string;
   }>;
+  resourceUrl?: string;
 }
 
 export const Part3Question = ({
@@ -31,6 +34,7 @@ export const Part3Question = ({
   showCorrectAnswers = false,
   userAnswers = {},
   reviewAnswers = [],
+  resourceUrl,
 }: Part3QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
@@ -110,6 +114,7 @@ export const Part3Question = ({
                       expanded={isTranscriptExpanded}
                       onToggle={() => toggleTranscript(groupIndex)}
                       explanation={group.groupContext?.transcript || ''}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
 
@@ -120,8 +125,18 @@ export const Part3Question = ({
                       expanded={isTranslationExpanded}
                       onToggle={() => toggleTranslation(groupIndex)}
                       explanation={group.groupContext?.translation || ''}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
+
+                  {/* Vocabulary Section (AI-extracted, attached to test) */}
+                  {showCorrectAnswers &&
+                    group.groupContext?.vocabulary &&
+                    group.groupContext.vocabulary.length > 0 && (
+                      <VocabularySection
+                        words={group.groupContext.vocabulary}
+                      />
+                    )}
                 </div>
 
                 {/* Questions */}
@@ -146,9 +161,11 @@ export const Part3Question = ({
                           <QuestionHeader
                             questionNumber={question.questionNumber}
                           />
-                          <p className="mb-4 font-medium">
-                            {question.questionText}
-                          </p>
+                          <QuestionText
+                            text={question.questionText || ''}
+                            resourceUrl={resourceUrl}
+                            showCorrectAnswers={showCorrectAnswers}
+                          />
                           <AnswerOptions
                             options={question.options}
                             userAnswer={userAnswer ?? undefined}
@@ -162,6 +179,7 @@ export const Part3Question = ({
                                 label
                               )
                             }
+                            resourceUrl={resourceUrl}
                           />
                           {/* Explanation */}
                           {showCorrectAnswers && (
@@ -172,6 +190,8 @@ export const Part3Question = ({
                                 toggleExplanation(question.questionNumber)
                               }
                               explanation={question.explanation}
+                              resourceUrl={resourceUrl}
+                              showCorrectAnswers={showCorrectAnswers}
                             />
                           )}
                         </CardContent>

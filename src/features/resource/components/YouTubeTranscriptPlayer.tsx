@@ -1,31 +1,44 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import YouTube, { type YouTubeProps } from 'react-youtube';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Volume2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Play,
+  Pause,
+  Volume2,
+  GraduationCap,
+  RefreshCw,
+  AlertCircle,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface TranscriptSegment {
-  text: string;
-  start: number;
-  duration?: number;
-  end?: number;
-}
+import { SyncedExercisePanel } from './exercises';
+import type { TranscriptSegment } from '../types/resource.type';
 
 interface YouTubeTranscriptPlayerProps {
   videoUrl: string;
   transcript: TranscriptSegment[];
   className?: string;
+  isLoadingTranscript?: boolean;
+  transcriptError?: string | null;
+  onRetryTranscript?: () => void;
 }
 
 const YouTubeTranscriptPlayer: React.FC<YouTubeTranscriptPlayerProps> = ({
   videoUrl,
   transcript,
   className,
+  isLoadingTranscript = false,
+  transcriptError = null,
+  onRetryTranscript,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState(-1);
+  const [playerError, setPlayerError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'transcript' | 'practice'>(
+    'transcript'
+  );
   const playerRef = useRef<{
     seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
     playVideo: () => void;
@@ -109,6 +122,14 @@ const YouTubeTranscriptPlayer: React.FC<YouTubeTranscriptPlayerProps> = ({
   // YouTube player event handlers
   const onReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
+    setPlayerError(null); // Clear any previous errors
+  };
+
+  const onError: YouTubeProps['onError'] = (event) => {
+    console.error('YouTube player error:', event);
+    setPlayerError(
+      'Failed to load video. Please check your network connection.'
+    );
   };
 
   const onStateChange: YouTubeProps['onStateChange'] = (event) => {
@@ -151,6 +172,63 @@ const YouTubeTranscriptPlayer: React.FC<YouTubeTranscriptPlayerProps> = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Play a specific segment (for exercises)
+  const handlePlaySegment = useCallback(
+    (startTime: number, endTime?: number) => {
+      if (playerRef.current) {
+        try {
+          playerRef.current.seekTo(startTime, true);
+          playerRef.current.playVideo();
+
+          // Optionally pause at end time
+          if (endTime) {
+            const duration = (endTime - startTime) * 1000;
+            setTimeout(() => {
+              if (playerRef.current && isPlaying) {
+                const currentT = playerRef.current.getCurrentTime();
+                if (currentT >= endTime - 0.5) {
+                  playerRef.current.pauseVideo();
+                }
+              }
+            }, duration);
+          }
+        } catch (error) {
+          console.error('Error playing segment:', error);
+        }
+      }
+    },
+    [isPlaying]
+  );
+
+  // Seek to specific time
+  const handleSeek = useCallback((time: number) => {
+    if (playerRef.current) {
+      try {
+        playerRef.current.seekTo(time, true);
+      } catch (error) {
+        console.error('Error seeking:', error);
+      }
+    }
+  }, []);
+
+  // Navigate to specific segment (for synced exercises)
+  const handleNavigateSegment = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < transcript.length) {
+        const segment = transcript[index];
+        setActiveSegmentIndex(index);
+        if (playerRef.current) {
+          try {
+            playerRef.current.seekTo(segment.start, true);
+          } catch (error) {
+            console.error('Error navigating to segment:', error);
+          }
+        }
+      }
+    },
+    [transcript]
+  );
+
   if (!videoId) {
     return (
       <Card className={className}>
@@ -169,87 +247,188 @@ const YouTubeTranscriptPlayer: React.FC<YouTubeTranscriptPlayerProps> = ({
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-0 min-h-[500px]">
           {/* Video Player - Left Side */}
           <div className="bg-black flex items-center justify-center">
-            <div className="w-full">
-              <YouTube
-                videoId={videoId}
-                opts={opts}
-                onReady={onReady}
-                onStateChange={onStateChange}
-                className="w-full h-full"
-              />
-            </div>
-          </div>
-
-          {/* Transcript - Right Side */}
-          <div className="border-l">
-            <div className="p-4 border-b bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <Volume2 className="w-5 h-5" />
-                    Interactive Transcript
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Click on any sentence to jump to that part of the video
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePlayPause}
-                  className="ml-4"
+            {playerError ? (
+              <div className="text-center p-8">
+                <div className="text-red-400 mb-4">{playerError}</div>
+                <a
+                  href={videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:underline"
                 >
-                  {isPlaying ? (
-                    <Pause className="w-4 h-4" />
-                  ) : (
-                    <Play className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {transcript && transcript.length > 0 ? (
-              <div
-                ref={transcriptContainerRef}
-                className="h-[400px] overflow-y-auto p-4 space-y-2"
-              >
-                {transcript.map((segment, index) => (
-                  <div
-                    key={index}
-                    data-segment-index={index}
-                    onClick={() => handleSegmentClick(segment, index)}
-                    className={cn(
-                      'p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-100 border-l-4',
-                      activeSegmentIndex === index
-                        ? 'bg-blue-100 border-blue-500 shadow-sm'
-                        : 'bg-gray-50 border-transparent hover:border-gray-300'
-                    )}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-xs font-mono text-gray-500 min-w-[60px] mt-0.5 bg-gray-200 px-2 py-1 rounded">
-                        {formatTime(segment.start)}
-                      </span>
-                      <p
-                        className={cn(
-                          'text-sm leading-relaxed flex-1',
-                          activeSegmentIndex === index
-                            ? 'text-blue-900 font-medium'
-                            : 'text-gray-700'
-                        )}
-                        dangerouslySetInnerHTML={{ __html: segment.text }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  Watch on YouTube
+                </a>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-[500px] text-gray-500">
-                <div className="text-center">
-                  <Volume2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>No transcript available for this video</p>
-                </div>
+              <div className="w-full">
+                <YouTube
+                  videoId={videoId}
+                  opts={opts}
+                  onReady={onReady}
+                  onError={onError}
+                  onStateChange={onStateChange}
+                  className="w-full h-full"
+                />
               </div>
             )}
+          </div>
+
+          {/* Right Side - Tabs for Transcript and Practice */}
+          <div className="border-l flex flex-col">
+            <Tabs
+              value={activeTab}
+              onValueChange={(v) =>
+                setActiveTab(v as 'transcript' | 'practice')
+              }
+              className="flex flex-col h-full"
+            >
+              {/* Tab Headers */}
+              <div className="p-3 border-b bg-gray-50">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="transcript" className="gap-2">
+                    <Volume2 className="w-4 h-4" />
+                    Transcript
+                  </TabsTrigger>
+                  <TabsTrigger value="practice" className="gap-2">
+                    <GraduationCap className="w-4 h-4" />
+                    Practice
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              {/* Transcript Tab */}
+              <TabsContent
+                value="transcript"
+                className="flex-1 m-0 overflow-hidden"
+              >
+                <div className="p-3 border-b bg-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">
+                        Click on any sentence to jump to that part
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePlayPause}
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-4 h-4" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {transcript && transcript.length > 0 ? (
+                  <div
+                    ref={transcriptContainerRef}
+                    className="h-[380px] overflow-y-auto p-4 space-y-2"
+                  >
+                    {transcript.map((segment, index) => (
+                      <div
+                        key={index}
+                        data-segment-index={index}
+                        onClick={() => handleSegmentClick(segment, index)}
+                        className={cn(
+                          'p-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-100 border-l-4',
+                          activeSegmentIndex === index
+                            ? 'bg-blue-100 border-blue-500 shadow-sm'
+                            : 'bg-gray-50 border-transparent hover:border-gray-300'
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="text-xs font-mono text-gray-500 min-w-[60px] mt-0.5 bg-gray-200 px-2 py-1 rounded">
+                            {formatTime(segment.start)}
+                          </span>
+                          <p
+                            className={cn(
+                              'text-sm leading-relaxed flex-1',
+                              activeSegmentIndex === index
+                                ? 'text-blue-900 font-medium'
+                                : 'text-gray-700'
+                            )}
+                            dangerouslySetInnerHTML={{ __html: segment.text }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : isLoadingTranscript ? (
+                  <div className="flex items-center justify-center h-[380px] text-gray-500">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4" />
+                      <p className="text-sm">Loading transcript...</p>
+                    </div>
+                  </div>
+                ) : transcriptError ? (
+                  <div className="flex items-center justify-center h-[380px] text-gray-500">
+                    <div className="text-center px-6">
+                      <AlertCircle className="w-10 h-10 mx-auto mb-3 text-amber-400" />
+                      <p className="text-sm text-gray-600 mb-4">
+                        {transcriptError}
+                      </p>
+                      {onRetryTranscript && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={onRetryTranscript}
+                          className="gap-2"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          Retry
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-[380px] text-gray-500">
+                    <div className="text-center">
+                      <Volume2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p>No transcript available for this video</p>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Practice Tab */}
+              <TabsContent
+                value="practice"
+                className="flex-1 m-0 overflow-auto"
+              >
+                {transcript && transcript.length > 0 ? (
+                  <div className="p-4 h-[430px] overflow-y-auto">
+                    <SyncedExercisePanel
+                      transcript={transcript}
+                      currentSegmentIndex={
+                        activeSegmentIndex >= 0 ? activeSegmentIndex : 0
+                      }
+                      onPlaySegment={handlePlaySegment}
+                      onSeek={handleSeek}
+                      onNavigateSegment={handleNavigateSegment}
+                    />
+                  </div>
+                ) : isLoadingTranscript ? (
+                  <div className="flex items-center justify-center h-[430px] text-gray-500">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4" />
+                      <p className="text-sm">
+                        Loading transcript for practice...
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-[430px] text-gray-500">
+                    <div className="text-center">
+                      <GraduationCap className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p>Transcript required for practice exercises</p>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </CardContent>

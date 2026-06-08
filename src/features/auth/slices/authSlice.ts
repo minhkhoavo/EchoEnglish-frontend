@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { User, AuthState } from '../types/auth.types';
+import { api } from '@/core/api/api';
 
 // Helper function to get user from storage
 const getUserFromStorage = (): User | null => {
@@ -112,5 +113,8 @@ export const {
   clearError,
   updateAccessToken,
 } = authSlice.actions;
+
+// Export action to reset API state (clear all cache)
+export const resetApiState = api.util.resetApiState;
 
 export default authSlice.reducer;

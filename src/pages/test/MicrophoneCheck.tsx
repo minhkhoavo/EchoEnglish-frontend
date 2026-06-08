@@ -191,37 +191,18 @@ const MicrophoneCheck: React.FC = () => {
 
     setIsStartingTest(true);
     try {
+      // Call start - backend will return existing attempt or create new one + return full data
       const res = await startAttempt({
         toeicSpeakingTestId: String(testData.testId ?? testId),
+        examMode: examMode,
       }).unwrap();
 
-      // Extract attempt ID from response
-      let attemptId: string | undefined;
-      const r: unknown = res;
-      if (r && typeof r === 'object') {
-        const obj = r as Record<string, unknown>;
-        if (
-          typeof obj.testAttemptId === 'string' ||
-          typeof obj.testAttemptId === 'number'
-        ) {
-          attemptId = String(obj.testAttemptId);
-        } else if (
-          obj.data &&
-          typeof obj.data === 'object' &&
-          (obj.data as Record<string, unknown>).testAttemptId
-        ) {
-          attemptId = String(
-            (obj.data as Record<string, unknown>).testAttemptId
-          );
-        } else if (obj._id) {
-          attemptId = String(obj._id);
-        } else if (obj.id) {
-          attemptId = String(obj.id);
-        }
-      }
+      // Response is now full SpeakingAttemptData
+      // Backend returns testAttemptId or _id depending on response format
+      const attemptId = res.testAttemptId || res._id;
 
       if (attemptId) {
-        setTestAttemptId(String(attemptId));
+        setTestAttemptId(attemptId);
         toast.success('Test started successfully');
         // Navigate to speaking exam with test attempt ID
         navigate(`/test/speaking/${testId}/exam`, {

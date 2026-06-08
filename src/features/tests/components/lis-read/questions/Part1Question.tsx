@@ -24,6 +24,7 @@ interface Part1QuestionProps {
     isCorrect: boolean;
     correctAnswer: string;
   }>;
+  resourceUrl?: string;
 }
 
 export const Part1Question = ({
@@ -31,6 +32,7 @@ export const Part1Question = ({
   showCorrectAnswers = false,
   userAnswers = {},
   reviewAnswers = [],
+  resourceUrl,
 }: Part1QuestionProps) => {
   // Using common useExpanded hook
   const { toggle: toggleExpanded, isExpanded } = useExpanded();
@@ -110,7 +112,7 @@ export const Part1Question = ({
                         <img
                           src={imageUrl}
                           alt={`Question ${question.questionNumber} image ${index + 1}`}
-                          className="w-full rounded-lg shadow-sm border"
+                          className="w-full max-w-md mx-auto rounded-lg shadow-sm border object-contain"
                         />
                       </div>
                     )
@@ -124,6 +126,7 @@ export const Part1Question = ({
                       expanded={isTranscriptExpanded}
                       onToggle={() => toggleTranscript(question.questionNumber)}
                       explanation={question.media?.transcript || ''}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
 
@@ -137,6 +140,8 @@ export const Part1Question = ({
                         toggleTranslation(question.questionNumber)
                       }
                       explanation={question.media.translation}
+                      resourceUrl={resourceUrl}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
 
@@ -147,6 +152,8 @@ export const Part1Question = ({
                       expanded={isExplanationExpanded}
                       onToggle={() => toggleExpanded(question.questionNumber)}
                       explanation={question.explanation}
+                      resourceUrl={resourceUrl}
+                      showCorrectAnswers={showCorrectAnswers}
                     />
                   )}
                 </div>
@@ -167,6 +174,7 @@ export const Part1Question = ({
                       )
                     }
                     listening={true}
+                    resourceUrl={resourceUrl}
                   />
                 </div>
               </div>

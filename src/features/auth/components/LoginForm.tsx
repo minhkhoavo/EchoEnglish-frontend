@@ -115,7 +115,11 @@ const LoginForm: React.FC = () => {
       );
 
       toast.success('Login successful!');
-      navigate('/');
+
+      // Check if user is admin and redirect accordingly
+      const isAdmin = profileResult.data.role === 'ADMIN';
+
+      navigate(isAdmin ? '/admin/dashboard' : '/');
     } catch (error: unknown) {
       const errorMessage =
         (error as { data?: { message?: string } })?.data?.message ||

@@ -1,13 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/core/store/store';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, BookOpen } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Header } from '@/components/layout/Header';
-import { useGetTranscriptMutation } from '@/features/resource/services/resourceApi';
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  BookOpen,
+  FileText,
+  Download,
+  Maximize2,
+  ExternalLink,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  useGetTranscriptMutation,
+  useGetResourceByIdQuery,
+} from '@/features/resource/services/resourceApi';
 import { useGetFlashcardsBySourceQuery } from '@/features/flashcard/services/flashcardApi';
 import {
   ResourceType,
@@ -18,63 +31,117 @@ import SelectionMenu from '@/features/resource/components/SelectionMenu';
 import CreateEditFlashcardDialog from '@/features/resource/components/CreateEditFlashcardDialog';
 import YouTubeTranscriptPlayer from '@/features/resource/components/YouTubeTranscriptPlayer';
 import VocabularySheet from '@/features/resource/components/VocabularySheet';
+import { ArticleExerciseContainer } from '@/features/resource/components/exercises/reading';
+import { RawHtmlRenderer, useCompanion } from '@/features/livecontext';
 
 export default function ResourceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const currentUser = useSelector((state: RootState) => state.auth.user);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [showSelectionMenu, setShowSelectionMenu] = useState(false);
   const [showFlashcardDialog, setShowFlashcardDialog] = useState(false);
   const [selectionPosition, setSelectionPosition] = useState({ x: 0, y: 0 });
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
+  const [transcriptError, setTranscriptError] = useState<string | null>(null);
+  const [transcriptRetryCount, setTranscriptRetryCount] = useState(0);
+  const [selectedTranslation, setSelectedTranslation] = useState<string>('');
+  const xapiFrameRef = useRef<HTMLIFrameElement>(null);
 
-  const { toast } = useToast();
+  // Get resource from location state OR fetch by ID
+  const resourceFromState = location.state?.resource;
+  const {
+    data: resourceResponse,
+    isLoading: isLoadingResource,
+    error: resourceError,
+  } = useGetResourceByIdQuery(id || '', {
+    skip: !id || !!resourceFromState, // Skip if we have resource from state
+  });
 
-  // Get resource from location state (passed from search page)
-  const resource = location.state?.resource;
+  // Use resource from state if available, otherwise from API
+  const resource = resourceFromState || resourceResponse?.data;
 
   // API calls
   const { data: flashcardsResponse, refetch: refetchFlashcards } =
-    useGetFlashcardsBySourceQuery(resource?.url || '');
+    useGetFlashcardsBySourceQuery(resource?.url || '', {
+      skip: !resource?.url, // Skip if resource URL is not available yet
+    });
   const [getTranscript, { isLoading: isLoadingTranscript }] =
     useGetTranscriptMutation();
 
   const flashcards: Flashcard[] = flashcardsResponse || [];
 
-  // Fetch transcript when component mounts
+  // ── Publish the active resource into LiveContext so the AI knows what
+  //    the user is reading. This gets surfaced in get_screen_context().
+  const { setPageContext } = useCompanion();
+  useEffect(() => {
+    if (!resource) {
+      setPageContext('resource', null);
+      return;
+    }
+    setPageContext('resource', {
+      id: resource._id || id,
+      title: resource.title,
+      type: resource.type,
+      summary: resource.summary,
+      description: resource.description,
+      url: resource.url,
+      keyPoints: resource.keyPoints,
+      labels: resource.labels,
+      // First 800 chars only — full text via get_resource_text tool
+      contentPreview: (resource.content || '')
+        .replace(/<[^>]+>/g, ' ')
+        .slice(0, 800),
+      // Tell the AI exactly which ai_id wraps the article body so it can
+      // call highlight_text({container_ai_id: '<this>'})
+      articleContainerAiId: `resource-${id || resource._id || 'doc'}`,
+    });
+    return () => setPageContext('resource', null);
+  }, [resource, id, setPageContext]);
+
+  const cleanSegments = (segments: TranscriptSegment[]) =>
+    segments.map((seg) => ({
+      ...seg,
+      text: seg.text.replace(/&amp;#39;/g, "'").replace(/&amp;/g, '&'),
+    }));
+
+  // Fetch transcript when component mounts (or on manual retry)
   useEffect(() => {
     const fetchTranscript = async () => {
+      if (!resource?.url || resource.type !== ResourceType.YOUTUBE) return;
+
+      // Use transcript already stored on the resource (avoids hitting YouTube again)
+      if (resource.transcript && resource.transcript.length > 0) {
+        setTranscript(cleanSegments(resource.transcript));
+        return;
+      }
+
+      setTranscriptError(null);
       try {
-        if (!resource?.url || resource.type !== ResourceType.YOUTUBE) return;
-
         const response = await getTranscript({ url: resource.url }).unwrap();
-
         if (response?.data && Array.isArray(response.data)) {
-          // Clean up transcript text (decode HTML entities)
-          const cleanedTranscript = response.data.map(
-            (segment: TranscriptSegment) => ({
-              ...segment,
-              text: segment.text
-                .replace(/&amp;#39;/g, "'")
-                .replace(/&amp;/g, '&'),
-            })
-          );
-          setTranscript(cleanedTranscript);
+          setTranscript(cleanSegments(response.data));
         }
       } catch (error) {
         console.error('Error fetching transcript:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load transcript. Please try again.',
-          variant: 'destructive',
-        });
+        const msg =
+          (error as { data?: { message?: string } })?.data?.message ||
+          'Failed to load transcript. Please try again.';
+        setTranscriptError(msg);
+        toast.error(msg);
       }
     };
 
     fetchTranscript();
-  }, [resource, getTranscript, toast]);
+  }, [resource, getTranscript, transcriptRetryCount]);
+
+  const handleRetryTranscript = useCallback(() => {
+    setTranscript([]);
+    setTranscriptError(null);
+    setTranscriptRetryCount((c) => c + 1);
+  }, []);
 
   // Handle text selection
   const handleTextSelection = (e: React.MouseEvent) => {
@@ -110,7 +177,8 @@ export default function ResourceDetailPage() {
     setShowSelectionMenu(true);
   };
 
-  const handleCreateFlashcard = () => {
+  const handleCreateFlashcard = (translation?: string) => {
+    setSelectedTranslation(translation || '');
     setShowSelectionMenu(false);
     setShowFlashcardDialog(true);
   };
@@ -118,18 +186,67 @@ export default function ResourceDetailPage() {
   const handleCloseSelection = () => {
     setShowSelectionMenu(false);
     setSelectedText('');
+    setSelectedTranslation('');
   };
 
   const handleFlashcardSuccess = () => {
     setShowFlashcardDialog(false);
     setSelectedText('');
+    setSelectedTranslation('');
     refetchFlashcards();
   };
 
-  if (!resource) {
+  const isVideo = resource?.type === ResourceType.YOUTUBE;
+  const isXapi = resource?.type === ResourceType.XAPI;
+  const isArticle =
+    resource &&
+    !isXapi &&
+    (resource.type === ResourceType.WEB_RSS ||
+      resource.type === ResourceType.ARTICLE ||
+      resource.isArticle);
+
+  const xapiLaunchSrc = useMemo(() => {
+    if (!isXapi || !resource?.xapiLaunchUrl) return '';
+    const endpoint = import.meta.env.VITE_XAPI_LRS_ENDPOINT as
+      | string
+      | undefined;
+    const auth = import.meta.env.VITE_XAPI_LRS_AUTH as string | undefined;
+    if (!endpoint) return resource.xapiLaunchUrl;
+    const actor = currentUser
+      ? {
+          name: [currentUser.fullName || currentUser.email || 'Learner'],
+          mbox: currentUser.email ? [`mailto:${currentUser.email}`] : undefined,
+        }
+      : { name: ['Anonymous Learner'] };
+    const params = new URLSearchParams({
+      endpoint,
+      auth: auth || '',
+      actor: JSON.stringify(actor),
+      activity_id: String(resource._id || id || ''),
+      registration: String(resource._id || id || ''),
+    });
+    const sep = resource.xapiLaunchUrl.includes('?') ? '&' : '?';
+    return `${resource.xapiLaunchUrl}${sep}${params.toString()}`;
+  }, [isXapi, resource, id, currentUser]);
+
+  // Loading state
+  if (isLoadingResource) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading resource...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error or not found state
+  if (!resource || resourceError) {
+    return (
+      <div className="min-h-screen bg-gray-50">
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -148,20 +265,27 @@ export default function ResourceDetailPage() {
     );
   }
 
-  const isVideo = resource.type === ResourceType.YOUTUBE;
-  const isArticle = resource.type === ResourceType.WEB_RSS;
-
   return (
-    <div className="min-h-screen bg-gray-50" onMouseUp={handleTextSelection}>
-      <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div
+      className="min-h-screen bg-gray-50"
+      onMouseUp={handleTextSelection}
+      data-ai-id="resource-detail-page"
+      data-ai-label={`Resource detail: ${resource?.title || ''}`}
+    >
+      <main
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+        data-ai-id="resource-detail-main"
+        data-ai-role="section"
+      >
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8" data-ai-id="resource-detail-header">
           <Button
             variant="ghost"
             onClick={() => navigate(-1)}
             className="mb-4 hover:bg-gray-100"
+            data-ai-id="resource-back-btn"
+            data-ai-label="Back to resources"
+            data-ai-role="cancel"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
@@ -189,13 +313,23 @@ export default function ResourceDetailPage() {
                   </Badge>
                 )}
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+              <h1
+                className="text-3xl font-bold text-gray-900 leading-tight"
+                data-ai-id="resource-detail-title"
+                data-ai-label={`Resource title: ${resource.title}`}
+                data-ai-role="heading"
+              >
                 {resource.title}
               </h1>
 
               {/* Key Points */}
               {resource.keyPoints && resource.keyPoints.length > 0 && (
-                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                <div
+                  className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg"
+                  data-ai-id="resource-key-points"
+                  data-ai-label={`Key points: ${resource.keyPoints.join('; ')}`}
+                  data-ai-role="section"
+                >
                   <h3 className="font-semibold text-blue-900 mb-2">
                     Key Points:
                   </h3>
@@ -204,6 +338,9 @@ export default function ResourceDetailPage() {
                       <li
                         key={index}
                         className="text-blue-800 text-sm flex items-start gap-2"
+                        data-ai-id={`resource-key-point-${index}`}
+                        data-ai-label={`Key point ${index + 1}: ${point}`}
+                        data-ai-role="list-item"
                       >
                         <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                         {point}
@@ -214,7 +351,12 @@ export default function ResourceDetailPage() {
               )}
 
               {resource.description && (
-                <p className="text-gray-600 text-lg leading-relaxed max-w-4xl">
+                <p
+                  className="text-gray-600 text-lg leading-relaxed max-w-4xl"
+                  data-ai-id="resource-description"
+                  data-ai-label={`Description: ${(resource.description as string).slice(0, 200)}`}
+                  data-ai-role="paragraph"
+                >
                   {resource.description}
                 </p>
               )}
@@ -233,7 +375,64 @@ export default function ResourceDetailPage() {
         </div>
 
         {/* Content Layout */}
-        {isVideo ? (
+        {isXapi ? (
+          /* xAPI iSpring package — embed launch file qua iframe */
+          <div className="space-y-6 pb-16">
+            {resource.xapiLaunchUrl ? (
+              <>
+                {/* Toolbar */}
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => xapiFrameRef.current?.requestFullscreen?.()}
+                  >
+                    <Maximize2 className="w-4 h-4 mr-2" />
+                    Fullscreen
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(xapiLaunchSrc, '_blank')}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Open in new tab
+                  </Button>
+                </div>
+
+                {/* Course frame — fill viewport height, no nested scrollbars */}
+                <iframe
+                  ref={xapiFrameRef}
+                  src={xapiLaunchSrc}
+                  title={resource.title || 'xAPI Course'}
+                  className="block w-full h-[calc(100vh-220px)] min-h-[560px] rounded-lg border bg-white shadow"
+                  allow="autoplay; fullscreen; microphone; camera"
+                  allowFullScreen
+                />
+
+                {/* Optional admin description below the course */}
+                {resource.content && (
+                  <Card>
+                    <CardContent className="p-8">
+                      <div className="prose prose-lg max-w-none">
+                        <RawHtmlRenderer
+                          html={resource.content}
+                          prefix={`resource-${id || resource._id || 'doc'}`}
+                          className="leading-relaxed article-content"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>This xAPI package has no launch URL.</p>
+              </div>
+            )}
+          </div>
+        ) : isVideo ? (
           /* Video gets full width */
           <div className="space-y-6 pb-16 ">
             {resource.url && (
@@ -243,6 +442,9 @@ export default function ResourceDetailPage() {
                   ...seg,
                   end: seg.start + seg.duration,
                 }))}
+                isLoadingTranscript={isLoadingTranscript}
+                transcriptError={transcriptError}
+                onRetryTranscript={handleRetryTranscript}
               />
             )}
 
@@ -256,13 +458,68 @@ export default function ResourceDetailPage() {
         ) : (
           /* Article layout full width */
           <div className="space-y-6 pb-16 max-w-4xl mx-auto">
+            {/* Attachment download card */}
+            {resource.attachmentUrl && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-8 h-8 text-blue-600" />
+                      <div>
+                        <h3 className="font-medium text-gray-900">
+                          {resource.attachmentName || 'Attached Document'}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Download the attached file to read offline
+                        </p>
+                      </div>
+                    </div>
+                    <a
+                      href={resource.attachmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      data-ai-id="resource-attachment-link"
+                      data-ai-label={`Download attachment: ${resource.attachmentName || 'document'}`}
+                      data-ai-role="view"
+                    >
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        data-ai-id="resource-attachment-btn"
+                        data-ai-label={`Download attachment: ${resource.attachmentName || 'document'}`}
+                        data-ai-role="view"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download
+                      </Button>
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Article Content */}
             <Card>
-              <CardContent className="p-8">
+              <CardContent
+                className="p-8"
+                data-ai-id="resource-article-card"
+                data-ai-label={`Article content: ${resource.title || ''}`}
+                data-ai-role="section"
+              >
                 <div className="prose prose-lg max-w-none">
                   {resource.content ? (
-                    <div
-                      dangerouslySetInnerHTML={{ __html: resource.content }}
+                    /*
+                     * Wrap article HTML in RawHtmlRenderer so every heading,
+                     * paragraph, list-item, blockquote, link and table gets
+                     * a stable data-ai-id and every paragraph is split into
+                     * sentence-level spans. This is what lets the AI call
+                     * highlight_text({container_ai_id, text}) on the exact
+                     * phrase the user asked about.
+                     */
+                    <RawHtmlRenderer
+                      html={resource.content}
+                      prefix={`resource-${id || resource._id || 'doc'}`}
                       className="leading-relaxed article-content"
                     />
                   ) : (
@@ -284,6 +541,23 @@ export default function ResourceDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Reading Exercises */}
+            {resource.content && (
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Reading Exercises
+                </h2>
+                <ArticleExerciseContainer
+                  id={resource.id}
+                  title={resource.title}
+                  content={resource.content}
+                  onClose={() =>
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }
+                />
+              </div>
+            )}
 
             {/* Floating Vocabulary Sheet */}
             <VocabularySheet
@@ -309,6 +583,7 @@ export default function ResourceDetailPage() {
           open={showFlashcardDialog}
           onOpenChange={setShowFlashcardDialog}
           selectedText={selectedText}
+          selectedTranslation={selectedTranslation}
           resourceUrl={resource?.url}
           onSuccess={handleFlashcardSuccess}
         />

@@ -1,13 +1,6 @@
-import type {
-  ExamRecoveryInfo,
-  QuestionState,
-} from '../slices/speakingExamSlice';
-
 const RECOVERY_STORAGE_KEY = 'speaking_exam_recovery';
 
 export interface StoredRecoveryData {
-  recoveryInfo: ExamRecoveryInfo;
-  questionStates: Record<number, QuestionState>;
   currentQuestionIndex: number;
   currentPartIndex: number;
   testAttemptId?: string;

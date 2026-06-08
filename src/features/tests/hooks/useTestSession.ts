@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useContext } from 'react';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
 import {
   saveAnswerByNumber,
@@ -13,10 +13,14 @@ import type {
   TOEICTestDetail,
   TestSession,
 } from '../types/toeic-test.types';
+import { PracticeDrillContext } from '../../practice-drill/contexts/PracticeDrillContext';
 
 // Quản lý logic dữ liệu và trạng thái phiên làm bài kiểm tra TOEIC
 // Đồng bộ dữ liệu giữa Redux store và IndexedDB (qua testStorageService).
 export const useTestSession = (isReviewMode?: boolean) => {
+  // Check if we're in Practice Drill context
+  const practiceDrillContext = useContext(PracticeDrillContext);
+
   const dispatch = useAppDispatch();
   const currentSession = useAppSelector((state) => state.test.currentSession);
   const activeTest = useAppSelector((state) => state.test.activeTest);
@@ -367,6 +371,10 @@ export const useTestSession = (isReviewMode?: boolean) => {
     );
   }, [currentSession]);
 
+  // If in Practice Drill context, override saveAnswer and getAnswer
+  const finalSaveAnswer = practiceDrillContext?.saveAnswer || saveAnswer;
+  const finalGetAnswer = practiceDrillContext?.getAnswer || getAnswer;
+
   return {
     // State
     currentSession,
@@ -377,8 +385,8 @@ export const useTestSession = (isReviewMode?: boolean) => {
     startTest, // Bắt đầu một bài thi mới hoặc khôi phục từ phiên cũ trong IndexedDB
     forceStartFresh, // Luôn bắt đầu phiên thi mới mà không quan tâm phiên cũ trong IndexedDB
     endTest, // Kết thúc phiên thi, đồng thời xóa dữ liệu lưu trong IndexedDB và Redux.
-    saveAnswer,
-    getAnswer, // Lấy đáp án theo questionNumber
+    saveAnswer: finalSaveAnswer, // Use overridden version if in Practice Drill
+    getAnswer: finalGetAnswer, // Lấy đáp án theo questionNumber
     updateCurrentSession,
     getAllAnswers,
     checkExistingSession, // Kiểm tra có phiên thi nào đang lưu trong IndexedDB không, nếu có thì trả về dữ liệu session đó

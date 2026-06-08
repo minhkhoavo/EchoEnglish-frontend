@@ -6,6 +6,7 @@ export interface Flashcard {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   tags: string[];
   source?: string;
+  phonetic?: string;
   isAIGenerated: boolean;
   createdAt: string;
   updatedAt: string;

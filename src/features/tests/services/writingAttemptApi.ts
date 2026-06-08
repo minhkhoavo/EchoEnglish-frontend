@@ -1,4 +1,6 @@
 import { api } from '@/core/api/api';
+import type { FeaturePricingType } from '@/features/auth/services/creditsApi';
+import { FeaturePricingType as FeaturePricingTypeConst } from '@/features/auth/services/creditsApi';
 
 export interface SubmitWritingAttemptRequest {
   testId: string;
@@ -13,6 +15,10 @@ export interface SubmitWritingAttemptResponse {
   data: {
     resultId: string;
   };
+}
+
+export interface CheckWritingAffordabilityRequest {
+  featureType: FeaturePricingType;
 }
 
 export const writingAttemptApi = api.injectEndpoints({

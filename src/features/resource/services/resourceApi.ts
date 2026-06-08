@@ -29,6 +29,15 @@ export const resourceApi = api.injectEndpoints({
       providesTags: ['Resource'],
     }),
 
+    // Get resource by ID
+    getResourceById: builder.query<{ data: Resource }, string>({
+      query: (id) => ({
+        url: `/resources/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (_result, _error, id) => [{ type: 'Resource', id }],
+    }),
+
     // Get transcript for YouTube video
     getTranscript: builder.mutation<
       { data: TranscriptSegment[] },
@@ -93,6 +102,7 @@ export const resourceApi = api.injectEndpoints({
 // Export hooks
 export const {
   useSearchResourcesQuery,
+  useGetResourceByIdQuery,
   useGetTranscriptMutation,
   useSaveTranscriptMutation,
   useUpdateResourceMutation,

@@ -22,10 +22,11 @@ import {
   CreditCard,
   History,
 } from 'lucide-react';
+import { UserAvatar } from '@/components/UserAvatar';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/core/store/store';
-import { logout } from '@/features/auth/slices/authSlice';
+import { logout, resetApiState } from '@/features/auth/slices/authSlice';
 import { useEffect, useState } from 'react';
 import { useGetUserBalanceQuery } from '@/features/payment/services/paymentApi';
 import {
@@ -120,8 +121,9 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(resetApiState());
     toast.success('Logged out successfully!');
-    navigate('/login');
+    window.location.href = '/login';
   };
 
   return (
@@ -171,6 +173,9 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
                 size="sm"
                 className="hidden sm:flex items-center space-x-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
                 onClick={() => navigate('/payment')}
+                data-ai-id="header-credits-btn"
+                data-ai-label={`Credit balance: ${userBalance.credits.toLocaleString('vi-VN')} credits — click to buy more`}
+                data-ai-role="navigation"
               >
                 <Coins className="h-4 w-4" />
                 <span className="font-medium">
@@ -181,13 +186,13 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
             )}
 
             {/* Premium Badge */}
-            <Badge
+            {/* <Badge
               variant="outline"
               className="hidden sm:flex border-amber-200 text-amber-700 bg-amber-50 dark:border-amber-700 dark:text-amber-300 dark:bg-amber-900/20"
             >
               <Crown className="h-3 w-3 mr-1" />
               Premium
-            </Badge>
+            </Badge> */}
 
             {/* Notifications */}
             <div className="relative">
@@ -196,6 +201,9 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
                 size="sm"
                 className="relative hover:bg-gray-100 dark:hover:bg-gray-800"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                data-ai-id="header-notifications-btn"
+                data-ai-label={`Notifications${displayUnreadCount > 0 ? ` (${displayUnreadCount} unread)` : ''}`}
+                data-ai-role="navigation"
               >
                 <Bell className="h-4 w-4" />
                 {displayUnreadCount > 0 && (
@@ -216,33 +224,26 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
               />
             </div>
 
-            {/* Settings */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-
             {/* User Avatar Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative h-9 w-9 rounded-full p-0 shadow-md hover:shadow-lg transition-all duration-200 bg-gradient-to-r from-purple-200 to-pink-200"
+                  className="relative rounded-full"
+                  data-ai-id="header-user-menu-btn"
+                  data-ai-label={`User menu for ${user?.fullName || 'User'}`}
+                  data-ai-role="navigation"
                 >
-                  <span className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-300 to-pink-300 opacity-70" />
-                  <img
-                    src={
-                      user?.image ||
-                      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
-                    }
+                  <UserAvatar
+                    src={user?.image}
                     alt="User Avatar"
-                    className="h-7 w-7 rounded-full object-cover relative z-10 border border-white dark:border-gray-900"
+                    fallbackText={user?.fullName || 'U'}
+                    size="xs"
+                    showOnlineIndicator
+                    className="relative z-10"
+                    ringClassName="ring-0"
                   />
-                  <span className="absolute bottom-1 right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 shadow z-20" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
@@ -278,17 +279,12 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
                   <History className="mr-2 h-4 w-4" />
                   <span>Transaction History</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate('/me/tests')}
+                >
                   <BookOpen className="mr-2 h-4 w-4" />
                   <span>My Learning</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Crown className="mr-2 h-4 w-4" />
-                  <span>Upgrade to Premium</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

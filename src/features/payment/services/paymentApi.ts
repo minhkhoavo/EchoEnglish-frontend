@@ -13,7 +13,12 @@ const paymentApiInjected = api.injectEndpoints({
   endpoints: (builder) => ({
     createPayment: builder.mutation<
       ApiResponse<PaymentResponse>,
-      { credits: number; paymentGateway: string; description: string }
+      {
+        credits: number;
+        paymentGateway: string;
+        description: string;
+        promoCode?: string;
+      }
     >({
       query: (body) => ({
         url: '/payments/create',
@@ -24,11 +29,11 @@ const paymentApiInjected = api.injectEndpoints({
     }),
 
     validatePromoCode: builder.mutation<
-      ApiResponse<PromoCodeValidation>,
+      PromoCodeValidation,
       { code: string; credits: number }
     >({
       query: ({ code, credits }) => ({
-        url: '/promo-codes/validate',
+        url: '/promo/validate',
         method: 'POST',
         data: { code, credits },
       }),
@@ -50,8 +55,19 @@ const paymentApiInjected = api.injectEndpoints({
         if (filters?.status) params.append('status', filters.status);
         if (filters?.paymentGateway)
           params.append('paymentGateway', filters.paymentGateway);
-        if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
-        if (filters?.dateTo) params.append('dateTo', filters.dateTo);
+
+        if (filters?.dateFrom) {
+          const dateFrom = new Date(filters.dateFrom);
+          dateFrom.setHours(0, 0, 0, 0);
+          params.append('dateFrom', dateFrom.toISOString());
+        }
+
+        if (filters?.dateTo) {
+          const dateTo = new Date(filters.dateTo);
+          dateTo.setHours(23, 59, 59, 999);
+          params.append('dateTo', dateTo.toISOString());
+        }
+
         if (filters?.page) params.append('page', filters.page.toString());
         if (filters?.limit) params.append('limit', filters.limit.toString());
 

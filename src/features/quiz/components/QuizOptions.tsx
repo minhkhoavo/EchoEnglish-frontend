@@ -42,6 +42,9 @@ export const QuizOptions = ({
           return (
             <div
               key={option.id}
+              data-ai-id={`quiz-option-${currentQ.id}-${option.id}`}
+              data-ai-label={`Answer option ${option.id.toUpperCase()}${option.text ? `: ${option.text}` : ''}${isReviewMode && isCorrect ? ' (correct answer)' : ''}${isSelected ? ' (selected)' : ''}`}
+              data-ai-role={isReviewMode ? 'answer-review' : 'answer-option'}
               className={cn(
                 'p-4 border rounded-lg transition-all duration-200',
                 !isReviewMode && 'cursor-pointer hover:bg-muted/50',

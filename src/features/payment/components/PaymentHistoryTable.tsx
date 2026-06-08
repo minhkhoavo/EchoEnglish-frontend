@@ -10,7 +10,6 @@ import { Badge } from '../../../components/ui/badge';
 import type { Transaction } from '../types';
 import { TransactionType, PaymentMethod } from '../types';
 import { TransactionStatusBadge } from './TransactionStatusBadge';
-import { TransactionFiltersComponent } from './TransactionFilters';
 import {
   Table,
   TableBody,
@@ -29,16 +28,13 @@ import {
   Copy,
   CheckCircle2,
 } from 'lucide-react';
-import type { TransactionFilters } from '../types';
+import { formatDate, formatCurrency } from '@/lib/format.ts';
 
 interface PaymentHistoryTableProps {
   transactions: Transaction[];
   isLoading?: boolean;
   error?: string | null;
   onPaymentContinue?: (transaction: Transaction) => void;
-  filters?: TransactionFilters;
-  onFiltersChange?: (filters: TransactionFilters) => void;
-  onClearFilters?: () => void;
 }
 
 export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
@@ -46,30 +42,8 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
   isLoading = false,
   error = null,
   onPaymentContinue,
-  filters,
-  onFiltersChange,
-  onClearFilters,
 }) => {
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
-
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return 'Unknown';
-
-      const pad = (n: number) => n.toString().padStart(2, '0');
-      return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-    } catch {
-      return 'Unknown';
-    }
-  };
-
-  const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
-  };
 
   const getTransactionTypeInfo = (type: string) => {
     switch (type) {
@@ -203,7 +177,7 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
 
   if (!transactions.length) {
     return (
-      <Card className="bg-white/80 backdrop-blur-sm border-white/50 shadow-xl">
+      <Card className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg">
         <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-t-lg">
           <CardTitle className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg">
@@ -236,33 +210,21 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
   }
 
   return (
-    <Card className="border-gray-200">
+    <Card className="bg-white/80 backdrop-blur-sm border-white/50 shadow-lg">
       <CardHeader className="pb-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Calendar className="h-5 w-5 text-gray-600" />
-            <span className="text-gray-900">
-              Transaction History ({transactions.length} transactions)
-            </span>
-          </CardTitle>
-
-          {/* Compact Filters */}
-          {filters && onFiltersChange && onClearFilters && (
-            <TransactionFiltersComponent
-              filters={filters}
-              onFiltersChange={onFiltersChange}
-              onClearFilters={onClearFilters}
-              compact={true}
-            />
-          )}
-        </div>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Calendar className="h-5 w-5 text-gray-600" />
+          <span className="text-gray-900">
+            Transaction History ({transactions.length} transactions)
+          </span>
+        </CardTitle>
       </CardHeader>
       <CardContent className="p-1.5">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="table-fixed w-full">
             <TableHeader>
-              <TableRow className="bg-gradient-to-r from-gray-50/50 to-blue-50/50 hover:from-gray-100/50 hover:to-blue-100/50">
-                <TableHead className="w-[140px] font-semibold text-gray-700">
+              <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100">
+                <TableHead className="font-semibold text-gray-700">
                   Time
                 </TableHead>
                 <TableHead className="font-semibold text-gray-700">
@@ -277,7 +239,7 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
                 <TableHead className="text-right font-semibold text-gray-700">
                   Credit
                 </TableHead>
-                <TableHead className="font-semibold text-gray-700">
+                <TableHead className="w-60 max-w-[220px] font-semibold text-gray-700">
                   Description
                 </TableHead>
                 <TableHead className="font-semibold text-gray-700">
@@ -286,7 +248,7 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
                 <TableHead className="font-semibold text-gray-700">
                   Gateway
                 </TableHead>
-                <TableHead className="text-center font-semibold text-gray-700">
+                <TableHead className="w-20 text-center font-semibold text-gray-700">
                   Actions
                 </TableHead>
               </TableRow>
@@ -308,7 +270,7 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
                         {transaction.expiredAt &&
                           transaction.status === 'INITIATED' && (
                             <span className="text-xs text-gray-500">
-                              Hết hạn: {formatDate(transaction.expiredAt)}
+                              Expires: {formatDate(transaction.expiredAt)}
                             </span>
                           )}
                       </div>
@@ -352,11 +314,11 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
                       {transaction.amount > 0 ? (
                         <div className="flex flex-col items-end">
                           <span className="font-medium">
-                            {formatAmount(transaction.amount)}
+                            {formatCurrency(transaction.amount)}
                           </span>
                           {transaction.discount > 0 && (
                             <span className="text-xs text-green-600">
-                              Giảm {formatAmount(transaction.discount)}
+                              Save {formatCurrency(transaction.discount)}
                             </span>
                           )}
                         </div>
@@ -385,8 +347,8 @@ export const PaymentHistoryTable: React.FC<PaymentHistoryTableProps> = ({
                     </TableCell>
 
                     {/* Mô tả */}
-                    <TableCell>
-                      <div className="max-w-xs">
+                    <TableCell className="w-44 max-w-[180px]">
+                      <div className="overflow-hidden">
                         <p
                           className="text-sm truncate"
                           title={transaction.description}

@@ -7,9 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp';
 import { toast } from 'sonner';
 import { useAppDispatch } from '@/core/store/store';
 import { useVerifyRegisterOtpMutation } from '../services/authApi';
@@ -21,23 +25,19 @@ const VerifyOtpForm: React.FC = () => {
   const dispatch = useAppDispatch();
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email') || '';
+  const otpFromUrl = searchParams.get('otp') || '';
   const [verifyOtp, { isLoading }] = useVerifyRegisterOtpMutation();
 
   // Form state
   const [otp, setOtp] = useState('');
   const [otpError, setOtpError] = useState('');
-  const [countdown, setCountdown] = useState(60);
-  const [canResend, setCanResend] = useState(false);
 
-  // Countdown timer for resend OTP
+  // Auto-fill OTP from URL if present
   useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    } else {
-      setCanResend(true);
+    if (otpFromUrl && /^\d{6}$/.test(otpFromUrl)) {
+      setOtp(otpFromUrl);
     }
-  }, [countdown]);
+  }, [otpFromUrl]);
 
   // Validation function
   const validateOtp = () => {
@@ -58,22 +58,12 @@ const VerifyOtpForm: React.FC = () => {
   };
 
   // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 6); // Only numbers, max 6 digits
+  const handleInputChange = (value: string) => {
     setOtp(value);
     // Clear error when user starts typing
     if (otpError) {
       setOtpError('');
     }
-  };
-
-  // Handle resend OTP
-  const handleResendOtp = async () => {
-    // Here you would call the resend OTP API
-    // For now, just reset the countdown
-    setCountdown(60);
-    setCanResend(false);
-    toast.success('New OTP code has been sent!');
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -133,23 +123,28 @@ const VerifyOtpForm: React.FC = () => {
         <form onSubmit={onSubmit} className="space-y-4">
           {/* OTP Field */}
           <div>
-            <Label htmlFor="otp" className="text-gray-700">
-              OTP Code (6 digits)
+            <Label htmlFor="otp" className="text-gray-700 text-center block">
+              Enter OTP Code
             </Label>
-            <div className="mt-1">
-              <Input
-                id="otp"
-                name="otp"
-                type="text"
+            <div className="mt-4 flex justify-center">
+              <InputOTP
                 value={otp}
                 onChange={handleInputChange}
-                placeholder="123456"
-                className="h-12 text-center text-lg font-mono tracking-widest border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 maxLength={6}
-              />
+                id="otp"
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
             </div>
             {otpError && (
-              <p className="text-sm font-medium text-red-500 mt-1">
+              <p className="text-sm font-medium text-red-500 mt-2 text-center">
                 {otpError}
               </p>
             )}
@@ -164,23 +159,7 @@ const VerifyOtpForm: React.FC = () => {
           </Button>
 
           {/* Resend OTP */}
-          <div className="text-center">
-            {canResend ? (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleResendOtp}
-                className="text-blue-600 hover:text-blue-800 font-medium"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Resend OTP Code
-              </Button>
-            ) : (
-              <p className="text-sm text-gray-600">
-                Resend code in {countdown} seconds
-              </p>
-            )}
-          </div>
+          <div className="text-center"></div>
 
           <div className="text-center pt-4 space-y-2">
             <Link

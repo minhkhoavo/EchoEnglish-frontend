@@ -26,7 +26,8 @@ type BackendScore = {
 
 type BackendQuestion = {
   questionNumber: number;
-  promptText: string;
+  questionText?: string; // Backend returns questionText
+  promptText?: string; // Keep for backward compatibility
   promptImage: string | null;
   s3AudioUrl: string | null;
   recordingId: MaybeOID | null;
@@ -50,7 +51,6 @@ type BackendSpeakingResult = {
   _id: MaybeOID;
   userId: MaybeOID;
   toeicSpeakingTestId: MaybeOID;
-  testIdNumeric: number;
   submissionTimestamp: MaybeISO;
   status: string;
   parts: BackendPart[];
@@ -69,12 +69,9 @@ const iconByPart: Record<BackendPart['questionType'], string> = {
 };
 
 // Default max score per question by part and index (fallbacks)
-function getQuestionMaxScore(
-  partType: BackendPart['questionType'],
-  idx: number
-): number {
-  switch (partType) {
-    case 'speaking_part5':
+function getQuestionMaxScore(partIndex: number): number {
+  switch (partIndex) {
+    case 5:
       return 5;
     default:
       return 3;
@@ -167,9 +164,10 @@ function transformSpeakingResult(input: BackendSpeakingResult): {
 } {
   const parts: SpeakingPartResult[] = input.parts.map((p) => {
     const filledQuestions = fillMissingScoresTemplate(p.questions);
+    console.log(`Viewing:::::`, p);
     const questions: SpeakingQuestionResult[] = filledQuestions.map(
       (q, idx) => {
-        const maxScore = getQuestionMaxScore(p.questionType, idx);
+        const maxScore = getQuestionMaxScore(p.partIndex);
         const scoresObj = extractScores(q);
         const score = scoresObj?.overallScore ?? 0;
         const pct = (score / maxScore) * 100;
@@ -179,7 +177,7 @@ function transformSpeakingResult(input: BackendSpeakingResult): {
         return {
           questionId: q.questionNumber,
           questionNumber: q.questionNumber,
-          questionText: q.promptText,
+          questionText: q.questionText || q.promptText || '',
           score,
           maxScore,
           proficiencyLevel: getProficiencyFromPercent(pct),
@@ -231,7 +229,7 @@ function transformSpeakingResult(input: BackendSpeakingResult): {
     ),
     testDate: testDateIso,
     testDuration: 20,
-    testTitle: `TOEIC Speaking Test #${input.testIdNumeric}`,
+    testTitle: `TOEIC Speaking Test`,
     completionRate: (() => {
       const total = parts.reduce((acc, p) => acc + p.questions.length, 0);
       const answered = parts.reduce(

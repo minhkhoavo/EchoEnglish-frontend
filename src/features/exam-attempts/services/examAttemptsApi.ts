@@ -34,14 +34,16 @@ const transformSpeakingAttempt = (attempt: SpeakingAttempt): ExamAttempt => {
     id: attempt._id,
     type: 'speaking',
     status: attempt.status === 'completed' ? 'completed' : 'in-progress',
-    title: `TOEIC Speaking Test ${attempt.testIdNumeric}`,
+    title: `TOEIC Speaking Test`,
     description: attempt.level,
     startedAt: attempt.createdAt,
-    score: attempt.scoreOverall,
+    score: attempt.status === 'completed' ? attempt.totalScore : 0,
     maxScore: 200,
-    percentage: attempt.scoreOverall
-      ? (attempt.scoreOverall / 200) * 100
-      : undefined,
+    percentage:
+      attempt.status === 'completed' && attempt.totalScore
+        ? (attempt.totalScore / 200) * 100
+        : undefined,
+    toeicSpeakingTestId: attempt.toeicSpeakingTestId,
   };
 };
 
@@ -50,7 +52,7 @@ const transformWritingAttempt = (attempt: WritingAttempt): ExamAttempt => {
     id: attempt._id,
     type: 'writing',
     status: attempt.status === 'completed' ? 'completed' : 'in-progress',
-    title: `TOEIC Writing Test ${attempt.testIdNumeric}`,
+    title: `TOEIC Writing Test`,
     description: attempt.overallLevel,
     startedAt: attempt.createdAt,
     score: attempt.overallScore,
@@ -72,7 +74,6 @@ export const examAttemptsApi = api.injectEndpoints({
       transformResponse: (response: ListeningReadingResponse) => {
         return response.data.map(transformListeningReadingResult);
       },
-      providesTags: ['TestResult'],
     }),
     getSpeakingAttempts: builder.query<ExamAttempt[], void>({
       query: () => ({
@@ -80,9 +81,9 @@ export const examAttemptsApi = api.injectEndpoints({
         method: 'GET',
       }),
       transformResponse: (response: SpeakingAttemptsResponse) => {
+        console.log('Speaking Attempts Response:', response);
         return response.data.map(transformSpeakingAttempt);
       },
-      providesTags: ['SpeakingTest'],
     }),
     getWritingAttempts: builder.query<ExamAttempt[], void>({
       query: () => ({
@@ -92,7 +93,6 @@ export const examAttemptsApi = api.injectEndpoints({
       transformResponse: (response: WritingAttemptsResponse) => {
         return response.data.map(transformWritingAttempt);
       },
-      providesTags: ['WritingTest'],
     }),
   }),
 });

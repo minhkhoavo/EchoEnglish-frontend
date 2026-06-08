@@ -1,15 +1,25 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Languages, Save, Loader2 } from 'lucide-react';
+import {
+  Languages,
+  Save,
+  Loader2,
+  Highlighter,
+  StickyNote,
+} from 'lucide-react';
 import { useTranslateTextMutation } from '@/features/flashcard/services/flashcardApi';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface SelectionMenuProps {
   selectedText: string;
   position: { x: number; y: number };
-  onSave: () => void;
+  onSave: (translation?: string) => void;
   onClose: () => void;
+  // Optional highlight/note actions (for ebook reader)
+  onHighlight?: () => void;
+  onAddNote?: () => void;
+  showHighlightActions?: boolean;
 }
 
 export default function SelectionMenu({
@@ -17,12 +27,14 @@ export default function SelectionMenu({
   position,
   onSave,
   onClose,
+  onHighlight,
+  onAddNote,
+  showHighlightActions = false,
 }: SelectionMenuProps) {
   const [menuPosition, setMenuPosition] = useState(position);
   const [translation, setTranslation] = useState('');
   const [showTranslation, setShowTranslation] = useState(false);
   const [translateText, { isLoading }] = useTranslateTextMutation();
-  const { toast } = useToast();
 
   useEffect(() => {
     // Adjust menu position to stay within viewport
@@ -65,11 +77,7 @@ export default function SelectionMenu({
       setShowTranslation(true);
     } catch (error) {
       console.error('Translation failed:', error);
-      toast({
-        title: 'Translation Error',
-        description: 'Failed to translate text. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to translate text. Please try again.');
     }
   };
 
@@ -101,7 +109,7 @@ export default function SelectionMenu({
         )}
 
         {/* Action buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="ghost"
             size="sm"
@@ -119,12 +127,36 @@ export default function SelectionMenu({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onSave}
+            onClick={() => onSave(translation)}
             className="flex items-center gap-2 h-8 px-3"
           >
             <Save className="h-3 w-3" />
-            Save Flashcard
+            Flashcard
           </Button>
+
+          {/* Highlight/Note actions (for ebook reader) */}
+          {showHighlightActions && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onHighlight}
+                className="flex items-center gap-2 h-8 px-3 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+              >
+                <Highlighter className="h-3 w-3" />
+                Highlight
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onAddNote}
+                className="flex items-center gap-2 h-8 px-3"
+              >
+                <StickyNote className="h-3 w-3" />
+                Note
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </Card>

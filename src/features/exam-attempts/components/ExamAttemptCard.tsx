@@ -135,8 +135,25 @@ export const ExamAttemptCard: React.FC<ExamAttemptCardProps> = ({
     );
   };
 
+  // Pre-compute a stable ai_id + descriptive label for this card so the AI
+  // can address it by name. The label includes title, type, status and
+  // (when completed) the score — that's what the AI quotes to the user.
+  const aiLabel = [
+    attempt.title,
+    config.label,
+    attempt.status,
+    attempt.score != null && attempt.maxScore != null
+      ? `score ${attempt.score}/${attempt.maxScore}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
     <Card
+      data-ai-id={`exam-attempt-${attempt.id}`}
+      data-ai-label={aiLabel}
+      data-ai-role="exam-attempt-card"
       className={`group hover:shadow-lg transition-all duration-300 border-0 shadow-sm overflow-hidden flex flex-col ${
         attempt.type === 'listening-reading' ? 'min-h-[320px]' : 'min-h-[220px]'
       }`}
@@ -209,9 +226,14 @@ export const ExamAttemptCard: React.FC<ExamAttemptCardProps> = ({
             attempt.type === 'speaking' &&
             onContinue && (
               <Button
-                onClick={() => onContinue(attempt.id)}
+                onClick={() =>
+                  onContinue(attempt.toeicSpeakingTestId as string)
+                }
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md h-8 text-xs"
                 size="sm"
+                data-ai-id={`exam-attempt-${attempt.id}-continue-btn`}
+                data-ai-label={`Continue ${config.label} attempt: ${attempt.title}`}
+                data-ai-role="start"
               >
                 <PlayCircle className="h-3 w-3 mr-1" />
                 Continue
@@ -225,6 +247,9 @@ export const ExamAttemptCard: React.FC<ExamAttemptCardProps> = ({
                 variant="outline"
                 className="w-full border-slate-200 hover:bg-slate-50 hover:border-slate-300 h-8 text-xs"
                 size="sm"
+                data-ai-id={`exam-attempt-${attempt.id}-details-btn`}
+                data-ai-label={`View details of ${config.label} attempt: ${attempt.title}${attempt.score != null ? ` (score ${attempt.score})` : ''}`}
+                data-ai-role="view"
               >
                 <Eye className="h-3 w-3 mr-1" />
                 Details

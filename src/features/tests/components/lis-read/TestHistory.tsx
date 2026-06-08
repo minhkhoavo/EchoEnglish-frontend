@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, Calendar, Clock, Target, Loader2 } from 'lucide-react';
 import { useGetTestHistoryQuery } from '../../services/testResultAPI';
 import { useNavigate } from 'react-router-dom';
-import CustomPagination from '@/components/ui/custom-pagination';
+import CustomPagination from '@/components/CustomPagination';
 
 interface TestHistoryProps {
   testId?: string; // Nhận thêm prop testId (nếu cần)

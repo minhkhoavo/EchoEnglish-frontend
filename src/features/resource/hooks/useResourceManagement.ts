@@ -56,6 +56,8 @@ export const useResourceManagement = (
 
   // Handlers
   const handleResourceSelect = (resource: Resource) => {
+    // Navigate with resource in state for faster loading (optional optimization)
+    // But detail page can also load by ID if state is missing
     navigate(`/resources/${resource._id}`, { state: { resource } });
     window.scrollTo(0, 0);
   };

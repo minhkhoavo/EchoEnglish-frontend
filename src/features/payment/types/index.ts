@@ -55,6 +55,12 @@ export interface TransactionHistoryResponse {
   message: string;
   data: {
     transaction: Transaction[];
+    pagination: {
+      page: number | null;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
   };
 }
 
@@ -108,10 +114,11 @@ export interface PromoCode {
 
 // Promo Code Validation Response
 export interface PromoCodeValidation {
-  isValid: boolean;
-  discountVnd: number;
-  message?: string;
-  promoCode?: PromoCode;
+  message: string;
+  data?: {
+    code: string;
+    discount: number;
+  };
 }
 
 // Credit Calculation Interface

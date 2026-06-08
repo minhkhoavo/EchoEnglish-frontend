@@ -19,6 +19,7 @@ export interface NotificationResponse {
 
 export interface User {
   _id: string;
+  email: string;
   fullName: string;
 }
 
@@ -49,7 +50,7 @@ export const notificationApi = api.injectEndpoints({
       query: ({ page = 1, limit = 9999 } = {}) => ({
         url: '/users',
         method: 'GET' as const,
-        params: { page, limit, fields: '_id,fullName' },
+        params: { page, limit, fields: '_id,fullName,email' },
       }),
       providesTags: ['User'],
     }),
