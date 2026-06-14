@@ -126,17 +126,17 @@ const questionContext = (q: PromptQuestion): string => {
 export const buildGenerateQuestion = (input: {
   part: number;
   difficulty?: string;
-  topic?: string;
+  instructions?: string;
   count?: number;
 }): RunAiRequest => {
-  const { part, difficulty = 'B1', topic, count = 1 } = input;
+  const { part, difficulty = 'B1', instructions, count = 1 } = input;
   const transcriptField = isListeningBlankPart(part)
     ? ', "transcript": string (the spoken lines)'
     : '';
   return {
     temperature: 0.7,
     prompt: `${PREAMBLE}
-Generate ${count} brand-new question(s). Target CEFR: ${difficulty}.${topic ? ` Topic: ${topic}.` : ''}
+Generate ${count} brand-new question(s). Target CEFR: ${difficulty}.${instructions ? `\nAuthor's instructions: ${instructions}` : ''}
 ${partFormat(part)}
 Options labels: ${optionLabels(part)}. Make distractors plausible and the key unambiguous.
 Return JSON: { "questions": [ { "questionText": string|null, "options": [{ "label": string, "text": string }], "correctAnswer": string, "explanation": string${transcriptField} } ] }`,
@@ -146,10 +146,11 @@ Return JSON: { "questions": [ { "questionText": string|null, "options": [{ "labe
 export const buildGenerateGroup = (input: {
   part: number;
   difficulty?: string;
-  topic?: string;
+  /** Free-text guidance typed by the author (topic, scenario, constraints…). */
+  instructions?: string;
   numQuestions?: number;
 }): RunAiRequest => {
-  const { part, difficulty = 'B1', topic, numQuestions = 3 } = input;
+  const { part, difficulty = 'B1', instructions, numQuestions = 3 } = input;
   const isListening = part === 3 || part === 4;
   const contextField = isListening
     ? '"transcript": string (spoken script, speakers labeled e.g. "M:"/"W:")'
@@ -157,13 +158,42 @@ export const buildGenerateGroup = (input: {
   return {
     temperature: 0.7,
     prompt: `${PREAMBLE}
-Create ONE question group. Target CEFR: ${difficulty}.${topic ? ` Topic: ${topic}.` : ''}
+Create ONE question group. Target CEFR: ${difficulty}.${instructions ? `\nAuthor's instructions: ${instructions}` : ''}
 ${partFormat(part)}
 Generate a coherent shared context plus ${numQuestions} linked questions (4 printed options A-D each) that can ONLY be answered using the context.
 Return JSON: {
   "groupContext": { ${contextField}, "translation": string (Vietnamese translation of the context) },
   "questions": [ { "questionText": string, "options": [{ "label": "A"|"B"|"C"|"D", "text": string }], "correctAnswer": string, "explanation": string } ]
 }`,
+  };
+};
+
+export const buildGenerateFromMedia = (input: {
+  part: number;
+  difficulty?: string;
+  instructions?: string;
+  /** Audio transcript used as the source when no image is attached (Part 2). */
+  transcript?: string | null;
+  /** True when image URL(s) are attached to the request (Part 1). */
+  hasImage?: boolean;
+}): RunAiRequest => {
+  const { part, difficulty = 'B1', instructions, transcript, hasImage } = input;
+  const transcriptField = isListeningBlankPart(part)
+    ? ', "transcript": string (the spoken lines)'
+    : '';
+  const source = hasImage
+    ? 'An image is attached to this message. Base the question ENTIRELY on what is actually visible in that image — do not invent objects that are not there.'
+    : transcript
+      ? `Use the following transcript of the audio as the single source of truth:\n"""${transcript.slice(0, 6000)}"""`
+      : '';
+  return {
+    temperature: 0.6,
+    prompt: `${PREAMBLE}
+Author 1 exam-realistic question from the provided media. Target CEFR: ${difficulty}.
+${source}
+${partFormat(part)}
+Options labels: ${optionLabels(part)}. Make distractors plausible and the key unambiguous.${instructions ? `\nAuthor's instructions: ${instructions}` : ''}
+Return JSON: { "questions": [ { "questionText": string|null, "options": [{ "label": string, "text": string }], "correctAnswer": string, "explanation": string${transcriptField} } ] }`,
   };
 };
 

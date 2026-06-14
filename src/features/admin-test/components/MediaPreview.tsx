@@ -6,7 +6,10 @@ import {
   Image as ImageIcon,
   X,
   ZoomIn,
+  Upload,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +20,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import {
+  useUploadTestAudioMutation,
+  useUploadTestImageMutation,
+} from '../services/adminTestUploadApi';
 
 interface AudioPreviewProps {
   url: string;
@@ -34,6 +41,24 @@ export const AudioPreview = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadAudio, { isLoading: isUploading }] =
+    useUploadTestAudioMutation();
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file
+    if (!file) return;
+    try {
+      const res = await uploadAudio({ file }).unwrap();
+      onChange(res.url);
+      setError(false);
+      toast.success('Audio uploaded.');
+    } catch (err) {
+      console.error('[AudioPreview] upload failed', err);
+      toast.error('Failed to upload audio.');
+    }
+  };
 
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -65,6 +90,28 @@ export const AudioPreview = ({
           placeholder="https://example.com/audio.mp3"
           className="flex-1"
         />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="audio/*"
+          className="hidden"
+          onChange={handleUpload}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          title="Upload audio to S3"
+          className="flex-shrink-0"
+        >
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Upload className="h-4 w-4" />
+          )}
+        </Button>
         {url && (
           <Button
             type="button"
@@ -116,6 +163,9 @@ export const ImagePreview = ({
 }: ImagePreviewProps) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState(urls?.join(', ') || '');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadImage, { isLoading: isUploading }] =
+    useUploadTestImageMutation();
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
@@ -126,6 +176,28 @@ export const ImagePreview = ({
           .filter(Boolean)
       : [];
     onChange(newUrls);
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ''; // allow re-selecting the same file
+    if (files.length === 0) return;
+    try {
+      const uploaded = await Promise.all(
+        files.map((file) => uploadImage({ file }).unwrap())
+      );
+      const newUrls = [...(urls || []), ...uploaded.map((u) => u.url)];
+      setInputValue(newUrls.join(', '));
+      onChange(newUrls);
+      toast.success(
+        uploaded.length > 1
+          ? `${uploaded.length} images uploaded.`
+          : 'Image uploaded.'
+      );
+    } catch (err) {
+      console.error('[ImagePreview] upload failed', err);
+      toast.error('Failed to upload image.');
+    }
   };
 
   const removeImage = (index: number) => {
@@ -140,11 +212,37 @@ export const ImagePreview = ({
         <ImageIcon className="h-4 w-4" />
         {label}
       </Label>
-      <Input
-        value={inputValue}
-        onChange={(e) => handleInputChange(e.target.value)}
-        placeholder="https://example.com/image1.png, https://example.com/image2.png"
-      />
+      <div className="flex items-center gap-2">
+        <Input
+          value={inputValue}
+          onChange={(e) => handleInputChange(e.target.value)}
+          placeholder="https://example.com/image1.png, https://example.com/image2.png"
+          className="flex-1"
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={handleUpload}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          title="Upload image(s) to S3"
+          className="flex-shrink-0"
+        >
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Upload className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
 
       {/* Image Thumbnails */}
       {urls && urls.length > 0 && (

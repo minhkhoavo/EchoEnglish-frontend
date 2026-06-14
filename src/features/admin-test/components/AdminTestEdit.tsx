@@ -62,6 +62,7 @@ import { AiActionButton } from './ai/AiActionButton';
 import { AiSuggestionPanel } from './ai/AiSuggestionPanel';
 import { SkillTagsEditor } from './ai/SkillTagsEditor';
 import { GenerateQuestionDialog } from './ai/GenerateQuestionDialog';
+import { GenerateFromMediaDialog } from './ai/GenerateFromMediaDialog';
 import { useRunAiMutation } from '../services/adminTestAiApi';
 import {
   buildGenerateGroup,
@@ -126,11 +127,35 @@ const QuestionEditor = ({
   groupContext?: TestMedia;
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [mediaGenOpen, setMediaGenOpen] = useState(false);
   const hasOptions4 = ![2].includes(partNumber); // Part 2 only has 3 options
 
   const { show } = useAiAssist();
   const [runAi] = useRunAiMutation();
   const blankPart = partNumber === 1 || partNumber === 2;
+
+  // Per-question "Generate from media": only meaningful once media exists.
+  // Part 1 needs the uploaded photo; Part 2 (audio-only) needs a transcript.
+  const canGenerateFromMedia =
+    (partNumber === 1 && (question.media?.imageUrls?.length ?? 0) > 0) ||
+    (partNumber === 2 && !!question.media?.transcript?.trim());
+
+  // Fill THIS question from an AI generation, preserving its number, id and any
+  // uploaded media; only the authored fields (and transcript) are replaced.
+  const applyGeneratedToQuestion = (aiQ: AiGeneratedQuestion) => {
+    const mapped = aiToTestQuestion(partNumber, aiQ, question.questionNumber);
+    onChange({
+      ...question,
+      questionText: mapped.questionText,
+      options: mapped.options,
+      correctAnswer: mapped.correctAnswer,
+      explanation: mapped.explanation,
+      media: {
+        ...question.media,
+        transcript: aiQ.transcript ?? question.media?.transcript ?? null,
+      },
+    });
+  };
 
   const updateOption = (label: string, text: string) => {
     const newOptions = question.options.map((opt) =>
@@ -456,6 +481,13 @@ const QuestionEditor = ({
                 <Sparkles className="h-3.5 w-3.5" />
                 AI
               </span>
+              {canGenerateFromMedia && (
+                <AiActionButton
+                  label="Generate question (AI)"
+                  icon={Wand2}
+                  onRun={async () => setMediaGenOpen(true)}
+                />
+              )}
               {!blankPart && (
                 <AiActionButton
                   label="Improve"
@@ -694,6 +726,15 @@ const QuestionEditor = ({
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
+
+      <GenerateFromMediaDialog
+        open={mediaGenOpen}
+        onOpenChange={setMediaGenOpen}
+        part={partNumber}
+        imageUrls={question.media?.imageUrls ?? undefined}
+        transcript={question.media?.transcript}
+        onApply={applyGeneratedToQuestion}
+      />
     </Card>
   );
 };
