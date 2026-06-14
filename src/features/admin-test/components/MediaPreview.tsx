@@ -8,6 +8,7 @@ import {
   ZoomIn,
   Upload,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -24,12 +25,17 @@ import {
   useUploadTestAudioMutation,
   useUploadTestImageMutation,
 } from '../services/adminTestUploadApi';
+import {
+  GenerateAudioDialog,
+  type GenerateAudioContext,
+} from './voice/GenerateAudioDialog';
 
 interface AudioPreviewProps {
   url: string;
   onChange: (url: string) => void;
   label?: string;
   className?: string;
+  generateContext?: GenerateAudioContext;
 }
 
 export const AudioPreview = ({
@@ -37,9 +43,11 @@ export const AudioPreview = ({
   onChange,
   label = 'Audio URL',
   className,
+  generateContext,
 }: AudioPreviewProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState(false);
+  const [genOpen, setGenOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadAudio, { isLoading: isUploading }] =
@@ -112,6 +120,18 @@ export const AudioPreview = ({
             <Upload className="h-4 w-4" />
           )}
         </Button>
+        {generateContext && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setGenOpen(true)}
+            title="Generate audio with AI"
+            className="flex-shrink-0 text-violet-600 hover:text-violet-700"
+          >
+            <Sparkles className="h-4 w-4" />
+          </Button>
+        )}
         {url && (
           <Button
             type="button"
@@ -143,6 +163,17 @@ export const AudioPreview = ({
         <p className="text-xs text-red-500">
           Failed to load audio. Please check the URL.
         </p>
+      )}
+      {generateContext && (
+        <GenerateAudioDialog
+          open={genOpen}
+          onOpenChange={setGenOpen}
+          context={generateContext}
+          onAccepted={(generatedUrl) => {
+            onChange(generatedUrl);
+            setError(false);
+          }}
+        />
       )}
     </div>
   );

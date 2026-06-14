@@ -540,6 +540,20 @@ const QuestionEditor = ({
                     media: { ...question.media, audioUrl: url || null },
                   })
                 }
+                generateContext={
+                  partNumber === 1 || partNumber === 2
+                    ? {
+                        partNumber,
+                        questionNumber: question.questionNumber,
+                        questionText: question.questionText ?? undefined,
+                        options: question.options,
+                        defaultText:
+                          question.questionText ||
+                          question.media?.transcript ||
+                          '',
+                      }
+                    : undefined
+                }
               />
               <ImagePreview
                 urls={question.media?.imageUrls || []}
@@ -1112,6 +1126,20 @@ const GroupEditor = ({
                         audioUrl: url || null,
                       },
                     })
+                  }
+                  generateContext={
+                    (partNumber === 3 || partNumber === 4) &&
+                    group.questions.length > 0
+                      ? {
+                          partNumber,
+                          range: {
+                            start: group.questions[0].questionNumber,
+                            end: group.questions[group.questions.length - 1]
+                              .questionNumber,
+                          },
+                          defaultText: group.groupContext?.transcript || '',
+                        }
+                      : undefined
                   }
                 />
                 <ImagePreview
