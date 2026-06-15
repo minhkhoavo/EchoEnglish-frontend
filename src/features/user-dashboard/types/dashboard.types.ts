@@ -136,6 +136,90 @@ export interface DailyLessonData {
   updatedAt: string;
 }
 
+// ==================== STUDY MEMO (USER-PROVIDED MATERIAL) ====================
+
+export interface StudyMemoMaterialRef {
+  refType: 'file' | 'resource';
+  refId: string;
+}
+
+export interface MemoDayPlanItem {
+  order: number;
+  focus: string;
+  status?: 'pending' | 'in-progress' | 'done';
+  _id?: string;
+}
+
+export interface MemoSupplementedWeakness {
+  skillKey: string;
+  skillName: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  reason?: string;
+}
+
+export interface MemoAnalysisResult {
+  isSuitable: boolean;
+  suitabilityReason: string;
+  cefrFit: string;
+  warnings: string[];
+  suggestedTotalDays: number;
+  dayPlan: MemoDayPlanItem[];
+  supplementedWeaknesses: MemoSupplementedWeakness[];
+}
+
+export interface ResolvedMemoMaterial {
+  refType: 'file' | 'resource';
+  refId: string;
+  title: string;
+  resourceType: string;
+}
+
+export interface AnalyzeMemoRequest {
+  materials: StudyMemoMaterialRef[];
+  note?: string;
+  scope: 'date' | 'week';
+  targetDate?: string;
+  targetWeekNumber?: number;
+  preferredDays?: number;
+}
+
+export interface AnalyzeMemoResponse {
+  data: {
+    analysis: MemoAnalysisResult;
+    materials: ResolvedMemoMaterial[];
+  };
+}
+
+export interface CreateMemoRequest extends AnalyzeMemoRequest {
+  suitability: { isSuitable: boolean; reason?: string; cefrFit?: string };
+  dayPlan: Array<{ order: number; focus: string }>;
+  supplementedWeaknesses?: MemoSupplementedWeakness[];
+}
+
+export interface StudyMemo {
+  _id: string;
+  materials: Array<{
+    refType: 'file' | 'resource';
+    refId: string;
+    title?: string;
+  }>;
+  note?: string;
+  scope: 'date' | 'week';
+  targetDate?: string;
+  targetWeekNumber?: number;
+  suitability?: { isSuitable: boolean; reason?: string; cefrFit?: string };
+  totalDays: number;
+  dayPlan: MemoDayPlanItem[];
+  status: 'active' | 'completed';
+}
+
+export interface SavedResource {
+  resourceId: string;
+  title?: string;
+  type?: string;
+  addedAt?: string;
+}
+
 export interface TrackResourceTimeRequest {
   sessionId: string;
   itemId: string;

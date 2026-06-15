@@ -6,11 +6,19 @@ import {
   Eye,
   ExternalLink,
   GraduationCap,
+  BookmarkPlus,
+  BookmarkCheck,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ResourceType, type Resource } from '../types/resource.type';
+import {
+  useGetMyLibraryQuery,
+  useAddToLibraryMutation,
+} from '@/features/user-dashboard/services/dashboardApi';
 
 interface ResourceCardProps {
   resource: Resource;
@@ -25,6 +33,25 @@ export default function ResourceCard({
 }: ResourceCardProps) {
   const isVideo = resource.type === ResourceType.YOUTUBE;
   const isXapi = resource.type === ResourceType.XAPI;
+
+  // Quick-add to the learner's personal library (skipped in admin views).
+  const { data: libraryData } = useGetMyLibraryQuery(undefined, {
+    skip: isAdmin,
+  });
+  const [addToLibrary, { isLoading: savingToLibrary }] =
+    useAddToLibraryMutation();
+  const inLibrary = !!libraryData?.data?.some(
+    (l) => l.resourceId === resource._id
+  );
+
+  const handleSaveToLibrary = async () => {
+    try {
+      await addToLibrary(resource._id).unwrap();
+      toast.success('Saved to My Library');
+    } catch {
+      toast.error('Could not save to library');
+    }
+  };
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
@@ -160,6 +187,31 @@ export default function ResourceCard({
               <Eye className="h-4 w-4 mr-2" />
               {isXapi ? 'Open' : isVideo ? 'Watch' : 'Read'}
             </Button>
+            {!isAdmin && (
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!inLibrary) handleSaveToLibrary();
+                }}
+                variant="outline"
+                size="sm"
+                disabled={inLibrary || savingToLibrary}
+                title={
+                  inLibrary ? 'Already in My Library' : 'Save to My Library'
+                }
+                data-ai-id={`${resAiId}-save-library-btn`}
+                data-ai-label={`Save "${resource.title || 'Untitled'}" to My Library`}
+                data-ai-role="save"
+              >
+                {savingToLibrary ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : inLibrary ? (
+                  <BookmarkCheck className="h-4 w-4 text-[#10b981]" />
+                ) : (
+                  <BookmarkPlus className="h-4 w-4" />
+                )}
+              </Button>
+            )}
             <Button
               onClick={(e) => {
                 e.stopPropagation();

@@ -7,4 +7,5 @@ export { AIInsights } from './AIInsights';
 export { LearningStatsSidebar } from './LearningStatsSidebar';
 export { StudyPreferencesCard } from './StudyPreferences';
 export { MissedSessionsDialog } from './MissedSessionsDialog';
+export { StudyMemoPanel } from './StudyMemoPanel';
 export type { StudyPreferences } from './StudyPreferences';
