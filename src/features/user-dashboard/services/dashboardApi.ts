@@ -201,6 +201,18 @@ export const dashboardApi = api.injectEndpoints({
       }),
       invalidatesTags: ['DailyLesson'],
     }),
+
+    // Close the loop: record an inline activity's AI score → nudge competency
+    recordActivityResult: builder.mutation<
+      { data: { score: number } },
+      { kind?: string; targetSkill?: string; score: number }
+    >({
+      query: (body) => ({
+        url: '/learning-plans/activity-result',
+        method: 'POST',
+        data: body,
+      }),
+    }),
   }),
 });
 
@@ -223,6 +235,7 @@ export const {
   useAnalyzeStudyMemoMutation,
   useCreateStudyMemoMutation,
   useDeleteStudyMemoMutation,
+  useRecordActivityResultMutation,
 } = dashboardApi;
 
 // Helper function to transform competency data (keeping existing logic)
