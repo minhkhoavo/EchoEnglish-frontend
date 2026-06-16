@@ -26,6 +26,7 @@ const initialState: ChatbotState = {
     position: 'bottom-right',
   },
   error: undefined,
+  examContext: null,
 };
 
 // Create initial session
@@ -222,6 +223,10 @@ const chatbotSlice = createSlice({
         }
       }
     },
+
+    setExamContext: (state, action: PayloadAction<string | null>) => {
+      state.examContext = action.payload;
+    },
   },
 });
 
@@ -245,6 +250,7 @@ export const {
   addImageToMessage,
   addAttachmentToMessage,
   removeAttachmentFromMessage,
+  setExamContext,
 } = chatbotSlice.actions;
 
 export default chatbotSlice.reducer;

@@ -8,6 +8,7 @@ import { AnswerOptions } from '../common/AnswerOptions';
 import { ExplanationSection } from '../common/ExplanationSection';
 import { Instructions } from '../common/Instructions';
 import { useExpanded } from '@/features/tests/hooks/useExpanded';
+import { useAskAI } from '@/features/chatbot/hooks/useAskAI';
 import {
   getUserAnswer,
   handleAnswerSelect,
@@ -39,6 +40,7 @@ export const Part1Question = ({
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
+  const askAI = useAskAI(part.partName, showCorrectAnswers);
 
   const toggleTranscript = (questionNumber: number) => {
     toggleExpanded(questionNumber + 1000); // Add offset to avoid collision
@@ -96,7 +98,10 @@ export const Part1Question = ({
               className="border rounded-lg p-6 bg-background"
             >
               {/* Question Header */}
-              <QuestionHeader questionNumber={question.questionNumber} />
+              <QuestionHeader
+                questionNumber={question.questionNumber}
+                onAskAI={askAI(question)}
+              />
 
               {/* Audio Player */}
               <div className="mb-6">

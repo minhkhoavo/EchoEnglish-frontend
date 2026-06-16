@@ -9,6 +9,7 @@ import { ExplanationSection } from '../common/ExplanationSection';
 import { QuestionContent } from '../common/QuestionContent';
 import { Instructions } from '../common/Instructions';
 import { useExpanded } from '@/features/tests/hooks/useExpanded';
+import { useAskAI } from '@/features/chatbot/hooks/useAskAI';
 import {
   getUserAnswer,
   handleAnswerSelect,
@@ -39,6 +40,7 @@ export const Part5Question = ({
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
+  const askAI = useAskAI(part.partName, showCorrectAnswers);
 
   const toggleExplanation = (questionNumber: number) => {
     toggleExpanded(questionNumber);
@@ -82,7 +84,10 @@ export const Part5Question = ({
               className="border rounded-lg p-6 bg-background"
             >
               {/* Question Header */}
-              <QuestionHeader questionNumber={question.questionNumber} />
+              <QuestionHeader
+                questionNumber={question.questionNumber}
+                onAskAI={askAI(question)}
+              />
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Explanation and Summary - Left side */}

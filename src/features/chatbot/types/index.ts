@@ -140,6 +140,7 @@ export interface ChatbotState {
     position: 'bottom-right' | 'bottom-left';
   };
   error?: string;
+  examContext: string | null;
 }
 
 // Command Action Types (legacy)
