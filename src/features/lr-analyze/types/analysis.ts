@@ -292,7 +292,8 @@ export interface LearningResource {
     | 'flashcard'
     | 'drill'
     | 'vocabulary_set'
-    | 'personalized_guide';
+    | 'personalized_guide'
+    | 'activity';
   title: string;
   description: string;
   url?: string;
@@ -312,6 +313,21 @@ export interface LearningResource {
       content: string;
     }>;
     quickTips?: string[];
+    // For 'activity' resources: backend supplies only a brief + signals; the
+    // frontend generates the exercise and AI-grades it.
+    kind?: string;
+    brief?: string;
+    signals?: {
+      level?: string;
+      focus?: string;
+      targetSkill?: string;
+      weaknesses?: string[];
+      aiInsights?: string[];
+      interests?: string[];
+      materialResourceId?: string;
+      materialTitle?: string;
+      materialSummary?: string;
+    };
   };
 }
 

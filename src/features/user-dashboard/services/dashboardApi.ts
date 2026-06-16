@@ -7,6 +7,11 @@ import type {
   CompletePracticeDrillRequest,
   ListeningReadingChartResponse,
   CheckMissedSessionsResponse,
+  AnalyzeMemoRequest,
+  AnalyzeMemoResponse,
+  CreateMemoRequest,
+  StudyMemo,
+  SavedResource,
 } from '../types/dashboard.types';
 import type {
   RoadmapApiResponse,
@@ -142,6 +147,72 @@ export const dashboardApi = api.injectEndpoints({
       }),
       keepUnusedDataFor: 0,
     }),
+
+    // ===== Personal resource library =====
+    getMyLibrary: builder.query<{ data: SavedResource[] }, void>({
+      query: () => ({ url: '/users/library', method: 'GET' }),
+    }),
+    addToLibrary: builder.mutation<{ data: SavedResource[] }, string>({
+      query: (resourceId) => ({
+        url: '/users/library',
+        method: 'POST',
+        data: { resourceId },
+      }),
+    }),
+    removeFromLibrary: builder.mutation<
+      { data: { resourceId: string } },
+      string
+    >({
+      query: (resourceId) => ({
+        url: `/users/library/${resourceId}`,
+        method: 'DELETE',
+      }),
+    }),
+
+    // ===== Study Memo (user-provided material) =====
+    // Step A: analyze suitability + propose multi-day breakdown (nothing saved)
+    analyzeStudyMemo: builder.mutation<AnalyzeMemoResponse, AnalyzeMemoRequest>(
+      {
+        query: (body) => ({
+          url: '/learning-plans/memos/analyze',
+          method: 'POST',
+          data: body,
+        }),
+      }
+    ),
+
+    // Step B: confirm -> save memo (+ regenerate today if relevant)
+    createStudyMemo: builder.mutation<
+      { data: { memo: StudyMemo; session: DailyLessonData | null } },
+      CreateMemoRequest
+    >({
+      query: (body) => ({
+        url: '/learning-plans/memos',
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['DailyLesson'],
+    }),
+
+    deleteStudyMemo: builder.mutation<{ data: { memoId: string } }, string>({
+      query: (memoId) => ({
+        url: `/learning-plans/memos/${memoId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['DailyLesson'],
+    }),
+
+    // Close the loop: record an inline activity's AI score → nudge competency
+    recordActivityResult: builder.mutation<
+      { data: { score: number } },
+      { kind?: string; targetSkill?: string; score: number }
+    >({
+      query: (body) => ({
+        url: '/learning-plans/activity-result',
+        method: 'POST',
+        data: body,
+      }),
+    }),
   }),
 });
 
@@ -158,29 +229,32 @@ export const {
   useGetStudyPreferencesQuery,
   useGetListeningReadingChartDataQuery,
   useCheckMissedSessionsQuery,
+  useGetMyLibraryQuery,
+  useAddToLibraryMutation,
+  useRemoveFromLibraryMutation,
+  useAnalyzeStudyMemoMutation,
+  useCreateStudyMemoMutation,
+  useDeleteStudyMemoMutation,
+  useRecordActivityResultMutation,
 } = dashboardApi;
 
 // Helper function to transform competency data (keeping existing logic)
-const getActionUrlFromTitle = (title: string, actionText: string): string => {
-  if (
-    title.toLowerCase().includes('grammar') ||
-    actionText.toLowerCase().includes('grammar')
-  ) {
+const getActionUrlFromTitle = (title?: string, actionText?: string): string => {
+  const t = (title || '').toLowerCase();
+  const a = (actionText || '').toLowerCase();
+  if (t.includes('grammar') || a.includes('grammar')) {
     return '/practice/grammar';
   }
-  if (
-    title.toLowerCase().includes('vocabulary') ||
-    actionText.toLowerCase().includes('vocabulary')
-  ) {
+  if (t.includes('vocabulary') || a.includes('vocabulary')) {
     return '/practice/vocabulary';
   }
-  if (title.toLowerCase().includes('listening')) {
+  if (t.includes('listening')) {
     return '/practice/listening';
   }
-  if (title.toLowerCase().includes('reading')) {
+  if (t.includes('reading')) {
     return '/practice/reading';
   }
-  if (title.toLowerCase().includes('inference')) {
+  if (t.includes('inference')) {
     return '/practice/inference';
   }
   return '/practice';

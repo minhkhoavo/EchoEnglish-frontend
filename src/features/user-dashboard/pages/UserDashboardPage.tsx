@@ -24,6 +24,7 @@ import {
   LearningStatsSidebar,
   StudyPreferencesCard,
   MissedSessionsDialog,
+  StudyMemoPanel,
 } from '../components';
 import { fetchDashboardData } from '../services/dashboardService';
 import {
@@ -365,7 +366,7 @@ export const UserDashboardPage = () => {
             {/* Daily Practice Tab */}
             <TabsContent value="practice" className="space-y-6">
               {/* Header */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
                   <h2
                     className="text-2xl font-bold"
@@ -377,6 +378,8 @@ export const UserDashboardPage = () => {
                     AI-recommended exercises based on your weak points
                   </p>
                 </div>
+                {/* Study material memos (personalisation) — compact trigger */}
+                <StudyMemoPanel />
               </div>
 
               {/* Daily Lesson */}

@@ -184,6 +184,25 @@ export const flashcardApi = api.injectEndpoints({
       ) => response.data,
       invalidatesTags: [{ type: 'Category' }, { type: 'Flashcard' }],
     }),
+    // Apply a spaced-repetition review result (remember/forgot) to a card
+    reviewFlashcard: builder.mutation<
+      { _id: string; level_memory: number; nextReviewDate: string },
+      { id: string; remember: boolean }
+    >({
+      query: ({ id, remember }) => ({
+        url: `/flashcards/${id}/review`,
+        method: 'POST',
+        data: { remember },
+      }),
+      transformResponse: (
+        response: ApiResponse<{
+          _id: string;
+          level_memory: number;
+          nextReviewDate: string;
+        }>
+      ) => response.data,
+      invalidatesTags: [{ type: 'Flashcard' }],
+    }),
   }),
 });
 
@@ -201,4 +220,5 @@ export const {
   useTranslateTextMutation,
   useBulkUpdateFlashcardsMutation,
   useBulkDeleteFlashcardsMutation,
+  useReviewFlashcardMutation,
 } = flashcardApi;

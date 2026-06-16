@@ -68,7 +68,9 @@ export interface RoadmapData {
   learningStrategy: LearningStrategy;
   phaseSummary: PhaseSummary[];
   weeklyFocuses: WeeklyFocus[];
+  studyMemos?: import('./dashboard.types').StudyMemo[];
   currentWeek: number;
+  activeWeekNumber?: number;
   overallProgress: number;
   sessionsCompleted: number;
   totalSessions: number;
