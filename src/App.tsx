@@ -82,6 +82,27 @@ import LandingPage from './pages/LandingPage';
 // Error Pages
 import NotFound from './pages/NotFound';
 
+// Playground (dev-only generator simulator). The dynamic import lives inside a
+// statically-false branch in production, so esbuild tree-shakes the chunk away
+// entirely — the playground never ships in a prod build.
+import { lazy, Suspense, type ReactNode } from 'react';
+let playgroundRoute: ReactNode = null;
+if (import.meta.env.DEV) {
+  const PlaygroundPage = lazy(
+    () => import('./features/playground/PlaygroundPage')
+  );
+  playgroundRoute = (
+    <Route
+      path="/playground"
+      element={
+        <Suspense fallback={<div className="p-6">Loading playground…</div>}>
+          <PlaygroundPage />
+        </Suspense>
+      }
+    />
+  );
+}
+
 // LiveContext (AI Companion + DOM vision + webcam)
 import {
   CompanionProvider,
@@ -235,6 +256,11 @@ function App() {
             <Route path="/speaking-result" element={<SpeakingResultPage />} />
             <Route path="/writing-result" element={<WritingResultPage />} />
           </Route>
+
+          {/* ================================================================== */}
+          {/* PLAYGROUND (dev only) — generator simulator, standalone route */}
+          {/* ================================================================== */}
+          {playgroundRoute}
 
           {/* ================================================================== */}
           {/* 404 NOT FOUND */}
