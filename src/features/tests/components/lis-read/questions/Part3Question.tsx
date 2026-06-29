@@ -10,6 +10,7 @@ import { VocabularySection } from '../common/VocabularySection';
 import { QuestionText } from '../common/QuestionText';
 import { Instructions } from '../common/Instructions';
 import { useExpanded } from '@/features/tests/hooks/useExpanded';
+import { useAskAI } from '@/features/chatbot/hooks/useAskAI';
 import {
   getUserAnswer,
   handleAnswerSelect,
@@ -41,6 +42,7 @@ export const Part3Question = ({
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
+  const askAI = useAskAI(part.partName, showCorrectAnswers);
 
   const toggleTranscript = (groupIndex: number) => {
     toggleExpanded(groupIndex + 3000); // Group level transcript
@@ -160,6 +162,7 @@ export const Part3Question = ({
                         <CardContent className="p-6">
                           <QuestionHeader
                             questionNumber={question.questionNumber}
+                            onAskAI={askAI(question, group.groupContext)}
                           />
                           <QuestionText
                             text={question.questionText || ''}

@@ -45,6 +45,7 @@ interface ChatBubbleProps {
   messages: ChatMessage[];
   isTyping: boolean;
   className?: string;
+  examContext?: string | null;
 }
 
 // Helper function to render UI Contract v0.2 responses
@@ -103,6 +104,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   messages,
   isTyping,
   className,
+  examContext,
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [dragOver, setDragOver] = useState(false);
@@ -404,6 +406,23 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Exam context indicator */}
+      {examContext && (
+        <div className="px-4 pt-2 pb-0 border-t bg-white/80">
+          {(() => {
+            const qNum = examContext.match(/Q(\d+)/)?.[1];
+            return (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-700 border border-violet-200">
+                <Paperclip className="h-3 w-3" />
+                {qNum
+                  ? `Q${qNum} context attached`
+                  : 'Question context attached'}
+              </span>
+            );
+          })()}
         </div>
       )}
 

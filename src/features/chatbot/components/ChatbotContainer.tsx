@@ -17,6 +17,7 @@ import {
   setError,
   clearError,
 } from '../slices/chatbotSlice';
+
 import {
   useRunChatMutation,
   useRunChatWithImageMutation,
@@ -46,6 +47,9 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
     (state: RootState) => state.chatbot.pendingCommands
   );
   const error = useAppSelector((state: RootState) => state.chatbot.error);
+  const examContext = useAppSelector(
+    (state: RootState) => state.chatbot.examContext
+  );
 
   const messages = currentSession?.messages || [];
 
@@ -91,6 +95,11 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
 
         let response;
 
+        // Prepend exam question context if set (e.g. user is on the exam page)
+        const prompt = examContext
+          ? `${examContext}\n\nUser question: ${content}`
+          : content;
+
         // Check if we have images to send
         if (images && images.length > 0) {
           // Convert base64 to File object for the first image
@@ -111,12 +120,12 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
 
           // Use the image API endpoint
           response = await runChatWithImage({
-            prompt: content,
+            prompt,
             image: imageFile,
           }).unwrap();
         } else {
           // Use the regular text-only API endpoint
-          response = await runChat({ prompt: content }).unwrap();
+          response = await runChat({ prompt }).unwrap();
         }
 
         // Stop typing indicator
@@ -165,7 +174,7 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
         dispatch(setError('Failed to send message. Please try again.'));
       }
     },
-    [dispatch, runChat, runChatWithImage]
+    [dispatch, runChat, runChatWithImage, examContext]
   );
 
   const handleExecuteCommand = useCallback(
@@ -387,6 +396,7 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
       messages={messages}
       isTyping={isTyping}
       className={className}
+      examContext={examContext}
     />
   );
 };

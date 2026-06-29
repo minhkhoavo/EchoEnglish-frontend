@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import type { LearningResource } from '../types/analysis';
 import { ResourceContentModal } from './ResourceContentModal';
+import { ActivityRunnerModal } from '@/features/user-dashboard/components/ActivityRunnerModal';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -34,6 +35,7 @@ export function LearningResourceCard({
 }: LearningResourceCardProps) {
   const navigate = useNavigate();
   const [resourceModalOpen, setResourceModalOpen] = useState(false);
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [selectedResource, setSelectedResource] =
     useState<LearningResource | null>(null);
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -79,6 +81,7 @@ export function LearningResourceCard({
       drill: Zap,
       vocabulary_set: BookOpen,
       personalized_guide: FileText,
+      activity: Zap,
     };
     return icons[type] || BookOpen;
   };
@@ -91,11 +94,18 @@ export function LearningResourceCard({
       drill: 'bg-[#10b981]',
       vocabulary_set: 'bg-[#8b5cf6]',
       personalized_guide: 'bg-[#3b82f6]',
+      activity: 'bg-[#0ea5e9]',
     };
     return colors[type] || 'bg-[#64748b]';
   };
 
   const handleResourceClick = (resource: LearningResource) => {
+    // Adaptive self-study activity: runs inline (AI builds + grades it).
+    if (resource.type === 'activity') {
+      setActivityModalOpen(true);
+      return;
+    }
+
     // Handle external links (article, video) - mark as viewed by setting high timeSpent
     if (resource.type === 'article' && resource.url) {
       if (onTimeSpent && resource._id) {
@@ -204,6 +214,22 @@ export function LearningResourceCard({
           open={resourceModalOpen}
           onOpenChange={setResourceModalOpen}
         />
+
+        {resource.type === 'activity' && (
+          <ActivityRunnerModal
+            resource={resource}
+            open={activityModalOpen}
+            onOpenChange={setActivityModalOpen}
+            onComplete={() => {
+              if (onTimeSpent && resource._id) {
+                onTimeSpent(resource._id, 99999);
+              }
+              if (onComplete && resource._id) {
+                onComplete(resource._id);
+              }
+            }}
+          />
+        )}
       </>
     );
   }

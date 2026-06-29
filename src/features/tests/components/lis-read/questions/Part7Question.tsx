@@ -9,6 +9,7 @@ import { VocabularySection } from '../common/VocabularySection';
 import { QuestionContent } from '../common/QuestionContent';
 import { Instructions } from '../common/Instructions';
 import { useExpanded } from '@/features/tests/hooks/useExpanded';
+import { useAskAI } from '@/features/chatbot/hooks/useAskAI';
 import {
   getUserAnswer,
   handleAnswerSelect,
@@ -40,6 +41,7 @@ export const Part7Question = ({
 
   // Use Redux-based test session management
   const { saveAnswer, getAnswer } = useTestSession();
+  const askAI = useAskAI(part.partName, showCorrectAnswers);
 
   // Toggle explanation
   const toggleExplanation = (questionNumber: number) => {
@@ -184,6 +186,7 @@ export const Part7Question = ({
                     >
                       <QuestionHeader
                         questionNumber={question.questionNumber}
+                        onAskAI={askAI(question, group.groupContext)}
                       />
 
                       <div className="mb-4">
