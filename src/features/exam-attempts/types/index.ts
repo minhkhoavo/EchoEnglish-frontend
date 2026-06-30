@@ -66,6 +66,7 @@ export interface SpeakingAttempt {
   createdAt: string;
   totalScore?: number;
   level?: string;
+  testTitle?: string;
 }
 
 export interface SpeakingAttemptsResponse {

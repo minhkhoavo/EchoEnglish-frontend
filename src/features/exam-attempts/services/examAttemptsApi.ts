@@ -34,7 +34,7 @@ const transformSpeakingAttempt = (attempt: SpeakingAttempt): ExamAttempt => {
     id: attempt._id,
     type: 'speaking',
     status: attempt.status === 'completed' ? 'completed' : 'in-progress',
-    title: `TOEIC Speaking Test`,
+    title: attempt.testTitle || `TOEIC Speaking Test`,
     description: attempt.level,
     startedAt: attempt.createdAt,
     score: attempt.status === 'completed' ? attempt.totalScore : 0,

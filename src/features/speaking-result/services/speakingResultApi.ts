@@ -55,6 +55,7 @@ type BackendSpeakingResult = {
   status: string;
   parts: BackendPart[];
   createdAt: MaybeISO;
+  testTitle?: string;
 };
 
 type BackendEnvelope = { message: string; data: BackendSpeakingResult };
@@ -229,7 +230,7 @@ function transformSpeakingResult(input: BackendSpeakingResult): {
     ),
     testDate: testDateIso,
     testDuration: 20,
-    testTitle: `TOEIC Speaking Test`,
+    testTitle: input.testTitle || `TOEIC Speaking Test`,
     completionRate: (() => {
       const total = parts.reduce((acc, p) => acc + p.questions.length, 0);
       const answered = parts.reduce(
