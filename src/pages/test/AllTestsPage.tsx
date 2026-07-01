@@ -1,5 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Clock, BarChart3, FileText, Mic } from 'lucide-react';
+import {
+  Search,
+  Filter,
+  Clock,
+  BarChart3,
+  FileText,
+  Mic,
+  Sparkles,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import CustomPagination from '@/components/CustomPagination';
 import { UserSidebar } from '@/features/tests/components/UserSidebar';
 import { UnifiedTestCard } from '@/features/tests/components/UnifiedTestCard';
+import { SkillSearchDialog } from '@/features/tests/components/SkillSearchDialog';
 import { useGetTOEICTestsQuery } from '@/features/tests/services/listeningReadingTestAPI';
 import { useGetSpeakingTestsQuery } from '@/features/tests/services/speakingTestApi';
 import { useGetWritingTestsQuery } from '@/features/tests/services/writingTestApi';
@@ -49,6 +58,7 @@ const AllTestsPage = ({
   const [selectedTestType, setSelectedTestType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isSkillSearchOpen, setIsSkillSearchOpen] = useState(false);
 
   // API calls
   const {
@@ -213,17 +223,32 @@ const AllTestsPage = ({
               </div>
 
               {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search tests by name or testId..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search tests by name or testId..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsSkillSearchOpen(true)}
+                  className="whitespace-nowrap"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Search by Skill
+                </Button>
               </div>
             </div>
           </div>
+
+          <SkillSearchDialog
+            open={isSkillSearchOpen}
+            onOpenChange={setIsSkillSearchOpen}
+          />
 
           {/* Test Grid */}
           {filteredTests.length === 0 ? (
