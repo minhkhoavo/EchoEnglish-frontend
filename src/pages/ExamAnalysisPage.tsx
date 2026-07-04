@@ -61,7 +61,7 @@ export function ExamAnalysisPage() {
 
   const analysisData = apiData;
   const hasExamAnalysis = !!analysisData?.analysis?.examAnalysis;
-  const analysisCost = 5; // Default cost, can be made configurable later
+  const analysisCost = 10;
 
   const handleRequestAnalysis = async () => {
     try {

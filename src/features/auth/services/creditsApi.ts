@@ -23,6 +23,13 @@ export const FeaturePricingType = {
 export type FeaturePricingType =
   (typeof FeaturePricingType)[keyof typeof FeaturePricingType];
 
+export const SPEECH_ASSESSMENT_CREDITS_PER_MINUTE = 1;
+export const computeSpeechAssessmentCredits = (
+  durationSeconds: number
+): number =>
+  Math.max(1, Math.ceil((durationSeconds || 0) / 60)) *
+  SPEECH_ASSESSMENT_CREDITS_PER_MINUTE;
+
 export const creditsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     // Check if user can afford a feature

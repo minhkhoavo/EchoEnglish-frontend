@@ -19,6 +19,25 @@ import {
 import { Progress } from '../../../components/ui/progress';
 import axiosInstance from '../../../core/api/axios';
 import type { AxiosProgressEvent } from 'axios';
+import { computeSpeechAssessmentCredits } from '@/features/auth/services/creditsApi';
+
+function getAudioDurationSeconds(file: File): Promise<number> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const audio = new Audio();
+    const cleanup = () => URL.revokeObjectURL(url);
+    audio.addEventListener('loadedmetadata', () => {
+      const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+      cleanup();
+      resolve(duration);
+    });
+    audio.addEventListener('error', () => {
+      cleanup();
+      resolve(0);
+    });
+    audio.src = url;
+  });
+}
 
 interface FileUploadDialogProps {
   onUploadComplete?: (fileName: string) => void;
@@ -36,7 +55,17 @@ export function FileUploadDialog({
     'idle' | 'uploading' | 'success' | 'error'
   >('idle');
   const [isOpen, setIsOpen] = useState(false);
+  const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const estimatedCredits =
+    durationSeconds != null
+      ? computeSpeechAssessmentCredits(durationSeconds)
+      : null;
+  const estimatedMinutes =
+    durationSeconds != null
+      ? Math.max(1, Math.ceil(durationSeconds / 60))
+      : null;
 
   // Only accept mp3 and wav as requested
   const acceptedFileTypes = '.mp3,.wav';
@@ -63,6 +92,8 @@ export function FileUploadDialog({
 
     setSelectedFile(file);
     setUploadStatus('idle');
+    setDurationSeconds(null);
+    getAudioDurationSeconds(file).then(setDurationSeconds);
   };
 
   const handleUpload = async () => {
@@ -123,6 +154,7 @@ export function FileUploadDialog({
   const handleClose = () => {
     setIsOpen(false);
     setSelectedFile(null);
+    setDurationSeconds(null);
     setUploadProgress(0);
     setUploadStatus('idle');
     setIsUploading(false);
@@ -150,7 +182,7 @@ export function FileUploadDialog({
           </DialogTitle>
           <DialogDescription>
             Select an audio file for pronunciation analysis. Supports MP3 and
-            WAV (max 50MB).
+            WAV (max 30MB). Costs 1 credit per minute (rounded up).
           </DialogDescription>
         </DialogHeader>
 
@@ -195,13 +227,35 @@ export function FileUploadDialog({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSelectedFile(null)}
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setDurationSeconds(null);
+                    }}
                     className="text-gray-400 hover:text-red-500"
                   >
                     <X className="w-4 h-4" />
                   </Button>
                 )}
               </div>
+
+              {/* Estimated cost */}
+              {!isUploading && uploadStatus !== 'success' && (
+                <div className="mt-3 flex items-center justify-between rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-sm">
+                  <span className="text-gray-600">Estimated cost</span>
+                  {estimatedCredits != null ? (
+                    <span className="font-semibold text-blue-600">
+                      {estimatedCredits}{' '}
+                      {estimatedCredits === 1 ? 'credit' : 'credits'}
+                      <span className="ml-1 font-normal text-gray-500">
+                        (~{estimatedMinutes}{' '}
+                        {estimatedMinutes === 1 ? 'min' : 'mins'})
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">Calculating…</span>
+                  )}
+                </div>
+              )}
 
               {/* Upload Progress */}
               {isUploading && (
