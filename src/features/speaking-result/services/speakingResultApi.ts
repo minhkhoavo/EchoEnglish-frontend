@@ -170,7 +170,10 @@ function transformSpeakingResult(input: BackendSpeakingResult): {
       (q, idx) => {
         const maxScore = getQuestionMaxScore(p.partIndex);
         const scoresObj = extractScores(q);
-        const score = scoresObj?.overallScore ?? 0;
+        const score =
+          typeof scoresObj?.overallScore === 'number'
+            ? Math.round(scoresObj.overallScore)
+            : 0;
         const pct = (score / maxScore) * 100;
         const feedbackSummary = scoresObj?.feedback?.summary;
         const strengths = scoresObj?.feedback?.strengths ?? [];
