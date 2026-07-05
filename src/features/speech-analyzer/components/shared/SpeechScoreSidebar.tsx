@@ -35,12 +35,6 @@ const baseMenuItems: Omit<MenuItem, 'level' | 'score' | 'scoreColor'>[] = [
     activeGradient: 'from-[#fff35c] to-[#ef7b32]',
   },
   {
-    id: 'grammar',
-    icon: iconUrl('grammar'),
-    title: 'Grammar',
-    activeGradient: 'from-[#ff52e3] to-[#2980ff]',
-  },
-  {
     id: 'vocabulary',
     icon: iconUrl('vocabulary'),
     title: 'Vocabulary',

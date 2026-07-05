@@ -38,6 +38,7 @@ export const fetchDashboardData = (
       },
       scoreData: transformedData.scoreData!,
       skillsData: transformedData.skillsData!,
+      domainProficiency: transformedData.domainProficiency || [],
       aiInsights: transformedData.aiInsights!,
       partPerformance: [],
       learningPhases: [],

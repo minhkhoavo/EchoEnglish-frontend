@@ -27,8 +27,17 @@ export interface CompetencyProfileInsightResponse {
     aiInsights: AIInsight[];
     scorePrediction: ScoreData;
     skillsMap: SkillData[];
+    domainProficiency: DomainProficiencyItem[];
     lastUpdated: string;
   };
+}
+
+export interface DomainProficiencyItem {
+  domain: string;
+  accuracy: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  lastPracticed?: string;
 }
 
 export interface UserProfile {
@@ -315,6 +324,7 @@ export interface DashboardData {
   userProfile: UserProfile;
   scoreData: ScoreData;
   skillsData: SkillData[];
+  domainProficiency: DomainProficiencyItem[];
   partPerformance: PartPerformance[];
   learningPhases: LearningPhase[];
   dailyTasks: DailyTask[];

@@ -271,6 +271,7 @@ export const transformCompetencyData = (
     lastUpdated: skill.lastUpdated,
     _id: skill._id,
   }));
+  const domainProficiency = apiData.domainProficiency;
 
   // Transform AI insights
   const aiInsights = apiData.aiInsights.map((insight) => ({
@@ -297,6 +298,7 @@ export const transformCompetencyData = (
   return {
     scoreData,
     skillsData,
+    domainProficiency,
     aiInsights,
   };
 };

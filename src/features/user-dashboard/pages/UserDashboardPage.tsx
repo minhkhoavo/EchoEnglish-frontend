@@ -17,6 +17,7 @@ import {
 import {
   ScoreOverview,
   SkillsRadar,
+  TopWeakDomainsCard,
   LearningJourney,
   DailyLesson,
   WeeklyProgress,
@@ -292,6 +293,11 @@ export const UserDashboardPage = () => {
                       skillsData={combinedDashboardData.skillsData}
                     />
                   </div>
+
+                  {/* Top Weak Content Domains */}
+                  <TopWeakDomainsCard
+                    domainProficiency={combinedDashboardData.domainProficiency}
+                  />
 
                   {/* Listening & Reading Performance */}
                   <Card>

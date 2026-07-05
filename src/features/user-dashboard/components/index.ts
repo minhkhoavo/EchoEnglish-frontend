@@ -8,4 +8,5 @@ export { LearningStatsSidebar } from './LearningStatsSidebar';
 export { StudyPreferencesCard } from './StudyPreferences';
 export { MissedSessionsDialog } from './MissedSessionsDialog';
 export { StudyMemoPanel } from './StudyMemoPanel';
+export { TopWeakDomainsCard } from './TopWeakDomainsCard';
 export type { StudyPreferences } from './StudyPreferences';
