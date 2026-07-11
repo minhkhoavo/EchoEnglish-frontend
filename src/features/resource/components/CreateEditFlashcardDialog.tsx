@@ -82,6 +82,11 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
   const [showPhonetics, setShowPhonetics] = useState(false);
   const [phoneticsExpanded, setPhoneticsExpanded] = useState(false);
 
+  const latestFrontRef = useRef(formData.front);
+  useEffect(() => {
+    latestFrontRef.current = formData.front;
+  }, [formData.front]);
+
   const { speak } = useSpeechSynthesis();
 
   const isControlled = open !== undefined && onOpenChange !== undefined;
@@ -141,6 +146,8 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
         phonetic: '',
         isAIGenerated: false,
       });
+      setShowPhonetics(false);
+      setPhonetics([]);
     }
   }, [
     dialogOpen,
@@ -234,8 +241,14 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
 
     try {
       const result = await fetchPhonetics(word).unwrap();
-      if (result?.phonetics && result.phonetics.length > 0) {
-        setPhonetics(result.phonetics);
+
+      // Prevent race condition: check if input changed while fetching
+      if (latestFrontRef.current.trim() !== word) {
+        return;
+      }
+
+      if (result?.pronunciation?.sourcePhonetic) {
+        setPhonetics([{ text: result.pronunciation.sourcePhonetic }]);
         setShowPhonetics(true);
         setPhoneticsExpanded(true); // Auto-expand when results loaded
       } else {
@@ -315,6 +328,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
         setNewTag('');
         setShowPhonetics(false);
         setPhoneticsExpanded(false);
+        setPhonetics([]);
       }
     }
   };
@@ -339,6 +353,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
               setNewTag('');
               setShowPhonetics(false);
               setPhoneticsExpanded(false);
+              setPhonetics([]);
             }
             setDialogOpen(true);
           }}
@@ -380,6 +395,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                     setFormData((prev) => ({ ...prev, front: e.target.value }));
                     setShowPhonetics(false);
                     setPhoneticsExpanded(false);
+                    setPhonetics([]);
                   }}
                   onBlur={handleFetchPhonetics}
                   className="resize-none min-h-[100px]"

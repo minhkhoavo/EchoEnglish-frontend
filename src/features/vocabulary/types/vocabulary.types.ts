@@ -50,10 +50,20 @@ export interface PhoneticData {
   audio?: string;
 }
 
+export interface DictionaryDefinition {
+  partOfSpeech: string;
+  definition: string;
+  example?: string;
+  synonyms?: string[];
+}
+
 export interface PhoneticsResponse {
-  word: string;
-  phonetics: PhoneticData[];
-  formatted: string;
+  sourceText: string;
+  destinationText: string;
+  pronunciation: {
+    sourcePhonetic: string | null;
+  };
+  definitions: DictionaryDefinition[];
 }
 
 export interface ImportResponse {
