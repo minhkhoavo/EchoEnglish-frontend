@@ -21,7 +21,9 @@ import {
   Library,
   Clock,
   Loader2,
+  ArrowLeft,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { EbookCard, type EbookData } from './EbookCard';
 import { EbookReader } from './EbookReader';
@@ -321,6 +323,8 @@ export const EbookLibrary: React.FC<EbookLibraryProps> = ({
   isLoading = false,
   className,
 }) => {
+  const navigate = useNavigate();
+
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -458,6 +462,14 @@ export const EbookLibrary: React.FC<EbookLibraryProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b">
         <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="mr-1"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <Library className="h-6 w-6 text-primary" />
           <div>
             <h1 className="text-xl font-semibold">Ebook Library</h1>

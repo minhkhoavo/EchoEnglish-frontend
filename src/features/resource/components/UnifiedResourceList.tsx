@@ -98,9 +98,10 @@ const UnifiedResourceList: React.FC<UnifiedResourceListProps> = ({
         {/* Tabs */}
         <Tabs
           value={activeTab}
-          onValueChange={(value) =>
-            dispatch(setActiveTab(value as 'all' | ResourceType))
-          }
+          onValueChange={(value) => {
+            if (value === ResourceType.EBOOK) return;
+            dispatch(setActiveTab(value as 'all' | ResourceType));
+          }}
         >
           <TabsList className="grid w-full grid-cols-4 md:w-auto">
             <TabsTrigger value="all">All</TabsTrigger>
