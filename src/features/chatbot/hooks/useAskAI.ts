@@ -10,7 +10,7 @@ import type {
 export function useAskAI(partName: string, showCorrectAnswers: boolean) {
   const dispatch = useAppDispatch();
 
-  return useCallback(
+  const handler = useCallback(
     (question: TestQuestion, groupContext?: TestMedia | null) => () => {
       const context = buildExamQuestionContext(
         question,
@@ -22,5 +22,13 @@ export function useAskAI(partName: string, showCorrectAnswers: boolean) {
       dispatch(openChatbot());
     },
     [dispatch, partName, showCorrectAnswers]
+  );
+
+  // Hide "Ask AI" while actively taking the exam (showCorrectAnswers = false)
+  // so learners can't get AI help mid-test; only available in review mode.
+  return useCallback(
+    (question: TestQuestion, groupContext?: TestMedia | null) =>
+      showCorrectAnswers ? handler(question, groupContext) : undefined,
+    [handler, showCorrectAnswers]
   );
 }

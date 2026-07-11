@@ -85,7 +85,16 @@ export const dashboardApi = api.injectEndpoints({
         url: '/learning-plans/active',
         method: 'GET',
       }),
-      //   providesTags: ['Dashboard'],
+      providesTags: ['Dashboard'],
+    }),
+
+    // Delete roadmap
+    deleteRoadmap: builder.mutation<{ data: { roadmapId: string } }, string>({
+      query: (roadmapId) => ({
+        url: `/learning-plans/roadmap/${roadmapId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['DailyLesson', 'Dashboard'],
     }),
 
     // Track resource time spent
@@ -224,6 +233,7 @@ export const {
   useUpdateLessonProgressMutation,
   useUpdateTaskCompletionMutation,
   useGetActiveRoadmapQuery,
+  useDeleteRoadmapMutation,
   useTrackResourceTimeMutation,
   useCompletePracticeDrillMutation,
   useGetStudyPreferencesQuery,

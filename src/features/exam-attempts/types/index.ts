@@ -79,10 +79,14 @@ export interface WritingAttempt {
   userId: string;
   toeicWritingTestId: string;
   submissionTimestamp: string;
-  status: 'in_progress' | 'completed';
+  status:
+    | 'in_progress'
+    | 'completed'
+    | 'scored'
+    | 'partially_scored'
+    | 'scoring_failed';
   createdAt: string;
-  overallScore?: number;
-  overallLevel?: string;
+  totalScore?: number;
 }
 
 export interface WritingAttemptsResponse {

@@ -16,6 +16,7 @@ import {
   executePendingCommand,
   setError,
   clearError,
+  setExamContext,
 } from '../slices/chatbotSlice';
 
 import {
@@ -397,6 +398,7 @@ const ChatbotContainer: React.FC<ChatbotContainerProps> = ({
       isTyping={isTyping}
       className={className}
       examContext={examContext}
+      onClearExamContext={() => dispatch(setExamContext(null))}
     />
   );
 };

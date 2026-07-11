@@ -2,6 +2,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen,
@@ -11,9 +22,12 @@ import {
   Rocket,
   CheckCircle,
   Plus,
+  Trash2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   useGetActiveRoadmapQuery,
+  useDeleteRoadmapMutation,
   transformRoadmapData,
 } from '../services/dashboardApi';
 
@@ -35,6 +49,16 @@ export const LearningJourney = ({ className }: LearningJourneyProps) => {
     isLoading,
     error,
   } = useGetActiveRoadmapQuery();
+  const [deleteRoadmap, { isLoading: isDeleting }] = useDeleteRoadmapMutation();
+
+  const handleDeleteRoadmap = async (roadmapId: string) => {
+    try {
+      await deleteRoadmap(roadmapId).unwrap();
+      toast.success('Roadmap deleted.');
+    } catch {
+      toast.error('Failed to delete roadmap.');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -79,6 +103,7 @@ export const LearningJourney = ({ className }: LearningJourneyProps) => {
 
   const { learningPhases, currentScore, targetScore, overallProgress } =
     transformRoadmapData(roadmapResponse.data);
+  const { roadmapId } = roadmapResponse.data;
 
   return (
     <Card
@@ -88,14 +113,48 @@ export const LearningJourney = ({ className }: LearningJourneyProps) => {
       }}
     >
       <CardHeader>
-        <CardTitle className="flex items-center text-white text-2xl">
-          <Rocket className="h-7 w-7 mr-3" />
-          Your Learning Journey to {targetScore}+
-        </CardTitle>
-        <p className="text-white/90">
-          A visual roadmap of your transformation from 650 → {targetScore}+
-          TOEIC
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="flex items-center text-white text-2xl">
+              <Rocket className="h-7 w-7 mr-3" />
+              Your Learning Journey to {targetScore}+
+            </CardTitle>
+            <p className="text-white/90 mt-1">
+              A visual roadmap of your transformation from 650 → {targetScore}+
+              TOEIC
+            </p>
+          </div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white/80 hover:text-white hover:bg-white/10 shrink-0"
+                disabled={isDeleting}
+                aria-label="Delete roadmap"
+              >
+                <Trash2 className="h-5 w-5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this roadmap?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete your learning roadmap. This
+                  action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => handleDeleteRoadmap(roadmapId)}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="relative">

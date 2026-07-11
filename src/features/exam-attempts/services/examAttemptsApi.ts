@@ -47,19 +47,26 @@ const transformSpeakingAttempt = (attempt: SpeakingAttempt): ExamAttempt => {
   };
 };
 
+const WRITING_FINISHED_STATUSES: WritingAttempt['status'][] = [
+  'scored',
+  'partially_scored',
+  'scoring_failed',
+];
+
 const transformWritingAttempt = (attempt: WritingAttempt): ExamAttempt => {
+  const isFinished = WRITING_FINISHED_STATUSES.includes(attempt.status);
   return {
     id: attempt._id,
     type: 'writing',
-    status: attempt.status === 'completed' ? 'completed' : 'in-progress',
+    status: isFinished ? 'completed' : 'in-progress',
     title: `TOEIC Writing Test`,
-    description: attempt.overallLevel,
     startedAt: attempt.createdAt,
-    score: attempt.overallScore,
+    score: isFinished ? attempt.totalScore : undefined,
     maxScore: 200,
-    percentage: attempt.overallScore
-      ? (attempt.overallScore / 200) * 100
-      : undefined,
+    percentage:
+      isFinished && attempt.totalScore
+        ? (attempt.totalScore / 200) * 100
+        : undefined,
   };
 };
 
