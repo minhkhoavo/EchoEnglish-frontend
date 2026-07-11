@@ -60,7 +60,10 @@ export default function LiveChatPanel() {
 
   // Hide system + tool messages from the chat UI — tool calls run silently.
   const chatMessages = messages.filter(
-    (m) => m.type !== 'system' && m.type !== 'tool'
+    (m) =>
+      m.type !== 'system' &&
+      m.type !== 'tool' &&
+      !m.text.startsWith('[CONTEXT UPDATE]')
   );
 
   return (

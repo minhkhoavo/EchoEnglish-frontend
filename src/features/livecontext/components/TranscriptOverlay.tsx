@@ -34,6 +34,7 @@ export default function TranscriptOverlay({
     .filter((m) => {
       // System + tool messages never appear in the transcript overlay.
       if (m.type === 'system' || m.type === 'tool') return false;
+      if (m.text.startsWith('[CONTEXT UPDATE]')) return false;
       const duration = DISPLAY_DURATION[m.type] || 8000;
       return now - m.timestamp < duration;
     })
