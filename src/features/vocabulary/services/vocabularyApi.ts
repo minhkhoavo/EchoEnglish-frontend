@@ -64,11 +64,12 @@ export const vocabularyApi = api.injectEndpoints({
         response.data,
     }),
 
-    // Get phonetics for a word
+    // Get phonetics for a word (via translate dictionary info)
     getPhonetics: builder.query<PhoneticsResponse, string>({
       query: (word) => ({
-        url: `/vocabulary/phonetics/${word}`,
-        method: 'GET',
+        url: `/translate/dictionary`,
+        method: 'POST',
+        data: { word },
       }),
       transformResponse: (response: ApiResponse<PhoneticsResponse>) =>
         response.data,

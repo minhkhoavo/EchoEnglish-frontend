@@ -121,6 +121,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
         isAIGenerated: false,
       });
       setShowPhonetics(false);
+      setPhonetics([]);
     }
   }, [isEdit, flashcard]);
 
@@ -212,6 +213,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
         setNewTag('');
         setShowPhonetics(false);
         setPhoneticsExpanded(false);
+        setPhonetics([]);
         setOpen(true);
         // Only arm auto-submit when both required fields were actually supplied,
         // so opening a blank dialog never silently saves later.
@@ -276,8 +278,14 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
 
     try {
       const result = await fetchPhonetics(word).unwrap();
-      if (result?.phonetics && result.phonetics.length > 0) {
-        setPhonetics(result.phonetics);
+
+      // Prevent race condition: check if input changed while fetching
+      if (formDataRef.current.front.trim() !== word) {
+        return;
+      }
+
+      if (result?.pronunciation?.sourcePhonetic) {
+        setPhonetics([{ text: result.pronunciation.sourcePhonetic }]);
         setShowPhonetics(true);
         setPhoneticsExpanded(true); // Auto-expand when results loaded
       } else {
@@ -359,6 +367,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
             setNewTag('');
             setShowPhonetics(false);
             setPhoneticsExpanded(false);
+            setPhonetics([]);
           }
           setOpen(true);
         }}
@@ -391,6 +400,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
               setNewTag('');
               setShowPhonetics(false);
               setPhoneticsExpanded(false);
+              setPhonetics([]);
             }
             if (isEdit) {
               onSuccess?.();
@@ -428,6 +438,7 @@ const CreateEditFlashcardDialog: React.FC<CreateEditFlashcardDialogProps> = ({
                     setFormData((prev) => ({ ...prev, front: e.target.value }));
                     setShowPhonetics(false);
                     setPhoneticsExpanded(false);
+                    setPhonetics([]);
                   }}
                   onBlur={handleFetchPhonetics}
                   className="resize-none min-h-[100px]"
