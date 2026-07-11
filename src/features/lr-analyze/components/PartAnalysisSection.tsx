@@ -53,7 +53,8 @@ export function PartAnalysisSection({
     const titles: Record<string, string> = {
       '1': 'Part 1: Photographs',
       '2': 'Part 2: Question-Response',
-      '3': 'Part 3 & 4: Conversations & Talks',
+      '3': 'Part 3: Conversations',
+      '4': 'Part 4: Short Talks',
       '5': 'Part 5: Incomplete Sentences',
       '6': 'Part 6: Text Completion',
       '7': 'Part 7: Reading Comprehension',
@@ -65,7 +66,8 @@ export function PartAnalysisSection({
     const descriptions: Record<string, string> = {
       '1': 'Assess ability to connect descriptive language with images',
       '2': 'Test response reflex and understanding of communicative intent',
-      '3': 'Deeper contextual listening comprehension',
+      '3': 'Comprehension of short conversations between two or more speakers',
+      '4': 'Comprehension of short talks by a single speaker',
       '5': 'Direct assessment of grammar and vocabulary',
       '6': 'Discourse understanding and coherence',
       '7': 'Diverse reading comprehension skills',

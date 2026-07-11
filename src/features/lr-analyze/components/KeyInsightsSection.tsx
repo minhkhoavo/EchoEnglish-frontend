@@ -1,11 +1,40 @@
+import type { ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Lightbulb, CheckCircle2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface KeyInsightsSectionProps {
   insights: string[];
   summary?: string;
 }
+
+const markdownComponents = {
+  p: ({ children }: { children?: ReactNode }) => (
+    <p className="leading-relaxed">{children}</p>
+  ),
+  strong: ({ children }: { children?: ReactNode }) => (
+    <strong className="font-bold text-[#0f172a]">{children}</strong>
+  ),
+  em: ({ children }: { children?: ReactNode }) => (
+    <em className="italic">{children}</em>
+  ),
+  ul: ({ children }: { children?: ReactNode }) => (
+    <ul className="list-disc list-outside ml-4 space-y-1">{children}</ul>
+  ),
+  ol: ({ children }: { children?: ReactNode }) => (
+    <ol className="list-decimal list-outside ml-4 space-y-1">{children}</ol>
+  ),
+  li: ({ children }: { children?: ReactNode }) => (
+    <li className="leading-relaxed">{children}</li>
+  ),
+  code: ({ children }: { children?: ReactNode }) => (
+    <code className="bg-black/5 px-1 py-0.5 rounded text-[0.85em] font-mono">
+      {children}
+    </code>
+  ),
+};
 
 export function KeyInsightsSection({
   insights,
@@ -28,9 +57,14 @@ export function KeyInsightsSection({
               <h2 className="text-sm font-bold text-[#0f172a] mb-2">
                 Overall Summary
               </h2>
-              <p className="text-sm text-[#1e293b] leading-relaxed">
-                {summary}
-              </p>
+              <div className="prose prose-sm max-w-none text-sm text-[#1e293b]">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={markdownComponents}
+                >
+                  {summary}
+                </ReactMarkdown>
+              </div>
             </div>
           </div>
         </Card>
@@ -67,10 +101,13 @@ export function KeyInsightsSection({
                     {index + 1}
                   </span>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-[#1e293b] leading-relaxed">
+                <div className="flex-1 prose prose-sm max-w-none text-sm text-[#1e293b]">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={markdownComponents}
+                  >
                     {insight}
-                  </p>
+                  </ReactMarkdown>
                 </div>
               </div>
             </Card>

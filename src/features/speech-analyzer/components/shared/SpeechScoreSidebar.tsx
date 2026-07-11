@@ -89,8 +89,8 @@ const SpeechScoreSidebar = ({
       const sc = scores[item.id];
       return {
         ...item,
-        level: levelForScore(sc),
-        score: sc != null ? `${Math.round(sc)}%` : 'N/A',
+        level: sc != null ? levelForScore(sc) : '',
+        score: sc != null ? `${Math.round(sc)}%` : '',
         scoreColor: colorForScore(sc),
       };
     });
@@ -156,11 +156,13 @@ const SpeechScoreSidebar = ({
                       )}
                     </div>
 
-                    <div className="ml-auto font-bold flex items-center">
-                      <span className={`mr-[0.9375rem] ${item.scoreColor}`}>
-                        {item.score}
-                      </span>
-                    </div>
+                    {item.score && (
+                      <div className="ml-auto font-bold flex items-center">
+                        <span className={`mr-[0.9375rem] ${item.scoreColor}`}>
+                          {item.score}
+                        </span>
+                      </div>
+                    )}
                   </dt>
                 </div>
               </div>

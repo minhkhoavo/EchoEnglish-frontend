@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Activity, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react';
+
+const WPM_REFERENCE_URL =
+  'https://www.count-character.com/blog/speaking-words-per-minute#:~:text=Technical%20or%20high,clarity%20usually%20drops.';
 
 interface PaceScoreChartProps {
   score: number; // WPM (Words Per Minute)
@@ -124,6 +127,16 @@ const PaceScoreChart: React.FC<PaceScoreChartProps> = ({ score = 0 }) => {
               <Activity className="w-4 h-4" />
             </div>
             <h3 className="text-lg font-semibold text-gray-800">Speech Pace</h3>
+            <a
+              href={WPM_REFERENCE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Learn what a good speaking pace (WPM) looks like"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Info className="w-4 h-4" />
+            </a>
           </div>
           <Icon
             className={`w-5 h-5 text-${scoreData.status === 'excellent' ? 'emerald' : scoreData.status === 'good' ? 'amber' : 'red'}-600`}

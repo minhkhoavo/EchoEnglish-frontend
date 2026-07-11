@@ -38,6 +38,9 @@ interface VocabularyContentProps {
   recording?: Recording | null;
 }
 
+const isNA = (value?: string | null): boolean =>
+  !value || value.trim().toUpperCase() === 'N/A';
+
 const VocabularyContent: React.FC<VocabularyContentProps> = ({ recording }) => {
   const analysis = (recording?.analysis as RecordingAnalysis) || undefined;
   const vocabulary = analysis?.analyses?.vocabulary;
@@ -85,12 +88,15 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ recording }) => {
     ? {
         totalWords: vocabularyStats.totalWords || 0,
         uniqueWords: vocabularyStats.uniqueWords || 0,
+        // Advanced vocabulary = B2 + C1 + C2 only
         advancedVocabularyPercentage:
-          vocabularyStats.knownWords &&
-          vocabularyStats.totalWords &&
-          vocabularyStats.totalWords > 0
+          vocabularyStats.totalWords && vocabularyStats.totalWords > 0
             ? Math.round(
-                (vocabularyStats.knownWords / vocabularyStats.totalWords) * 100
+                (((vocabularyStats.distribution?.B2 || 0) +
+                  (vocabularyStats.distribution?.C1 || 0) +
+                  (vocabularyStats.distribution?.C2 || 0)) /
+                  vocabularyStats.totalWords) *
+                  100
               )
             : 0,
         cefrLevels: [
@@ -145,22 +151,49 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ recording }) => {
           {
             level: 'B2',
             name: 'Upper Intermediate',
-            percentage: 0,
-            count: 0,
+            percentage:
+              vocabularyStats.distribution?.B2 &&
+              vocabularyStats.totalWords &&
+              vocabularyStats.totalWords > 0
+                ? Math.round(
+                    (vocabularyStats.distribution.B2 /
+                      vocabularyStats.totalWords) *
+                      100
+                  )
+                : 0,
+            count: vocabularyStats.distribution?.B2 || 0,
             description: 'Upper intermediate vocabulary',
           },
           {
             level: 'C1',
             name: 'Advanced',
-            percentage: 0,
-            count: 0,
+            percentage:
+              vocabularyStats.distribution?.C1 &&
+              vocabularyStats.totalWords &&
+              vocabularyStats.totalWords > 0
+                ? Math.round(
+                    (vocabularyStats.distribution.C1 /
+                      vocabularyStats.totalWords) *
+                      100
+                  )
+                : 0,
+            count: vocabularyStats.distribution?.C1 || 0,
             description: 'Advanced vocabulary',
           },
           {
             level: 'C2',
             name: 'Proficient',
-            percentage: 0,
-            count: 0,
+            percentage:
+              vocabularyStats.distribution?.C2 &&
+              vocabularyStats.totalWords &&
+              vocabularyStats.totalWords > 0
+                ? Math.round(
+                    (vocabularyStats.distribution.C2 /
+                      vocabularyStats.totalWords) *
+                      100
+                  )
+                : 0,
+            count: vocabularyStats.distribution?.C2 || 0,
             description: 'Proficient vocabulary',
           },
         ],
@@ -414,9 +447,11 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ recording }) => {
                       {performance.score}
                     </Badge>
                   </div>
-                  <p className="text-xs text-green-700">
-                    {performance.description}
-                  </p>
+                  {!isNA(performance.description) && (
+                    <p className="text-xs text-green-700">
+                      {performance.description}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -470,13 +505,17 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ recording }) => {
                       )}
                     </Button>
                   </div>
-                  <div className="text-xs text-gray-600 mb-1">
-                    <span className="font-medium">Context:</span>{' '}
-                    {upgrade.context}
-                  </div>
-                  <div className="text-xs text-amber-700 bg-amber-100 px-2 py-1 rounded italic">
-                    💬 "{upgrade.example}"
-                  </div>
+                  {!isNA(upgrade.context) && (
+                    <div className="text-xs text-gray-600 mb-1">
+                      <span className="font-medium">Context:</span>{' '}
+                      {upgrade.context}
+                    </div>
+                  )}
+                  {!isNA(upgrade.example) && (
+                    <div className="text-xs text-amber-700 bg-amber-100 px-2 py-1 rounded italic">
+                      💬 "{upgrade.example}"
+                    </div>
+                  )}
                 </div>
               ))}
               <p className="text-xs text-amber-700 mt-2 text-center">
@@ -515,9 +554,11 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ recording }) => {
                       "{paraphrase.paraphrase}"
                     </div>
                   </div>
-                  <div className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded">
-                    📝 {paraphrase.technique}
-                  </div>
+                  {!isNA(paraphrase.technique) && (
+                    <div className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded">
+                      📝 {paraphrase.technique}
+                    </div>
+                  )}
                 </div>
               ))}
               <p className="text-xs text-blue-700 mt-2 text-center">
@@ -557,9 +598,11 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ recording }) => {
                         </Badge>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="text-xs text-yellow-600">
-                          {word.category}
-                        </span>
+                        {!isNA(word.category) && (
+                          <span className="text-xs text-yellow-600">
+                            {word.category}
+                          </span>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -582,12 +625,16 @@ const VocabularyContent: React.FC<VocabularyContentProps> = ({ recording }) => {
                         </Button>
                       </div>
                     </div>
-                    <p className="text-xs text-yellow-700 mb-1">
-                      {word.definition}
-                    </p>
-                    <p className="text-xs text-yellow-600 italic">
-                      "{word.example}"
-                    </p>
+                    {!isNA(word.definition) && (
+                      <p className="text-xs text-yellow-700 mb-1">
+                        {word.definition}
+                      </p>
+                    )}
+                    {!isNA(word.example) && (
+                      <p className="text-xs text-yellow-600 italic">
+                        "{word.example}"
+                      </p>
+                    )}
                   </div>
                 ))
               ) : (

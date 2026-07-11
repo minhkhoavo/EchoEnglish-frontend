@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Play, Filter, X } from 'lucide-react';
+import { Play, Filter, X, MousePointerClick } from 'lucide-react';
 import TranscriptAudioPlayer from './TranscriptAudioPlayer';
 import PronunciationWord from './PronunciationWord';
 import PronunciationPopup from './PronunciationPopup';
@@ -586,70 +586,104 @@ const Transcript: React.FC<TranscriptProps> = ({
       </div>
 
       {/* Legend */}
-      <div className="bg-gray-50 p-4 border-t border-gray-200">
-        <div className="text-sm text-gray-600">
-          <div className="font-medium mb-2">Legend:</div>
-
-          {/* Color Legend */}
-          <div className="mb-3">
-            <div className="text-xs font-medium text-gray-700 mb-1">
-              Accuracy Colors:
+      <div className="bg-gray-50 p-5 border-t border-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Accuracy Colors */}
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+              Accuracy Colors
             </div>
-            <div className="flex flex-wrap gap-4 text-xs">
-              <span>
-                <span className="text-green-700 font-medium">●</span> Excellent
-                (90%+)
-              </span>
-              <span>
-                <span className="text-blue-700 font-medium">●</span> Good
-                (70-89%)
-              </span>
-              <span>
-                <span className="text-yellow-600 font-medium">●</span> Fair
-                (50-69%)
-              </span>
-              <span>
-                <span className="text-red-600 font-medium">●</span> Needs
-                Practice (&lt;50%)
-              </span>
-              <span>
-                <span className="text-purple-600 font-medium">ˈ</span> Stressed
-                word
-              </span>
-            </div>
-          </div>
-
-          {/* Error Types Legend */}
-          <div className="mb-3">
-            <div className="text-xs font-medium text-gray-700 mb-1">
-              Error Types:
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-              <span>
-                <span className="text-orange-600">🔄</span> Mispronunciation
-              </span>
-              <span>
-                <span className="text-red-600">❌</span> Omission
-              </span>
-              <span>
-                <span className="text-purple-600">➕</span> Insertion
-              </span>
-              <span>
-                <span className="text-blue-600">⏸️</span> Unexpected break
-              </span>
-              <span>
-                <span className="text-green-600">⏩</span> Missing break
-              </span>
-              <span>
-                <span className="text-gray-600">📏</span> Monotone
+            <div className="flex flex-wrap gap-2">
+              {[
+                {
+                  label: 'Excellent (90%+)',
+                  dot: 'bg-green-500',
+                  pill: 'bg-green-50 text-green-700 border-green-200',
+                },
+                {
+                  label: 'Good (70-89%)',
+                  dot: 'bg-blue-500',
+                  pill: 'bg-blue-50 text-blue-700 border-blue-200',
+                },
+                {
+                  label: 'Fair (50-69%)',
+                  dot: 'bg-yellow-500',
+                  pill: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+                },
+                {
+                  label: 'Needs Practice (<50%)',
+                  dot: 'bg-red-500',
+                  pill: 'bg-red-50 text-red-700 border-red-200',
+                },
+              ].map(({ label, dot, pill }) => (
+                <span
+                  key={label}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${pill}`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${dot}`} />
+                  {label}
+                </span>
+              ))}
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border bg-purple-50 text-purple-700 border-purple-200 text-xs font-medium">
+                <span className="font-bold">ˈ</span> Stressed word
               </span>
             </div>
           </div>
 
-          <div className="text-xs text-gray-500">
-            Click any word to jump to that moment • Click words for detailed
-            pronunciation analysis
+          {/* Error Types */}
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+              Error Types
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {[
+                {
+                  icon: '🔄',
+                  label: 'Mispronunciation',
+                  pill: 'bg-orange-50 text-orange-700 border-orange-200',
+                },
+                {
+                  icon: '❌',
+                  label: 'Omission',
+                  pill: 'bg-red-50 text-red-700 border-red-200',
+                },
+                {
+                  icon: '➕',
+                  label: 'Insertion',
+                  pill: 'bg-purple-50 text-purple-700 border-purple-200',
+                },
+                {
+                  icon: '⏸️',
+                  label: 'Unexpected break',
+                  pill: 'bg-blue-50 text-blue-700 border-blue-200',
+                },
+                {
+                  icon: '⏩',
+                  label: 'Missing break',
+                  pill: 'bg-green-50 text-green-700 border-green-200',
+                },
+                {
+                  icon: '📏',
+                  label: 'Monotone',
+                  pill: 'bg-gray-100 text-gray-700 border-gray-200',
+                },
+              ].map(({ icon, label, pill }) => (
+                <span
+                  key={label}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${pill}`}
+                >
+                  <span>{icon}</span>
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-4 pt-3 border-t border-gray-200">
+          <MousePointerClick className="w-3.5 h-3.5 text-gray-400" />
+          Click any word to jump to that moment and see detailed pronunciation
+          analysis
         </div>
       </div>
     </div>
