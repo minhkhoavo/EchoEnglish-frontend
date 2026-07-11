@@ -37,7 +37,6 @@ import {
   Upload,
   X,
   FileText,
-  Image as ImageIcon,
   Loader2,
   Save,
   ArrowLeft,
@@ -105,7 +104,6 @@ export const ArticleEditor = ({
   // Form state
   const [title, setTitle] = useState(article?.title || '');
   const [summary, setSummary] = useState(article?.summary || '');
-  const [thumbnail, setThumbnail] = useState(article?.thumbnail || '');
   const [attachmentUrl, setAttachmentUrl] = useState(
     article?.attachmentUrl || ''
   );
@@ -143,31 +141,6 @@ export const ArticleEditor = ({
       },
     },
   });
-
-  // Handle thumbnail upload
-  const handleThumbnailUpload = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
-        return;
-      }
-
-      try {
-        const result = await uploadFile({
-          file,
-          folder: 'articles/thumbnails',
-        }).unwrap();
-        setThumbnail(result.data.url);
-        toast.success('Thumbnail uploaded');
-      } catch {
-        toast.error('Failed to upload thumbnail');
-      }
-    },
-    [uploadFile]
-  );
 
   // Handle attachment upload
   const handleAttachmentUpload = useCallback(
@@ -266,7 +239,6 @@ export const ArticleEditor = ({
         title: title.trim(),
         content,
         summary: summary.trim() || undefined,
-        thumbnail: thumbnail || undefined,
         attachmentUrl: attachmentUrl || undefined,
         attachmentName: attachmentName || undefined,
         labels,
@@ -545,62 +517,6 @@ export const ArticleEditor = ({
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Thumbnail */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <ImageIcon className="h-4 w-4" />
-                Thumbnail
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {thumbnail ? (
-                <div className="relative">
-                  <img
-                    src={thumbnail}
-                    alt="Thumbnail"
-                    className="w-full h-32 object-cover rounded-md"
-                  />
-                  <Button
-                    size="icon"
-                    variant="destructive"
-                    className="absolute top-2 right-2 h-6 w-6"
-                    onClick={() => setThumbnail('')}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <label
-                  className={`flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-md cursor-pointer hover:border-primary transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
-                      <span className="text-sm text-muted-foreground mt-2">
-                        Uploading...
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-8 w-8 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground mt-2">
-                        Upload image
-                      </span>
-                    </>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleThumbnailUpload}
-                    disabled={isUploading}
-                  />
-                </label>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Attachment */}
           {!isXapi && (
             <Card>

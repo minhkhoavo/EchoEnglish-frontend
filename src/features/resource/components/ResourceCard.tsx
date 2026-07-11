@@ -78,7 +78,7 @@ export default function ResourceCard({
       data-ai-id={resAiId}
       data-ai-label={resAiLabel}
       data-ai-role="resource-card"
-      className="group h-full overflow-hidden shadow-card hover:shadow-floating transition-smooth"
+      className="group h-full flex flex-col overflow-hidden shadow-card hover:shadow-floating transition-smooth"
     >
       <CardHeader className="pb-3">
         <div className="flex items-start gap-3">
@@ -117,7 +117,7 @@ export default function ResourceCard({
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 flex flex-col flex-1">
         {resource.summary && (
           <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
             {resource.summary}
@@ -153,78 +153,80 @@ export default function ResourceCard({
           </div>
         )}
 
-        {/* Footer */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-          <div className="flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            {resource.publishedAt
-              ? formatDate(resource.publishedAt)
-              : 'No date'}
+        <div className="mt-auto w-full">
+          {/* Footer */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {resource.publishedAt
+                ? formatDate(resource.publishedAt)
+                : 'No date'}
+            </div>
+            <div className="flex items-center gap-1">
+              {resource.labels?.cefr && (
+                <>
+                  <span>Level: </span>
+                  <span className="uppercase font-medium">
+                    {resource.labels.cefr}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            {resource.labels?.cefr && (
-              <>
-                <span>Level: </span>
-                <span className="uppercase font-medium">
-                  {resource.labels.cefr}
-                </span>
-              </>
-            )}
-          </div>
-        </div>
 
-        {/* Actions */}
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
-            <Button
-              onClick={() => onRead(resource)}
-              className="flex-1"
-              size="sm"
-              data-ai-id={`${resAiId}-read-btn`}
-              data-ai-label={`${isVideo ? 'Watch' : 'Read'} "${resource.title || 'Untitled'}"`}
-              data-ai-role="view"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              {isXapi ? 'Open' : isVideo ? 'Watch' : 'Read'}
-            </Button>
-            {!isAdmin && (
+          {/* Actions */}
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Button
+                onClick={() => onRead(resource)}
+                className="flex-1"
+                size="sm"
+                data-ai-id={`${resAiId}-read-btn`}
+                data-ai-label={`${isVideo ? 'Watch' : 'Read'} "${resource.title || 'Untitled'}"`}
+                data-ai-role="view"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                {isXapi ? 'Open' : isVideo ? 'Watch' : 'Read'}
+              </Button>
+              {!isAdmin && (
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!inLibrary) handleSaveToLibrary();
+                  }}
+                  variant="outline"
+                  size="sm"
+                  disabled={inLibrary || savingToLibrary}
+                  title={
+                    inLibrary ? 'Already in My Library' : 'Save to My Library'
+                  }
+                  data-ai-id={`${resAiId}-save-library-btn`}
+                  data-ai-label={`Save "${resource.title || 'Untitled'}" to My Library`}
+                  data-ai-role="save"
+                >
+                  {savingToLibrary ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : inLibrary ? (
+                    <BookmarkCheck className="h-4 w-4 text-[#10b981]" />
+                  ) : (
+                    <BookmarkPlus className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
               <Button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!inLibrary) handleSaveToLibrary();
+                  window.open(resource.url, '_blank');
                 }}
                 variant="outline"
                 size="sm"
-                disabled={inLibrary || savingToLibrary}
-                title={
-                  inLibrary ? 'Already in My Library' : 'Save to My Library'
-                }
-                data-ai-id={`${resAiId}-save-library-btn`}
-                data-ai-label={`Save "${resource.title || 'Untitled'}" to My Library`}
-                data-ai-role="save"
+                data-ai-id={`${resAiId}-external-btn`}
+                data-ai-label={`Open original source of "${resource.title || 'Untitled'}" in a new tab`}
+                data-ai-role="view"
               >
-                {savingToLibrary ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : inLibrary ? (
-                  <BookmarkCheck className="h-4 w-4 text-[#10b981]" />
-                ) : (
-                  <BookmarkPlus className="h-4 w-4" />
-                )}
+                <ExternalLink className="h-4 w-4" />
               </Button>
-            )}
-            <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(resource.url, '_blank');
-              }}
-              variant="outline"
-              size="sm"
-              data-ai-id={`${resAiId}-external-btn`}
-              data-ai-label={`Open original source of "${resource.title || 'Untitled'}" in a new tab`}
-              data-ai-role="view"
-            >
-              <ExternalLink className="h-4 w-4" />
-            </Button>
+            </div>
           </div>
         </div>
       </CardContent>
