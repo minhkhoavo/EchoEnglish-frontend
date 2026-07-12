@@ -174,10 +174,9 @@ export const UserDashboardPage = () => {
   };
 
   const handleInsightAction = (insight: AIInsight) => {
-    console.log('Action clicked:', insight);
-    // if (insight.actionUrl) {
-    //   navigate(insight.actionUrl);
-    // }
+    if (insight.actionUrl) {
+      navigate(insight.actionUrl);
+    }
   };
 
   const anyLoadingFlag = dashboardLoading || competencyLoading || chartLoading;

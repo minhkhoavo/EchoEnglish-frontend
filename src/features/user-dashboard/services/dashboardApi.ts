@@ -248,26 +248,33 @@ export const {
   useRecordActivityResultMutation,
 } = dashboardApi;
 
-// Helper function to transform competency data (keeping existing logic)
-const getActionUrlFromTitle = (title?: string, actionText?: string): string => {
-  const t = (title || '').toLowerCase();
-  const a = (actionText || '').toLowerCase();
-  if (t.includes('grammar') || a.includes('grammar')) {
-    return '/practice/grammar';
+const humanizeToken = (token: string): string =>
+  token
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+
+const isIdentifierLikeToken = (token: string): boolean =>
+  /[a-z][A-Z]/.test(token) || token.includes('_');
+
+const humanizeInsightText = (text?: string): string =>
+  (text || '').replace(/[A-Za-z][A-Za-z0-9_-]*/g, (token) =>
+    isIdentifierLikeToken(token) ? humanizeToken(token) : token
+  );
+
+// Route + label an insight's action button should use, based on the raw
+const getInsightAction = (
+  title?: string,
+  description?: string
+): { actionText: string; actionUrl: string } => {
+  const content = `${title || ''} ${description || ''}`.toLowerCase();
+  if (content.includes('vocabulary')) {
+    return { actionText: 'Practice Vocabulary', actionUrl: '/vocabulary' };
   }
-  if (t.includes('vocabulary') || a.includes('vocabulary')) {
-    return '/practice/vocabulary';
-  }
-  if (t.includes('listening')) {
-    return '/practice/listening';
-  }
-  if (t.includes('reading')) {
-    return '/practice/reading';
-  }
-  if (t.includes('inference')) {
-    return '/practice/inference';
-  }
-  return '/practice';
+  return { actionText: 'Start Practice Test', actionUrl: '/tests' };
 };
 
 // Transform API data to dashboard format (keeping existing logic)
@@ -283,16 +290,24 @@ export const transformCompetencyData = (
   }));
   const domainProficiency = apiData.domainProficiency;
 
-  // Transform AI insights
-  const aiInsights = apiData.aiInsights.map((insight) => ({
-    _id: insight._id,
-    title: insight.title,
-    description: insight.description,
-    actionText: insight.actionText,
-    priority: insight.priority,
-    createdAt: insight.createdAt,
-    actionUrl: getActionUrlFromTitle(insight.title, insight.actionText),
-  }));
+  // Transform AI insights: clean up raw identifier text and route the
+  // action button by topic (vocabulary insights -> /vocabulary, everything
+  // else -> /tests).
+  const aiInsights = apiData.aiInsights.map((insight) => {
+    const { actionText, actionUrl } = getInsightAction(
+      insight.title,
+      insight.description
+    );
+    return {
+      _id: insight._id,
+      title: humanizeInsightText(insight.title),
+      description: humanizeInsightText(insight.description),
+      priority: insight.priority,
+      createdAt: insight.createdAt,
+      actionText,
+      actionUrl,
+    };
+  });
 
   // Transform score data
   const scoreData = {

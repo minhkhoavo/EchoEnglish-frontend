@@ -294,7 +294,7 @@ export interface AIInsight {
   _id: string;
   title: string;
   description: string;
-  actionText: string;
+  actionText?: string;
   priority: 'high' | 'medium' | 'low';
   createdAt: string;
   actionUrl?: string;

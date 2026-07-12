@@ -73,20 +73,22 @@ export const AIInsights = ({ insights, onActionClick }: AIInsightsProps) => {
                   >
                     {insight.title}
                   </h4>
-                  <p className="text-sm mb-4" style={{ color: '#374151' }}>
+                  <p className="text-sm" style={{ color: '#374151' }}>
                     {insight.description}
                   </p>
-                  <Button
-                    size="sm"
-                    onClick={() => onActionClick?.(insight)}
-                    style={{
-                      backgroundColor: colors.border,
-                      color: '#FFFFFF',
-                    }}
-                    className="hover:opacity-90"
-                  >
-                    {insight.actionText}
-                  </Button>
+                  {insight.actionText && (
+                    <Button
+                      size="sm"
+                      onClick={() => onActionClick?.(insight)}
+                      style={{
+                        backgroundColor: colors.border,
+                        color: '#FFFFFF',
+                      }}
+                      className="mt-4 hover:opacity-90"
+                    >
+                      {insight.actionText}
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
